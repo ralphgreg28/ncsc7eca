@@ -83,7 +83,7 @@ function Login() {
           <div className="w-16 h-1 bg-blue-500 rounded-full mb-6"></div>
           
           <h2 className="text-xl font-semibold text-gray-700">
-            Welcome Back
+            Welcome!
           </h2>
           <p className="mt-2 text-sm text-gray-500">
             Don't have an account?{' '}

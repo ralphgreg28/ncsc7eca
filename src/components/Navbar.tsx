@@ -78,13 +78,10 @@ function Navbar({ onMenuClick, className = '' }: NavbarProps) {
                       {user.position}
                     </span>
                   </div>
-                  <ChevronDown className="h-4 w-4 ml-1 text-gray-500" />
+                  
                 </div>
                 
-                {/* Dropdown menu - can be implemented later */}
-                <div className="hidden group-hover:block absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-20">
-                  {/* Profile options can go here */}
-                </div>
+              
               </div>
               
               <button

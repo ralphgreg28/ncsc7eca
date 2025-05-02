@@ -72,13 +72,13 @@ function Login() {
         <div className="flex flex-col items-center">
           <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6 p-4">
             <img
-              src="https://i.ibb.co/tPHyVCCV/ncsc.png"
+              src="assets/ncsc.png"
               alt="NCSC Logo"
               className="h-16 w-auto"
             />
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-1">
-            NCSC 7 ECA_IMS
+            NCSC_7 ECA_IMS
           </h1>
           <div className="w-16 h-1 bg-blue-500 rounded-full mb-6"></div>
           
@@ -88,7 +88,7 @@ function Login() {
           <p className="mt-2 text-sm text-gray-500">
             Don't have an account?{' '}
             <Link to="/register" className="font-medium text-blue-600 hover:text-blue-700 transition-colors">
-              Register now
+              Register now!
             </Link>
           </p>
         </div>

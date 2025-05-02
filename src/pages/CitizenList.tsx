@@ -21,6 +21,13 @@ interface Filters {
   searchTerm: string;
 }
 
+interface Assignment {
+  id: number;
+  staff_id: string;
+  province_code: string;
+  lgu_code: string | null;
+}
+
 interface AddressOption {
   code: string;
   name: string;
@@ -87,6 +94,8 @@ function CitizenList() {
     barangays: {}
   });
   const { user } = useAuth();
+  const [userAssignments, setUserAssignments] = useState<Assignment[]>([]);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
   const [viewingCitizen, setViewingCitizen] = useState<Citizen | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [sortField, setSortField] = useState<SortField>('created_at');
@@ -119,9 +128,102 @@ function CitizenList() {
   ];
 
   useEffect(() => {
-    loadProvinces();
-    fetchCitizens();
-  }, []);
+    if (user && user.position === 'PDO') {
+      // For PDO users, first fetch assignments, then load data
+      // Don't load any data until assignments are loaded
+      setLoading(true); // Keep loading state true until assignments are loaded
+      fetchUserAssignments();
+    } else {
+      // For administrators, load provinces and fetch citizens immediately
+      loadProvinces();
+      fetchCitizens();
+    }
+  }, [user]);
+
+  // Only fetch citizens when assignments are loaded for PDO users
+  useEffect(() => {
+    if (user?.position === 'PDO' && !loadingAssignments) {
+      fetchCitizens();
+    }
+  }, [userAssignments, loadingAssignments]);
+
+  // Fetch assignments for PDO users
+  const fetchUserAssignments = async () => {
+    if (!user) return;
+    
+    try {
+      setLoadingAssignments(true);
+      
+      // Check if the staff_assignments table exists
+      const { error: tableCheckError } = await supabase
+        .from('staff_assignments')
+        .select('id')
+        .limit(1);
+      
+      if (tableCheckError) {
+        console.warn('Staff assignments table may not exist yet:', tableCheckError);
+        toast.warning('Assignment restrictions could not be loaded. You may have access to all records.');
+        loadProvinces(); // Load all provinces if table doesn't exist
+        setLoadingAssignments(false);
+        return;
+      }
+      
+      // Get assignments for the current user
+      const { data, error } = await supabase
+        .from('staff_assignments')
+        .select('id, staff_id, province_code, lgu_code')
+        .eq('staff_id', user.id);
+      
+      if (error) {
+        console.error('Error fetching user assignments:', error);
+        toast.error('Failed to load your assigned areas');
+        loadProvinces(); // Load all provinces if there's an error
+        setLoadingAssignments(false);
+        return;
+      }
+      
+      setUserAssignments(data || []);
+      
+      // Load only the assigned provinces
+      if (data && data.length > 0) {
+        const provinceCodes = [...new Set(data.map(a => a.province_code))];
+        await loadAssignedProvinces(provinceCodes);
+      } else {
+        toast.info('You have no assigned areas. Please contact an administrator.');
+        loadProvinces(); // Load all provinces if no assignments
+      }
+    } catch (error) {
+      console.error('Error in fetchUserAssignments:', error);
+      loadProvinces(); // Load all provinces if there's an error
+    } finally {
+      setLoadingAssignments(false);
+    }
+  };
+
+  // Load only the provinces assigned to the PDO user
+  const loadAssignedProvinces = async (provinceCodes: string[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('provinces')
+        .select('code, name')
+        .in('code', provinceCodes)
+        .order('name');
+      
+      if (error) throw error;
+      setProvinces(data || []);
+
+      const provinceMap = Object.fromEntries((data || []).map(p => [p.code, p.name]));
+      setAddressMaps(prev => ({ ...prev, provinces: provinceMap }));
+      
+      // If there's only one province, select it automatically
+      if (data && data.length === 1) {
+        setFilters(prev => ({ ...prev, provinceCode: data[0].code }));
+      }
+    } catch (error) {
+      console.error('Error loading assigned provinces:', error);
+      toast.error('Failed to load provinces');
+    }
+  };
 
   useEffect(() => {
     if (filters.provinceCode) {
@@ -258,6 +360,21 @@ function CitizenList() {
   const fetchCitizens = async () => {
     try {
       setLoading(true);
+      
+      // For PDO users, don't fetch any data until assignments are loaded
+      if (user?.position === 'PDO' && loadingAssignments) {
+        // Return early without fetching any data
+        return;
+      }
+      
+      // For PDO users with no assignments, show no data
+      if (user?.position === 'PDO' && userAssignments.length === 0) {
+        setCitizens([]);
+        setTotalRecords(0);
+        setLoading(false);
+        return;
+      }
+      
       let query = supabase.from('citizens').select('*', { count: 'exact' });
 
       if (filters.searchTerm) {
@@ -268,16 +385,98 @@ function CitizenList() {
         );
       }
 
-      if (filters.provinceCode) {
-        query = query.eq('province_code', filters.provinceCode);
-      }
+      // For PDO users, restrict to assigned provinces and LGUs
+      if (user && user.position === 'PDO' && userAssignments.length > 0) {
+        // Get unique province codes from assignments
+        const assignedProvinceCodes = [...new Set(userAssignments.map(a => a.province_code))];
+        
+        // If a province is selected in the filter, check if it's in the assigned provinces
+        if (filters.provinceCode) {
+          if (!assignedProvinceCodes.includes(filters.provinceCode)) {
+            // If the selected province is not in the assigned provinces, return no results
+            setCitizens([]);
+            setTotalRecords(0);
+            setLoading(false);
+            return;
+          }
+          
+          query = query.eq('province_code', filters.provinceCode);
+          
+          // If an LGU is selected, check if there's an assignment for this province+LGU
+          if (filters.lguCode) {
+            const hasLguAssignment = userAssignments.some(
+              a => a.province_code === filters.provinceCode && 
+                  (a.lgu_code === filters.lguCode || a.lgu_code === null)
+            );
+            
+            if (!hasLguAssignment) {
+              // If no assignment for this LGU, return no results
+              setCitizens([]);
+              setTotalRecords(0);
+              setLoading(false);
+              return;
+            }
+            
+            query = query.eq('lgu_code', filters.lguCode);
+          } else {
+            // If no LGU is selected, restrict to assigned LGUs for this province
+            const assignedLgusForProvince = userAssignments
+              .filter(a => a.province_code === filters.provinceCode)
+              .map(a => a.lgu_code);
+            
+            // If there are specific LGU assignments (not null), restrict to those
+            const specificLguAssignments = assignedLgusForProvince.filter(lgu => lgu !== null) as string[];
+            
+            if (specificLguAssignments.length > 0 && 
+                !assignedLgusForProvince.includes(null)) {
+              query = query.in('lgu_code', specificLguAssignments);
+            }
+          }
+        } else {
+          // If no province is selected, restrict to all assigned provinces
+          query = query.in('province_code', assignedProvinceCodes);
+          
+          // Get all assignments with specific LGUs (not null)
+          const lguAssignments = userAssignments
+            .filter(a => a.lgu_code !== null)
+            .map(a => ({ province: a.province_code, lgu: a.lgu_code as string }));
+          
+          // Get provinces with "all LGUs" assignment (lgu_code is null)
+          const provincesWithAllLgus = userAssignments
+            .filter(a => a.lgu_code === null)
+            .map(a => a.province_code);
+          
+          // If there are specific LGU assignments and not all provinces have "all LGUs" assignment
+          if (lguAssignments.length > 0 && 
+              !assignedProvinceCodes.every(p => provincesWithAllLgus.includes(p))) {
+            
+            // Build OR filter for each province+LGU combination
+            const orConditions = lguAssignments.map(a => 
+              `and(province_code.eq.${a.province},lgu_code.eq.${a.lgu})`
+            );
+            
+            // Add conditions for provinces with "all LGUs" assignment
+            provincesWithAllLgus.forEach(province => {
+              orConditions.push(`province_code.eq.${province}`);
+            });
+            
+            // Apply the OR filter
+            query = query.or(orConditions.join(','));
+          }
+        }
+      } else {
+        // For administrators or if no assignments, apply normal filters
+        if (filters.provinceCode) {
+          query = query.eq('province_code', filters.provinceCode);
+        }
 
-      if (filters.lguCode) {
-        query = query.eq('lgu_code', filters.lguCode);
-      }
+        if (filters.lguCode) {
+          query = query.eq('lgu_code', filters.lguCode);
+        }
 
-      if (filters.barangayCode) {
-        query = query.eq('barangay_code', filters.barangayCode);
+        if (filters.barangayCode) {
+          query = query.eq('barangay_code', filters.barangayCode);
+        }
       }
 
       if (filters.status.length > 0) {
@@ -326,8 +525,11 @@ function CitizenList() {
     }
   };
 
-  const fetchAllRecordsInBatches = async (baseQuery) => {
-    let allRecords = [];
+  // Type for Supabase query
+  type SupabaseQuery = any; // Using any to avoid complex typing issues
+  
+  const fetchAllRecordsInBatches = async (baseQuery: SupabaseQuery): Promise<Citizen[]> => {
+    let allRecords: Citizen[] = [];
     let hasMore = true;
     let start = 0;
     
@@ -338,7 +540,7 @@ function CitizenList() {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        allRecords = [...allRecords, ...data];
+        allRecords = [...allRecords, ...data as Citizen[]];
         start += EXPORT_BATCH_SIZE;
         
         toast.info(`Fetched ${allRecords.length} records...`, { 
@@ -357,7 +559,21 @@ function CitizenList() {
     try {
       setExportLoading(true);
       toast.info('Starting export...');
-
+      
+      // For PDO users, don't export any data until assignments are loaded
+      if (user?.position === 'PDO' && loadingAssignments) {
+        toast.warning('Please wait until your assignments are loaded before exporting data.');
+        setExportLoading(false);
+        return;
+      }
+      
+      // For PDO users with no assignments, show no data
+      if (user?.position === 'PDO' && userAssignments.length === 0) {
+        toast.info('No data to export - You have no assigned areas.');
+        setExportLoading(false);
+        return;
+      }
+      
       let query = supabase.from('citizens').select('*');
 
       if (filters.searchTerm) {
@@ -368,16 +584,96 @@ function CitizenList() {
         );
       }
 
-      if (filters.provinceCode) {
-        query = query.eq('province_code', filters.provinceCode);
-      }
+      // For PDO users, restrict to assigned provinces and LGUs
+      if (user && user.position === 'PDO' && userAssignments.length > 0) {
+        // Get unique province codes from assignments
+        const assignedProvinceCodes = [...new Set(userAssignments.map(a => a.province_code))];
+        
+        // If a province is selected in the filter, check if it's in the assigned provinces
+        if (filters.provinceCode) {
+          if (!assignedProvinceCodes.includes(filters.provinceCode)) {
+            // If the selected province is not in the assigned provinces, return no results
+            toast.info('No data to export - Province not in your assignments');
+            setExportLoading(false);
+            return;
+          }
+          
+          query = query.eq('province_code', filters.provinceCode);
+          
+          // If an LGU is selected, check if there's an assignment for this province+LGU
+          if (filters.lguCode) {
+            const hasLguAssignment = userAssignments.some(
+              a => a.province_code === filters.provinceCode && 
+                  (a.lgu_code === filters.lguCode || a.lgu_code === null)
+            );
+            
+            if (!hasLguAssignment) {
+              // If no assignment for this LGU, return no results
+              toast.info('No data to export - LGU not in your assignments');
+              setExportLoading(false);
+              return;
+            }
+            
+            query = query.eq('lgu_code', filters.lguCode);
+          } else {
+            // If no LGU is selected, restrict to assigned LGUs for this province
+            const assignedLgusForProvince = userAssignments
+              .filter(a => a.province_code === filters.provinceCode)
+              .map(a => a.lgu_code);
+            
+            // If there are specific LGU assignments (not null), restrict to those
+            const specificLguAssignments = assignedLgusForProvince.filter(lgu => lgu !== null) as string[];
+            
+            if (specificLguAssignments.length > 0 && 
+                !assignedLgusForProvince.includes(null)) {
+              query = query.in('lgu_code', specificLguAssignments);
+            }
+          }
+        } else {
+          // If no province is selected, restrict to all assigned provinces
+          query = query.in('province_code', assignedProvinceCodes);
+          
+          // Get all assignments with specific LGUs (not null)
+          const lguAssignments = userAssignments
+            .filter(a => a.lgu_code !== null)
+            .map(a => ({ province: a.province_code, lgu: a.lgu_code as string }));
+          
+          // Get provinces with "all LGUs" assignment (lgu_code is null)
+          const provincesWithAllLgus = userAssignments
+            .filter(a => a.lgu_code === null)
+            .map(a => a.province_code);
+          
+          // If there are specific LGU assignments and not all provinces have "all LGUs" assignment
+          if (lguAssignments.length > 0 && 
+              !assignedProvinceCodes.every(p => provincesWithAllLgus.includes(p))) {
+            
+            // Build OR filter for each province+LGU combination
+            const orConditions = lguAssignments.map(a => 
+              `and(province_code.eq.${a.province},lgu_code.eq.${a.lgu})`
+            );
+            
+            // Add conditions for provinces with "all LGUs" assignment
+            provincesWithAllLgus.forEach(province => {
+              orConditions.push(`province_code.eq.${province}`);
+            });
+            
+            // Apply the OR filter
+            query = query.or(orConditions.join(','));
+          }
+        }
+      } else {
+        // For administrators or if no assignments, apply normal filters
+        if (filters.provinceCode) {
+          query = query.eq('province_code', filters.provinceCode);
+        }
 
-      if (filters.lguCode) {
-        query = query.eq('lgu_code', filters.lguCode);
-      }
+        if (filters.lguCode) {
+          query = query.eq('lgu_code', filters.lguCode);
+        }
 
-      if (filters.barangayCode) {
-        query = query.eq('barangay_code', filters.barangayCode);
+        if (filters.barangayCode) {
+          query = query.eq('barangay_code', filters.barangayCode);
+        }
       }
 
       if (filters.status.length > 0) {
@@ -741,6 +1037,15 @@ function CitizenList() {
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {loadingAssignments && user?.position === 'PDO' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-3"></div>
+          <p className="text-blue-700">
+            Loading your assigned areas... Please wait while we filter the records based on your assignments.
+          </p>
         </div>
       )}
 

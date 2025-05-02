@@ -18,6 +18,7 @@ interface User {
   position: 'Administrator' | 'PDO';
   status: 'Active' | 'Inactive';
   last_login: string | null;
+  assignments?: Assignment[];
 }
 
 interface UserFormData {
@@ -34,6 +35,26 @@ interface UserFormData {
   status: 'Active' | 'Inactive';
 }
 
+interface Province {
+  code: string;
+  name: string;
+}
+
+interface LGU {
+  code: string;
+  name: string;
+  province_code: string;
+}
+
+interface Assignment {
+  id?: number;
+  staff_id: string;
+  province_code: string;
+  province_name?: string;
+  lgu_code: string | null;
+  lgu_name?: string | null;
+}
+
 function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,12 +62,296 @@ function UserManagement() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [lgus, setLgus] = useState<LGU[]>([]);
+  const [selectedProvince, setSelectedProvince] = useState<string>('');
+  const [selectedLgu, setSelectedLgu] = useState<string>('');
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<UserFormData>();
+  const { register, handleSubmit, reset, formState: { errors }, watch } = useForm<UserFormData>();
+  
+  const watchPosition = watch('position');
 
   useEffect(() => {
     fetchUsers();
+    fetchProvinces();
   }, []);
+
+  // Fetch provinces when component mounts
+  const fetchProvinces = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('provinces')
+        .select('code, name')
+        .order('name');
+      
+      if (error) throw error;
+      setProvinces(data || []);
+    } catch (error) {
+      console.error('Error fetching provinces:', error);
+      toast.error('Failed to load provinces');
+    }
+  };
+
+  // Fetch LGUs when a province is selected
+  const fetchLgus = async (provinceCode: string) => {
+    try {
+      setLgus([]);
+      setSelectedLgu('');
+      
+      const { data, error } = await supabase
+        .from('lgus')
+        .select('code, name, province_code')
+        .eq('province_code', provinceCode)
+        .order('name');
+      
+      if (error) throw error;
+      setLgus(data || []);
+    } catch (error) {
+      console.error('Error fetching LGUs:', error);
+      toast.error('Failed to load LGUs');
+    }
+  };
+
+  // Fetch assignments for a user
+  const fetchAssignments = async (userId: string) => {
+    try {
+      setLoadingAssignments(true);
+      
+      // Check if the staff_assignments table exists by querying it
+      const { error: tableCheckError } = await supabase
+        .from('staff_assignments')
+        .select('id')
+        .limit(1);
+      
+      // If the table doesn't exist yet (migration not applied), just return empty assignments
+      if (tableCheckError) {
+        console.warn('Staff assignments table may not exist yet:', tableCheckError);
+        setAssignments([]);
+        return;
+      }
+      
+      // Get assignments with province and LGU names
+      const { data, error } = await supabase
+        .from('staff_assignments')
+        .select(`
+          id,
+          staff_id,
+          province_code,
+          lgu_code
+        `)
+        .eq('staff_id', userId);
+      
+      if (error) {
+        console.error('Error fetching assignments:', error);
+        toast.error(`Failed to load assignments: ${error.message}`);
+        setAssignments([]);
+        return;
+      }
+      
+      if (!data || data.length === 0) {
+        setAssignments([]);
+        return;
+      }
+      
+      // Fetch province and LGU names for each assignment
+      const assignmentsWithNames = await Promise.all(data.map(async (assignment) => {
+        try {
+          const [provinceResult, lguResult] = await Promise.all([
+            supabase.from('provinces').select('name').eq('code', assignment.province_code).single(),
+            assignment.lgu_code 
+              ? supabase.from('lgus').select('name').eq('code', assignment.lgu_code).single() 
+              : Promise.resolve({ data: null, error: null })
+          ]);
+          
+          return {
+            ...assignment,
+            province_name: provinceResult.data?.name || 'Unknown Province',
+            lgu_name: lguResult.data?.name || null
+          };
+        } catch (err) {
+          console.error('Error fetching province/LGU details:', err);
+          return {
+            ...assignment,
+            province_name: 'Unknown Province',
+            lgu_name: null
+          };
+        }
+      }));
+      
+      setAssignments(assignmentsWithNames);
+    } catch (error) {
+      console.error('Error in fetchAssignments:', error);
+      toast.error('Failed to load assignments. Please try again.');
+      setAssignments([]);
+    } finally {
+      setLoadingAssignments(false);
+    }
+  };
+
+  // Add a new assignment
+  const addAssignment = async () => {
+    if (!selectedProvince) {
+      toast.error('Please select a province');
+      return;
+    }
+    
+    try {
+      // Check if assignment already exists
+      const existingAssignment = assignments.find(a => 
+        a.province_code === selectedProvince && a.lgu_code === (selectedLgu || null)
+      );
+      
+      if (existingAssignment) {
+        toast.warning('This assignment already exists');
+        return;
+      }
+      
+      // Get province and LGU names
+      const provinceName = provinces.find(p => p.code === selectedProvince)?.name || 'Unknown Province';
+      const lguName = selectedLgu ? lgus.find(l => l.code === selectedLgu)?.name || null : null;
+      
+      if (editingUser) {
+        // Check if the staff_assignments table exists by querying it
+        const { error: tableCheckError } = await supabase
+          .from('staff_assignments')
+          .select('id')
+          .limit(1);
+        
+        // If the table doesn't exist yet (migration not applied), just add to local state
+        if (tableCheckError) {
+          console.warn('Staff assignments table may not exist yet:', tableCheckError);
+          toast.warning('Assignment added locally only. Database table may not exist yet.');
+          
+          // Generate a temporary ID for the UI
+          const tempId = Date.now();
+          
+          setAssignments([...assignments, {
+            id: tempId,
+            staff_id: editingUser.id,
+            province_code: selectedProvince,
+            province_name: provinceName,
+            lgu_code: selectedLgu || null,
+            lgu_name: lguName
+          }]);
+        } else {
+          // If editing an existing user and table exists, save to database
+          const { data, error } = await supabase
+            .from('staff_assignments')
+            .insert({
+              staff_id: editingUser.id,
+              province_code: selectedProvince,
+              lgu_code: selectedLgu || null
+            })
+            .select();
+          
+          if (error) {
+            console.error('Error inserting assignment:', error);
+            toast.error(`Failed to save assignment: ${error.message}`);
+            
+            // Still add to local state even if database insert fails
+            const tempId = Date.now();
+            setAssignments([...assignments, {
+              id: tempId,
+              staff_id: editingUser.id,
+              province_code: selectedProvince,
+              province_name: provinceName,
+              lgu_code: selectedLgu || null,
+              lgu_name: lguName
+            }]);
+          } else {
+            // Add to local state with the database ID
+            setAssignments([...assignments, {
+              ...data[0],
+              province_name: provinceName,
+              lgu_name: lguName
+            }]);
+            
+            toast.success('Assignment added successfully');
+          }
+        }
+      } else {
+        // If creating a new user, just add to local state
+        // Generate a temporary ID for the UI
+        const tempId = Date.now();
+        
+        setAssignments([...assignments, {
+          id: tempId,
+          staff_id: 'temp',
+          province_code: selectedProvince,
+          province_name: provinceName,
+          lgu_code: selectedLgu || null,
+          lgu_name: lguName
+        }]);
+        
+        toast.success('Assignment added successfully');
+      }
+      
+      // Reset selection
+      setSelectedProvince('');
+      setSelectedLgu('');
+      setLgus([]);
+    } catch (error) {
+      console.error('Error in addAssignment:', error);
+      toast.error('Failed to add assignment. Please try again.');
+      
+      // Ensure UI is reset even if there's an error
+      setSelectedProvince('');
+      setSelectedLgu('');
+      setLgus([]);
+    }
+  };
+
+  // Remove an assignment
+  const removeAssignment = async (assignmentId: number) => {
+    try {
+      // Check if this is a temporary assignment (for new users)
+      const isTemporaryAssignment = assignments.find(a => a.id === assignmentId && a.staff_id === 'temp');
+      
+      if (isTemporaryAssignment) {
+        // For new users, just remove from local state
+        setAssignments(assignments.filter(a => a.id !== assignmentId));
+        toast.success('Assignment removed successfully');
+      } else {
+        // Check if the staff_assignments table exists by querying it
+        const { error: tableCheckError } = await supabase
+          .from('staff_assignments')
+          .select('id')
+          .limit(1);
+        
+        // If the table doesn't exist yet (migration not applied), just remove from local state
+        if (tableCheckError) {
+          console.warn('Staff assignments table may not exist yet:', tableCheckError);
+          setAssignments(assignments.filter(a => a.id !== assignmentId));
+          toast.warning('Assignment removed locally only. Database table may not exist yet.');
+        } else {
+          // For existing users, delete from database
+          const { error } = await supabase
+            .from('staff_assignments')
+            .delete()
+            .eq('id', assignmentId);
+          
+          if (error) {
+            console.error('Error deleting assignment:', error);
+            toast.error(`Failed to delete assignment: ${error.message}`);
+            // Still remove from local state even if database delete fails
+            setAssignments(assignments.filter(a => a.id !== assignmentId));
+          } else {
+            // Remove from local state
+            setAssignments(assignments.filter(a => a.id !== assignmentId));
+            toast.success('Assignment removed successfully');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error in removeAssignment:', error);
+      toast.error('Failed to remove assignment. Please try again.');
+      
+      // Still remove from local state even if there's an error
+      setAssignments(assignments.filter(a => a.id !== assignmentId));
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -83,7 +388,53 @@ function UserManagement() {
           .eq('id', editingUser.id);
 
         if (error) throw error;
-        toast.success('User updated successfully');
+        
+        // If the user is a PDO and there are assignments, update them
+        if (data.position === 'PDO' && assignments.length > 0) {
+          // Check if the staff_assignments table exists by querying it
+          const { error: tableCheckError } = await supabase
+            .from('staff_assignments')
+            .select('id')
+            .limit(1);
+          
+          // If the table doesn't exist yet (migration not applied), show a warning
+          if (tableCheckError) {
+            console.warn('Staff assignments table may not exist yet:', tableCheckError);
+            toast.warning('User updated successfully, but assignments could not be saved. The database table may not exist yet.');
+          } else {
+            try {
+              // First, delete all existing assignments for this user
+              await supabase
+                .from('staff_assignments')
+                .delete()
+                .eq('staff_id', editingUser.id);
+              
+              // Then, insert the new assignments
+              const assignmentsData = assignments.map(assignment => ({
+                staff_id: editingUser.id,
+                province_code: assignment.province_code,
+                lgu_code: assignment.lgu_code
+              }));
+              
+              // Insert assignments
+              const { error: assignmentError } = await supabase
+                .from('staff_assignments')
+                .insert(assignmentsData);
+              
+              if (assignmentError) {
+                console.error('Error saving assignments:', assignmentError);
+                toast.warning(`User updated but failed to save assignments: ${assignmentError.message}`);
+              } else {
+                toast.success('User and assignments updated successfully');
+              }
+            } catch (assignmentError) {
+              console.error('Error updating assignments:', assignmentError);
+              toast.warning('User updated but failed to update assignments');
+            }
+          }
+        } else {
+          toast.success('User updated successfully');
+        }
       } else {
         // For new users, password is required and stored as password_hash
         if (!data.password) {
@@ -91,16 +442,55 @@ function UserManagement() {
           return;
         }
 
-        const { error } = await supabase
+        // Insert the new user
+        const { data: newUser, error } = await supabase
           .from('staff')
           .insert({
             ...data,
             password_hash: data.password, // Store password as password_hash
             password: undefined, // Remove password field before inserting
-          });
+          })
+          .select();
 
         if (error) throw error;
-        toast.success('User created successfully');
+        
+        // If the new user is a PDO and there are assignments, save them
+        if (data.position === 'PDO' && assignments.length > 0 && newUser && newUser.length > 0) {
+          const userId = newUser[0].id;
+          
+          // Check if the staff_assignments table exists by querying it
+          const { error: tableCheckError } = await supabase
+            .from('staff_assignments')
+            .select('id')
+            .limit(1);
+          
+          // If the table doesn't exist yet (migration not applied), show a warning
+          if (tableCheckError) {
+            console.warn('Staff assignments table may not exist yet:', tableCheckError);
+            toast.warning('User created successfully, but assignments could not be saved. The database table may not exist yet.');
+          } else {
+            // Prepare assignments data for insertion
+            const assignmentsData = assignments.map(assignment => ({
+              staff_id: userId,
+              province_code: assignment.province_code,
+              lgu_code: assignment.lgu_code
+            }));
+            
+            // Insert assignments
+            const { error: assignmentError } = await supabase
+              .from('staff_assignments')
+              .insert(assignmentsData);
+            
+            if (assignmentError) {
+              console.error('Error saving assignments:', assignmentError);
+              toast.warning(`User created but failed to save assignments: ${assignmentError.message}`);
+            } else {
+              toast.success('User and assignments created successfully');
+            }
+          }
+        } else {
+          toast.success('User created successfully');
+        }
       }
 
       setShowModal(false);
@@ -129,7 +519,7 @@ function UserManagement() {
     }
   };
 
-  const openEditModal = (user: User) => {
+  const openEditModal = async (user: User) => {
     setEditingUser(user);
     reset({
       username: user.username,
@@ -143,6 +533,18 @@ function UserManagement() {
       position: user.position,
       status: user.status,
     });
+    
+    // Reset assignments state
+    setAssignments([]);
+    setSelectedProvince('');
+    setSelectedLgu('');
+    setLgus([]);
+    
+    // If user is a PDO, fetch their assignments
+    if (user.position === 'PDO') {
+      await fetchAssignments(user.id);
+    }
+    
     setShowModal(true);
   };
 
@@ -161,6 +563,13 @@ function UserManagement() {
       position: 'PDO',
       status: 'Active',
     });
+    
+    // Reset assignments state
+    setAssignments([]);
+    setSelectedProvince('');
+    setSelectedLgu('');
+    setLgus([]);
+    
     setShowModal(true);
   };
 
@@ -504,6 +913,128 @@ function UserManagement() {
                   </div>
                 </div>
               </div>
+
+              {/* PDO Assignments Section - Only visible for PDO users */}
+              {watchPosition === 'PDO' && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">
+                    Province & LGU Assignments
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Assign which provinces and LGUs this PDO user can view and manage.
+                  </p>
+                  
+                  {/* Assignment Selection */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Province</label>
+                      <select
+                        value={selectedProvince}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setSelectedProvince(value);
+                          if (value) {
+                            fetchLgus(value);
+                          } else {
+                            setLgus([]);
+                            setSelectedLgu('');
+                          }
+                        }}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                      >
+                        <option value="">Select Province</option>
+                        {provinces.map(province => (
+                          <option key={province.code} value={province.code}>
+                            {province.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">LGU (Optional)</label>
+                      <select
+                        value={selectedLgu}
+                        onChange={(e) => setSelectedLgu(e.target.value)}
+                        disabled={!selectedProvince || lgus.length === 0}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                      >
+                        <option value="">All LGUs in Province</option>
+                        {lgus.map(lgu => (
+                          <option key={lgu.code} value={lgu.code}>
+                            {lgu.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Leave blank to assign all LGUs in the selected province
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-end">
+                      <button
+                        type="button"
+                        onClick={addAssignment}
+                        disabled={!selectedProvince}
+                        className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Add Assignment
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Current Assignments */}
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Current Assignments</h4>
+                    
+                    {loadingAssignments ? (
+                      <div className="text-center py-4">
+                        <svg className="animate-spin h-5 w-5 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p className="text-sm text-gray-500 mt-2">Loading assignments...</p>
+                      </div>
+                    ) : assignments.length === 0 ? (
+                      <div className="text-center py-4 bg-gray-100 rounded-md">
+                        <p className="text-sm text-gray-500">No assignments yet. Add one above.</p>
+                      </div>
+                    ) : (
+                      <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+                        <ul className="divide-y divide-gray-200">
+                          {assignments.map((assignment) => (
+                            <li key={assignment.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+                              <div>
+                                <p className="text-sm font-medium text-gray-800">
+                                  {assignment.province_name}
+                                </p>
+                                {assignment.lgu_name && (
+                                  <p className="text-xs text-gray-500">
+                                    LGU: {assignment.lgu_name}
+                                  </p>
+                                )}
+                                {!assignment.lgu_name && (
+                                  <p className="text-xs text-gray-500">
+                                    All LGUs in province
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => assignment.id && removeAssignment(assignment.id)}
+                                className="text-red-600 hover:text-red-900 bg-red-50 p-1.5 rounded-md transition-colors duration-200"
+                                title="Remove assignment"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">

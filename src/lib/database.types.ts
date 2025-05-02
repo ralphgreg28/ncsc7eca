@@ -1,11 +1,3 @@
-type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
-
 export interface Database {
   public: {
     Tables: {
@@ -280,6 +272,29 @@ export interface Database {
           position?: 'Administrator' | 'PDO'
           status?: 'Active' | 'Inactive'
           last_login?: string | null
+        }
+      }
+      staff_assignments: {
+        Row: {
+          id: number
+          staff_id: string
+          province_code: string
+          lgu_code: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          staff_id: string
+          province_code: string
+          lgu_code?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          staff_id?: string
+          province_code?: string
+          lgu_code?: string | null
+          created_at?: string
         }
       }
     }

@@ -72,7 +72,7 @@ function Login() {
         <div className="flex flex-col items-center">
           <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6 p-4">
             <img
-              src="/assets/ncsc.png"
+              src="https://cthemydbthfjlvtuqdnu.supabase.co/storage/v1/object/public/logos//ncsc.png"
               alt="NCSC Logo"
               className="h-16 w-auto"
             />

@@ -33,7 +33,7 @@ function Navbar({ onMenuClick, className = '' }: NavbarProps) {
               <div className="h-8 w-8 relative flex-shrink-0">
                 {!imageError ? (
                   <img
-                    src="/assets/ncsc.png"
+                    src="https://cthemydbthfjlvtuqdnu.supabase.co/storage/v1/object/public/logos//ncsc.png"
                     alt="NCSC Logo"
                     className="h-full w-auto object-contain"
                     onError={() => setImageError(true)}
@@ -52,7 +52,7 @@ function Navbar({ onMenuClick, className = '' }: NavbarProps) {
                     NCSC 7 <span className="hidden sm:inline">- Central Visayas</span>
                   </h1>
                   <img 
-                    src="/assets/favicon.svg" 
+                    src="https://cthemydbthfjlvtuqdnu.supabase.co/storage/v1/object/public/logos//favicon.svg" 
                     alt="Favicon" 
                     className="h-3 w-3 ml-1 hidden sm:block" 
                   />

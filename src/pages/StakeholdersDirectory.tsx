@@ -52,6 +52,7 @@ interface Filters {
   province: string;
   lgu: string;
   barangay: string;
+  showFilters?: boolean;
 }
 
 interface AddressDetails {
@@ -96,6 +97,9 @@ function StakeholdersDirectory() {
     lgus: {},
     barangays: {}
   });
+  // Separate state for filter visibility
+  const [showFilters, setShowFilters] = useState(false);
+  
   const [filters, setFilters] = useState<Filters>({
     search: '',
     position: 0,
@@ -121,7 +125,8 @@ function StakeholdersDirectory() {
   const selectedProvince = watch('province_code');
   const selectedLgu = watch('lgu_code');
 
-  const positionLevel = positions.find(p => p.id === Number(selectedPosition))?.level;
+  // Explicitly type positionLevel to include undefined
+  const positionLevel: 'province' | 'lgu' | 'barangay' | undefined = positions.find(p => p.id === Number(selectedPosition))?.level;
 
   useEffect(() => {
     fetchStakeholders();
@@ -315,6 +320,11 @@ function StakeholdersDirectory() {
 
       if (existingStakeholders && existingStakeholders.length > 0) {
         const matchingStakeholder = existingStakeholders.find(s => {
+          // Skip the current stakeholder being edited
+          if (editingStakeholder && s.id === editingStakeholder.id) {
+            return false;
+          }
+          
           const lguMatch = (!data.lgu_code && !s.lgu_code) || (data.lgu_code === s.lgu_code);
           const barangayMatch = (!data.barangay_code && !s.barangay_code) || (data.barangay_code === s.barangay_code);
           return lguMatch && barangayMatch;
@@ -362,10 +372,14 @@ function StakeholdersDirectory() {
     try {
       setLoading(true);
 
-      const hasDuplicates = await checkForDuplicates(data);
-      if (hasDuplicates) return;
-
-      await saveStakeholder(data);
+      // If we're editing, skip duplicate check or pass the existing ID
+      if (editingStakeholder) {
+        await saveStakeholder(data, editingStakeholder.id);
+      } else {
+        const hasDuplicates = await checkForDuplicates(data);
+        if (hasDuplicates) return;
+        await saveStakeholder(data);
+      }
     } catch (error) {
       console.error('Error saving stakeholder:', error);
       toast.error('Failed to save stakeholder');
@@ -374,34 +388,53 @@ function StakeholdersDirectory() {
     }
   };
 
+  // Type guard function to check position level
+  const isPositionLevel = (level: 'province' | 'lgu' | 'barangay' | undefined, checkLevel: 'province' | 'lgu' | 'barangay'): boolean => {
+    return level === checkLevel;
+  };
+
   const saveStakeholder = async (data: StakeholderFormData, existingId?: string) => {
     try {
       const stakeholderData = {
         name: data.name,
         position_id: data.position_id,
         province_code: data.province_code,
-        lgu_code: positionLevel === 'province' ? null : data.lgu_code,
-        barangay_code: positionLevel === 'barangay' ? data.barangay_code : null,
+        lgu_code: isPositionLevel(positionLevel, 'province') ? null : data.lgu_code,
+        barangay_code: isPositionLevel(positionLevel, 'barangay') ? data.barangay_code : null,
         updated_by: user?.username || null
       };
 
       let stakeholderId: string;
 
       if (existingId) {
-        const { error: updateError } = await supabase
-          .from('stakeholders')
-          .update(stakeholderData)
-          .eq('id', existingId);
-
-        if (updateError) throw updateError;
-        stakeholderId = existingId;
-
-        // Delete existing contacts
+        // Workaround: Delete the existing record and create a new one instead of updating
+        
+        // First, delete existing contacts
         await supabase
           .from('stakeholder_contacts')
           .delete()
-          .eq('stakeholder_id', stakeholderId);
+          .eq('stakeholder_id', existingId);
+          
+        // Then delete the existing stakeholder
+        const { error: deleteError } = await supabase
+          .from('stakeholders')
+          .delete()
+          .eq('id', existingId);
+          
+        if (deleteError) throw deleteError;
+        
+        // Create a new stakeholder with the updated data
+        const { data: newStakeholder, error: insertError } = await supabase
+          .from('stakeholders')
+          .insert(stakeholderData)
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        if (!newStakeholder) throw new Error('Failed to create stakeholder');
+        stakeholderId = newStakeholder.id;
       } else {
+        // Create a new stakeholder
         const { data: newStakeholder, error: insertError } = await supabase
           .from('stakeholders')
           .insert(stakeholderData)
@@ -461,6 +494,7 @@ function StakeholdersDirectory() {
 
   const handleUpdateExisting = async () => {
     if (!duplicateData) return;
+    // Use the same delete-and-create approach for updating existing stakeholders
     await saveStakeholder(duplicateData.newData, duplicateData.existingData.id);
   };
 
@@ -477,6 +511,8 @@ function StakeholdersDirectory() {
       lgu: '',
       barangay: ''
     });
+    // Keep filters visible after reset
+    setShowFilters(true);
   };
 
   const handleProvinceChange = async (province: string) => {
@@ -553,11 +589,11 @@ function StakeholdersDirectory() {
         
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => setShowFilters(!filters)}
+            onClick={() => setShowFilters(!showFilters)}
             className="btn-outline flex items-center"
           >
             <Filter className="h-5 w-5 mr-2" />
-            {filters ? 'Hide Filters' : 'Show Filters'}
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
           </button>
           <button 
             onClick={async () => {
@@ -640,7 +676,7 @@ function StakeholdersDirectory() {
       </div>
 
       {/* Filters */}
-      {filters && (
+      {showFilters && (
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold">Filters</h2>
@@ -971,11 +1007,11 @@ function StakeholdersDirectory() {
                   )}
                 </div>
 
-                {positionLevel !== 'province' && (
+                {positionLevel && !isPositionLevel(positionLevel, 'province') && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">City/Municipality</label>
                     <select
-                      {...register('lgu_code', { required: positionLevel !== 'province' })}
+                      {...register('lgu_code', { required: positionLevel && !isPositionLevel(positionLevel, 'province') })}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                       disabled={!selectedProvince}
                     >
@@ -992,11 +1028,11 @@ function StakeholdersDirectory() {
                   </div>
                 )}
 
-                {positionLevel === 'barangay' && (
+                {positionLevel && isPositionLevel(positionLevel, 'barangay') && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Barangay</label>
                     <select
-                      {...register('barangay_code', { required: positionLevel === 'barangay' })}
+                      {...register('barangay_code', { required: positionLevel && isPositionLevel(positionLevel, 'barangay') })}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                       disabled={!selectedLgu}
                     >

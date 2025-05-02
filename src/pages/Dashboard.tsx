@@ -66,6 +66,11 @@ interface Stats {
     disqualified: number;
     total: number;
   }[];
+  paidBySpecificAge: {
+    age: number;
+    count: number;
+    percentage: number;
+  }[];
 }
 
 const COLORS = {
@@ -107,11 +112,12 @@ function Dashboard() {
       cleanlisted: 0,
       paid: 0,
       unpaid: 0,
-      liquified: 0,
+      liquidated: 0,
       disqualified: 0,
       total: 0
     },
-    provinceStats: []
+    provinceStats: [],
+    paidBySpecificAge: []
   });
   
   const [provinces, setProvinces] = useState<AddressOption[]>([]);
@@ -239,9 +245,27 @@ function Dashboard() {
     });
   };
 
-  const fetchAllCitizens = async (query) => {
+  // Define a type for the citizen object
+  interface Citizen {
+    id: number;
+    last_name: string;
+    first_name: string;
+    middle_name: string | null;
+    extension_name: string | null;
+    birth_date: string;
+    sex: 'Male' | 'Female';
+    province_code: string;
+    lgu_code: string;
+    barangay_code: string;
+    status: string;
+    payment_date: string | null;
+    created_at: string;
+    [key: string]: any; // For any other properties
+  }
+
+  const fetchAllCitizens = async (query: any): Promise<Citizen[]> => {
     const PAGE_SIZE = 1000;
-    let allCitizens = [];
+    let allCitizens: Citizen[] = [];
     let hasMore = true;
     let page = 0;
 
@@ -252,7 +276,7 @@ function Dashboard() {
       if (error) throw error;
 
       if (data) {
-        allCitizens = [...allCitizens, ...data];
+        allCitizens = [...allCitizens, ...data as Citizen[]];
       }
 
       hasMore = data && data.length === PAGE_SIZE;
@@ -262,173 +286,206 @@ function Dashboard() {
     return allCitizens;
   };
 
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
+      const fetchStats = async () => {
+        try {
+          setLoading(true);
 
-      let query = supabase.from('citizens').select('*');
+          let query = supabase.from('citizens').select('*');
 
-      if (filters.startDate) {
-        query = query.gte('created_at', startOfDay(parseISO(filters.startDate)).toISOString());
-      }
-      if (filters.endDate) {
-        query = query.lte('created_at', endOfDay(parseISO(filters.endDate)).toISOString());
-      }
+          if (filters.startDate) {
+            query = query.gte('created_at', startOfDay(parseISO(filters.startDate)).toISOString());
+          }
+          if (filters.endDate) {
+            query = query.lte('created_at', endOfDay(parseISO(filters.endDate)).toISOString());
+          }
 
-      if (filters.birthDateStart) {
-        query = query.gte('birth_date', filters.birthDateStart);
-      }
-      if (filters.birthDateEnd) {
-        query = query.lte('birth_date', filters.birthDateEnd);
-      }
+          if (filters.birthDateStart) {
+            query = query.gte('birth_date', filters.birthDateStart);
+          }
+          if (filters.birthDateEnd) {
+            query = query.lte('birth_date', filters.birthDateEnd);
+          }
 
-      if (filters.paymentDateStart) {
-        query = query.gte('payment_date', filters.paymentDateStart);
-      }
-      if (filters.paymentDateEnd) {
-        query = query.lte('payment_date', filters.paymentDateEnd);
-      }
+          if (filters.paymentDateStart) {
+            query = query.gte('payment_date', filters.paymentDateStart);
+          }
+          if (filters.paymentDateEnd) {
+            query = query.lte('payment_date', filters.paymentDateEnd);
+          }
 
-      if (filters.province) {
-        query = query.eq('province_code', filters.province);
-      }
-      if (filters.lgu) {
-        query = query.eq('lgu_code', filters.lgu);
-      }
-      if (filters.barangay) {
-        query = query.eq('barangay_code', filters.barangay);
-      }
+          if (filters.province) {
+            query = query.eq('province_code', filters.province);
+          }
+          if (filters.lgu) {
+            query = query.eq('lgu_code', filters.lgu);
+          }
+          if (filters.barangay) {
+            query = query.eq('barangay_code', filters.barangay);
+          }
 
-      if (filters.status.length > 0) {
-        query = query.in('status', filters.status);
-      }
+          if (filters.status.length > 0) {
+            query = query.in('status', filters.status);
+          }
 
-      const citizens = await fetchAllCitizens(query);
+          const citizens = await fetchAllCitizens(query);
 
-      const filteredCitizens = citizens.filter(citizen => {
-        const age = new Date().getFullYear() - new Date(citizen.birth_date).getFullYear();
-        const meetsAgeStart = !filters.ageStart || age >= parseInt(filters.ageStart);
-        const meetsAgeEnd = !filters.ageEnd || age <= parseInt(filters.ageEnd);
-        return meetsAgeStart && meetsAgeEnd;
-      });
+          const filteredCitizens = citizens.filter(citizen => {
+            const age = new Date().getFullYear() - new Date(citizen.birth_date).getFullYear();
+            const meetsAgeStart = !filters.ageStart || age >= parseInt(filters.ageStart);
+            const meetsAgeEnd = !filters.ageEnd || age <= parseInt(filters.ageEnd);
+            return meetsAgeStart && meetsAgeEnd;
+          });
 
-      const byStatus = Object.entries(
-        filteredCitizens.reduce((acc, citizen) => {
-          acc[citizen.status] = (acc[citizen.status] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>)
-      ).map(([status, count]) => ({ status, count }));
+          const byStatus = Object.entries(
+            filteredCitizens.reduce((acc, citizen) => {
+              acc[citizen.status] = (acc[citizen.status] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>)
+          ).map(([status, count]) => ({ status, count }));
 
-      const bySex = Object.entries(
-        filteredCitizens.reduce((acc, citizen) => {
-          acc[citizen.sex] = (acc[citizen.sex] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>)
-      ).map(([sex, count]) => ({ sex, count }));
+          const bySex = Object.entries(
+            filteredCitizens.reduce((acc, citizen) => {
+              acc[citizen.sex] = (acc[citizen.sex] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>)
+          ).map(([sex, count]) => ({ sex, count }));
 
-      const byAge = AGE_RANGES.map(range => ({
-        range: range.label,
-        count: filteredCitizens.filter(citizen => {
-          const age = new Date().getFullYear() - new Date(citizen.birth_date).getFullYear();
-          return age >= range.min && age <= range.max;
-        }).length
-      }));
+          const byAge = AGE_RANGES.map(range => ({
+            range: range.label,
+            count: filteredCitizens.filter(citizen => {
+              const age = new Date().getFullYear() - new Date(citizen.birth_date).getFullYear();
+              return age >= range.min && age <= range.max;
+            }).length
+          }));
 
-      const byQuarter = [1, 2, 3, 4].map(q => ({
-        quarter: `Q${q}`,
-        count: filteredCitizens.filter(citizen => {
-          const date = new Date(citizen.birth_date);
-          return Math.floor(date.getMonth() / 3) + 1 === q;
-        }).length
-      }));
+          const byQuarter = [1, 2, 3, 4].map(q => ({
+            quarter: `Q${q}`,
+            count: filteredCitizens.filter(citizen => {
+              const date = new Date(citizen.birth_date);
+              return Math.floor(date.getMonth() / 3) + 1 === q;
+            }).length
+          }));
 
-      const paymentStats = {
-        paid: filteredCitizens.filter(c => c.status === 'Paid').length,
-        unpaid: filteredCitizens.filter(c => c.status === 'Unpaid').length,
-        liquidated: filteredCitizens.filter(c => c.status === 'Liquidated').length,
-        disqualified: filteredCitizens.filter(c => c.status === 'Disqualified').length,
-        encoded: filteredCitizens.filter(c => c.status === 'Encoded').length,
-        validated: filteredCitizens.filter(c => c.status === 'Validated').length,
-        cleanlisted: filteredCitizens.filter(c => c.status === 'Cleanlisted').length,
-
-
-        
-        total: filteredCitizens.length
-      };
-
-      const { data: allProvinces } = await supabase
-        .from('provinces')
-        .select('code, name')
-        .order('name');
-
-      const provinceStats = await Promise.all(
-        (allProvinces || []).map(async (province) => {
-          const provinceCitizens = filteredCitizens.filter(c => c.province_code === province.code);
-          return {
-            name: province.name,
-            paid: provinceCitizens.filter(c => c.status === 'Paid').length,
-            unpaid: provinceCitizens.filter(c => c.status === 'Unpaid').length,
-            encoded: provinceCitizens.filter(c => c.status === 'Encoded').length,
-            validated: provinceCitizens.filter(c => c.status === 'Validated').length,
-            cleanlisted: provinceCitizens.filter(c => c.status === 'Cleanlisted').length,
-            liquidated: provinceCitizens.filter(c => c.status === 'Liquidated').length,
-            disqualified: provinceCitizens.filter(c => c.status === 'Disqualified').length,
-            total: provinceCitizens.length
+          const paymentStats = {
+            paid: filteredCitizens.filter(c => c.status === 'Paid').length,
+            unpaid: filteredCitizens.filter(c => c.status === 'Unpaid').length,
+            liquidated: filteredCitizens.filter(c => c.status === 'Liquidated').length,
+            disqualified: filteredCitizens.filter(c => c.status === 'Disqualified').length,
+            encoded: filteredCitizens.filter(c => c.status === 'Encoded').length,
+            validated: filteredCitizens.filter(c => c.status === 'Validated').length,
+            cleanlisted: filteredCitizens.filter(c => c.status === 'Cleanlisted').length,
+            total: filteredCitizens.length
           };
-        })
-      );
 
-      if (filters.province) {
-        const { data: lgus } = await supabase
-          .from('lgus')
-          .select('code, name')
-          .eq('province_code', filters.province)
-          .order('name');
+          // Calculate statistics for paid citizens at specific ages (exactly 80, 85, 90, 95, 100)
+          const specificAges = [80, 85, 90, 95, 100];
+          const paidCitizens = filteredCitizens.filter(c => c.status === 'Paid');
+          const totalPaid = paidCitizens.length;
+          
+          const paidBySpecificAge = specificAges.map(targetAge => {
+            const exactAgeCitizens = paidCitizens.filter(citizen => {
+              const age = new Date().getFullYear() - new Date(citizen.birth_date).getFullYear();
+              return age === targetAge; // Exact age match, not >= 
+            });
+            
+            const count = exactAgeCitizens.length;
+            
+            // Count by sex
+            const maleCount = exactAgeCitizens.filter(c => c.sex === 'Male').length;
+            const femaleCount = exactAgeCitizens.filter(c => c.sex === 'Female').length;
+            
+            // Cash gift amount based on age
+            const cashGift = targetAge === 100 ? 100000 : 10000;
+            
+            // Calculate percentage of all paid citizens who are at this specific age
+            return {
+              age: targetAge,
+              count,
+              maleCount,
+              femaleCount,
+              malePercentage: count > 0 ? (maleCount / count) * 100 : 0,
+              femalePercentage: count > 0 ? (femaleCount / count) * 100 : 0,
+              percentage: totalPaid > 0 ? (count / totalPaid) * 100 : 0,
+              cashGift,
+              totalAmount: count * cashGift
+            };
+          });
 
-        if (lgus) {
-          const lguStatsData = await Promise.all(
-            lgus.map(async (lgu) => {
-              const lguCitizens = filteredCitizens.filter(c => c.lgu_code === lgu.code);
+          const { data: allProvinces } = await supabase
+            .from('provinces')
+            .select('code, name')
+            .order('name');
+
+          const provinceStats = await Promise.all(
+            (allProvinces || []).map(async (province) => {
+              const provinceCitizens = filteredCitizens.filter(c => c.province_code === province.code);
               return {
-                name: lgu.name,
-                paid: lguCitizens.filter(c => c.status === 'Paid').length,
-                unpaid: lguCitizens.filter(c => c.status === 'Unpaid').length,
-                encoded: lguCitizens.filter(c => c.status === 'Encoded').length,
-                validated: lguCitizens.filter(c => c.status === 'Validated').length,
-                cleanlisted: lguCitizens.filter(c => c.status === 'Cleanlisted').length,
-                disqualified: lguCitizens.filter(c => c.status === 'Disqualified').length,
-                total: lguCitizens.length
+                name: province.name,
+                paid: provinceCitizens.filter(c => c.status === 'Paid').length,
+                unpaid: provinceCitizens.filter(c => c.status === 'Unpaid').length,
+                encoded: provinceCitizens.filter(c => c.status === 'Encoded').length,
+                validated: provinceCitizens.filter(c => c.status === 'Validated').length,
+                cleanlisted: provinceCitizens.filter(c => c.status === 'Cleanlisted').length,
+                liquidated: provinceCitizens.filter(c => c.status === 'Liquidated').length,
+                disqualified: provinceCitizens.filter(c => c.status === 'Disqualified').length,
+                total: provinceCitizens.length
               };
             })
           );
-          setLguStats(lguStatsData);
-        }
-      } else {
-        setLguStats([]);
-      }
 
-      const [
-        { count: provincesCount },
-        { count: lgusCount },
-        { count: barangaysCount }
-      ] = await Promise.all([
-        supabase.from('provinces').select('*', { count: 'exact', head: true }),
-        supabase.from('lgus').select('*', { count: 'exact', head: true }),
-        supabase.from('barangays').select('*', { count: 'exact', head: true })
-      ]);
+          if (filters.province) {
+            const { data: lgus } = await supabase
+              .from('lgus')
+              .select('code, name')
+              .eq('province_code', filters.province)
+              .order('name');
 
-      setStats({
-        totalCitizens: filteredCitizens.length,
-        provinces: provincesCount || 0,
-        lgus: lgusCount || 0,
-        barangays: barangaysCount || 0,
-        byStatus,
-        bySex,
-        byAge,
-        byQuarter,
-        paymentStats,
-        provinceStats
-      });
+            if (lgus) {
+              const lguStatsData = await Promise.all(
+                lgus.map(async (lgu) => {
+                  const lguCitizens = filteredCitizens.filter(c => c.lgu_code === lgu.code);
+                  return {
+                    name: lgu.name,
+                    paid: lguCitizens.filter(c => c.status === 'Paid').length,
+                    unpaid: lguCitizens.filter(c => c.status === 'Unpaid').length,
+                    encoded: lguCitizens.filter(c => c.status === 'Encoded').length,
+                    validated: lguCitizens.filter(c => c.status === 'Validated').length,
+                    cleanlisted: lguCitizens.filter(c => c.status === 'Cleanlisted').length,
+                    liquidated: lguCitizens.filter(c => c.status === 'Liquidated').length,
+                    disqualified: lguCitizens.filter(c => c.status === 'Disqualified').length,
+                    total: lguCitizens.length
+                  };
+                })
+              );
+              setLguStats(lguStatsData);
+            }
+          } else {
+            setLguStats([]);
+          }
+
+          const [
+            { count: provincesCount },
+            { count: lgusCount },
+            { count: barangaysCount }
+          ] = await Promise.all([
+            supabase.from('provinces').select('*', { count: 'exact', head: true }),
+            supabase.from('lgus').select('*', { count: 'exact', head: true }),
+            supabase.from('barangays').select('*', { count: 'exact', head: true })
+          ]);
+
+          setStats({
+            totalCitizens: filteredCitizens.length,
+            provinces: provincesCount || 0,
+            lgus: lgusCount || 0,
+            barangays: barangaysCount || 0,
+            byStatus,
+            bySex,
+            byAge,
+            byQuarter,
+            paymentStats,
+            provinceStats,
+            paidBySpecificAge
+          });
     } catch (error) {
       console.error('Error fetching stats:', error);
     } finally {
@@ -836,7 +893,108 @@ function Dashboard() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Paid by Specific Age Statistics */}
+      <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+        <h2 className="text-lg font-semibold mb-4">Paid Citizens by Specific Ages</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Analysis of citizens with "Paid" status at specific ages: 80, 85, 90, 95, and 100 years old
+        </p>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exact Age</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Count</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Male</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Female</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Cash Gift (PHP)</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount (PHP)</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {stats.paidBySpecificAge.map((ageGroup: any) => (
+                <tr key={ageGroup.age} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {ageGroup.age} years old
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 font-medium">
+                    {ageGroup.count}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-600 font-medium">
+                    {ageGroup.maleCount} ({ageGroup.malePercentage.toFixed(1)}%)
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-pink-600 font-medium">
+                    {ageGroup.femaleCount} ({ageGroup.femalePercentage.toFixed(1)}%)
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                    {ageGroup.percentage.toFixed(2)}%
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-600 font-medium">
+                    {ageGroup.cashGift?.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-indigo-600 font-medium">
+                    {ageGroup.totalAmount?.toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+              <tr className="bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  Total
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 font-medium">
+                  {stats.paidBySpecificAge.reduce((sum: number, item: any) => sum + item.count, 0)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-600 font-medium">
+                  {(() => {
+                    const totalMale = stats.paidBySpecificAge.reduce((sum: number, item: any) => sum + item.maleCount, 0);
+                    const totalCount = stats.paidBySpecificAge.reduce((sum: number, item: any) => sum + item.count, 0);
+                    const percentage = totalCount > 0 ? (totalMale / totalCount) * 100 : 0;
+                    return `${totalMale} (${percentage.toFixed(1)}%)`;
+                  })()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-pink-600 font-medium">
+                  {(() => {
+                    const totalFemale = stats.paidBySpecificAge.reduce((sum: number, item: any) => sum + item.femaleCount, 0);
+                    const totalCount = stats.paidBySpecificAge.reduce((sum: number, item: any) => sum + item.count, 0);
+                    const percentage = totalCount > 0 ? (totalFemale / totalCount) * 100 : 0;
+                    return `${totalFemale} (${percentage.toFixed(1)}%)`;
+                  })()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                  100%
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-600 font-medium">
+                  -
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-indigo-600 font-medium">
+                  {stats.paidBySpecificAge.reduce((sum: number, item: any) => sum + item.totalAmount, 0).toLocaleString()}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div className="mt-6 h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={stats.paidBySpecificAge}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="age" label={{ value: 'Exact Age (years)', position: 'insideBottom', offset: -5 }} />
+              <YAxis yAxisId="left" label={{ value: 'Count', angle: -90, position: 'insideLeft' }} />
+              <YAxis yAxisId="right" orientation="right" label={{ value: 'Percentage', angle: 90, position: 'insideRight' }} />
+              <Tooltip />
+              <Legend />
+              <Bar yAxisId="left" dataKey="count" name="Number of Paid Citizens" fill="#006400" />
+              <Bar yAxisId="right" dataKey="percentage" name="Percentage of Paid Citizens" fill="#FFA500" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="text-lg font-semibold mb-4">Status Distribution</h2>
           <div className="h-80">
@@ -929,7 +1087,14 @@ function Dashboard() {
   );
 }
 
-function StatCard({ title, value, icon, color }) {
+interface StatCardProps {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+  color: string;
+}
+
+function StatCard({ title, value, icon, color }: StatCardProps) {
   return (
     <div className={`${color} p-6 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md`}>
       <div className="flex items-center">

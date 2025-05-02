@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import EditModal from '../components/EditModal';
 import { useAuth } from '../contexts/AuthContext';
 import ViewModal from '../components/ViewModal';
+import { logAudit } from '../lib/audit';
 
 interface Filters {
   provinceCode: string;
@@ -804,12 +805,35 @@ function CitizenList() {
 
   const handleDelete = async (id: number) => {
     try {
+      // First fetch the record to be deleted for audit logging
+      const { data: oldRecord, error: fetchError } = await supabase
+        .from('citizens')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Delete the record
       const { error } = await supabase
         .from('citizens')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+      
+      // Log the deletion to audit trail
+      await logAudit({
+        action: 'delete',
+        table_name: 'citizens',
+        record_id: id.toString(),
+        details: { 
+          old: oldRecord,
+          type: 'Senior Citizen Delete Record'
+        },
+        staff_id: user?.id
+      });
+      
       toast.success('Record deleted successfully');
       fetchCitizens();
     } catch (error) {
@@ -822,12 +846,36 @@ function CitizenList() {
 
   const handleSaveEdit = async (updatedCitizen: Citizen) => {
     try {
+      // First fetch the original record for audit logging
+      const { data: oldRecord, error: fetchError } = await supabase
+        .from('citizens')
+        .select('*')
+        .eq('id', updatedCitizen.id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Update the record
       const { error } = await supabase
         .from('citizens')
         .update(updatedCitizen)
         .eq('id', updatedCitizen.id);
 
       if (error) throw error;
+      
+      // Log the update to audit trail
+      await logAudit({
+        action: 'update',
+        table_name: 'citizens',
+        record_id: updatedCitizen.id.toString(),
+        details: { 
+          old: oldRecord,
+          new: updatedCitizen,
+          type: 'Senior Citizen Update Record'
+        },
+        staff_id: user?.id
+      });
+      
       toast.success('Record updated successfully');
       fetchCitizens();
     } catch (error) {

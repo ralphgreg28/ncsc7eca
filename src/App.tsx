@@ -14,6 +14,7 @@ import AuditTrail from './pages/AuditTrail';
 import NotFound from './pages/NotFound';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import About from './pages/About';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
           <Route path="citizens/list" element={<CitizenList />} />
           <Route path="citizens/duplicates" element={<DuplicateCheck />} />
           <Route path="stakeholders" element={<StakeholdersDirectory />} />
+          <Route path="about" element={<About />} />
          
           <Route path="settings" element={<Settings />}>
             <Route index element={<Navigate to="address" replace />} />

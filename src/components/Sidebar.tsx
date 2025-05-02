@@ -1,4 +1,4 @@
-import { X, Home, Users, Settings, AlertTriangle, UserPlus, ChevronRight } from 'lucide-react';
+import { X, Home, Users, Settings, AlertTriangle, UserPlus, ChevronRight, Info } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -35,7 +35,8 @@ function Sidebar({ open, onClose }: SidebarProps) {
     { to: '/citizens/duplicates', icon: <AlertTriangle size={18} />, label: 'Duplicates' },
     ...(user?.position === 'Administrator' ? [
       { to: '/settings', icon: <Settings size={18} />, label: 'Settings' }
-    ] : [])
+    ] : []),
+    { to: '/about', icon: <Info size={18} />, label: 'About' }
   ];
 
   return (

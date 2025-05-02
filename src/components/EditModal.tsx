@@ -10,13 +10,19 @@ interface Citizen {
   extension_name: string | null;
   birth_date: string;
   sex: 'Male' | 'Female';
+  province_code: string;
+  lgu_code: string;
+  barangay_code: string;
   status: string;
   payment_date: string | null;
   remarks: string | null;
-  osca_id?: string | null;
-  rrn?: string | null;
+  osca_id: string;
+  rrn: string;
   validator?: string | null;
   validation_date?: string | null;
+  encoded_date: string;
+  encoded_by: string | null;
+  created_at: string;
 }
 
 interface AddressDetails {

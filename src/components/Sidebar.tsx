@@ -27,12 +27,12 @@ function Sidebar({ open, onClose }: SidebarProps) {
     { 
       to: '/citizens/new', 
       icon: <Users size={18} />, 
-      label: 'Registration',
+      label: 'SC Registration',
       badge: 'New'
     },
-    { to: '/citizens/list', icon: <Users size={18} />, label: 'Records' },
-    { to: '/stakeholders', icon: <UserPlus size={18} />, label: 'Stakeholders' },
-    { to: '/citizens/duplicates', icon: <AlertTriangle size={18} />, label: 'Duplicates' },
+    { to: '/citizens/list', icon: <Users size={18} />, label: 'Senior Citizens Records' },
+    { to: '/stakeholders', icon: <UserPlus size={18} />, label: 'Stakeholders Directory' },
+    { to: '/citizens/duplicates', icon: <AlertTriangle size={18} />, label: 'Duplicate Check' },
     ...(user?.position === 'Administrator' ? [
       { to: '/settings', icon: <Settings size={18} />, label: 'Settings' }
     ] : []),

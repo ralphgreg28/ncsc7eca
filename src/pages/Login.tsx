@@ -78,9 +78,13 @@ function Login() {
             />
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-1">
-            NCSC_7 ECA_IMS
+            NCSC_7 Expanded Centenarian
           </h1>
-          <div className="w-16 h-1 bg-blue-500 rounded-full mb-6"></div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-1">
+            Information Management System
+          </h1>
+          
+          <div className="w-20 h-1 bg-blue-500 rounded-full mb-6"></div>
           
           <h2 className="text-xl font-semibold text-gray-700">
             Welcome!

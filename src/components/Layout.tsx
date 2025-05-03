@@ -145,7 +145,7 @@ function Layout() {
       <footer className="bg-gray-800 text-gray-300 py-4 text-center text-sm shadow-inner">
         <div className="max-w-7xl mx-auto px-4">
           <p>Developed by: Ralph Jiene D. Gregorio, Project Development Officer III, Central Visayas</p>
-          <p className="text-xs mt-1 text-gray-400">© {new Date().getFullYear()} NCSC Regional Office VII - Central Visayas</p>
+          <p className="text-xs mt-1 text-gray-400">© {new Date().getFullYear()} NCSC Clustered Regional Office IV</p>
         </div>
       </footer>
 

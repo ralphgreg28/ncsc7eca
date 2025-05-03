@@ -7,8 +7,8 @@ function About() {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-8 text-white">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">About the Developer</h1>
-          <p className="text-blue-100">NCSC 7 ECA Information Management System</p>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">About the Developer and the System Features.</h1>
+          <p className="text-blue-100">NCSC 7 Expanded Centenarian Information Management System</p>
         </div>
 
         {/* Developer Info */}
@@ -17,7 +17,7 @@ function About() {
             <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 mx-auto md:mx-0">
               {/* Placeholder for developer photo - replace with actual photo URL if available */}
               <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-300">
-                <span className="text-4xl font-bold">RG</span>
+                <span className="text-4xl font-bold">RJG</span>
               </div>
             </div>
             
@@ -27,7 +27,9 @@ function About() {
               <p className="text-gray-600 mb-4">
                 NCSC Regional Office VII - Central Visayas
               </p>
-              
+              <p className="text-gray-600 mb-4">
+                Clustered Regional Office VII
+              </p>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center">
                   <Mail className="h-5 w-5 text-blue-600 mr-2" />
@@ -55,7 +57,7 @@ function About() {
           
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-medium text-blue-800 mb-2">Citizen Registration</h4>
+              <h4 className="font-medium text-blue-800 mb-2">Senior Citizen Registration</h4>
               <p className="text-sm text-gray-600">
                 Comprehensive form for registering citizens with validation and duplicate checking.
               </p>
@@ -69,7 +71,7 @@ function About() {
             </div>
             
             <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-medium text-blue-800 mb-2">Stakeholder Directory</h4>
+              <h4 className="font-medium text-blue-800 mb-2">Stakeholders Directory</h4>
               <p className="text-sm text-gray-600">
                 Maintain a directory of stakeholders and partners for easy reference.
               </p>

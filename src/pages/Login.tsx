@@ -83,7 +83,7 @@ function Login() {
             NCSC_7 Expanded Centenarian
           </h1>
           <h1 className="text-2xl font-bold text-gray-800 mb-1">
-            Information Management System
+            Information Management System 2.0
           </h1>
           
           <div className="w-20 h-1 bg-blue-500 rounded-full mb-6"></div>

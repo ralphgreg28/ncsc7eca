@@ -1,6 +1,55 @@
 export interface Database {
   public: {
     Tables: {
+      broadcast_messages: {
+        Row: {
+          id: number
+          created_at: string
+          created_by: string | null
+          message: string
+          is_active: boolean
+          start_date: string
+          end_date: string
+        }
+        Insert: {
+          id?: number
+          created_at?: string
+          created_by?: string | null
+          message: string
+          is_active?: boolean
+          start_date: string
+          end_date: string
+        }
+        Update: {
+          id?: number
+          created_at?: string
+          created_by?: string | null
+          message?: string
+          is_active?: boolean
+          start_date?: string
+          end_date?: string
+        }
+      }
+      broadcast_message_views: {
+        Row: {
+          id: number
+          message_id: number
+          staff_id: string
+          viewed_at: string
+        }
+        Insert: {
+          id?: number
+          message_id: number
+          staff_id: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: number
+          message_id?: number
+          staff_id?: string
+          viewed_at?: string
+        }
+      }
       citizens: {
         Row: {
           id: number

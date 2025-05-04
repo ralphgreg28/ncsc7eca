@@ -51,11 +51,7 @@ function Navbar({ onMenuClick, className = '' }: NavbarProps) {
                   <h1 className="font-bold text-sm text-blue-800 leading-tight">
                     NCSC 7 <span className="hidden sm:inline">- Central Visayas</span>
                   </h1>
-                  <img 
-                    src="https://cthemydbthfjlvtuqdnu.supabase.co/storage/v1/object/public/logos//favicon.svg" 
-                    alt="Favicon" 
-                    className="h-3 w-3 ml-1 hidden sm:block" 
-                  />
+                
                 </div>
                 <span className="text-xs text-blue-600 hidden sm:block">ECA Information Management System</span>
               </div>

@@ -28,7 +28,7 @@ function Sidebar({ open, onClose }: SidebarProps) {
       to: '/citizens/new', 
       icon: <Users size={18} />, 
       label: 'SC Registration',
-      badge: 'New'
+      badge: 'Hot!'
     },
     { to: '/citizens/list', icon: <Users size={18} />, label: 'Senior Citizens Records' },
     { to: '/stakeholders', icon: <UserPlus size={18} />, label: 'Stakeholders Directory' },

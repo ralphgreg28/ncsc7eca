@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/Layout';
+import BroadcastMessageAlert from './components/BroadcastMessageAlert';
 import Dashboard from './pages/Dashboard';
 import CitizenForm from './pages/CitizenForm';
 import CitizenList from './pages/CitizenList';
@@ -9,6 +10,7 @@ import Settings from './pages/Settings';
 import AddressManagement from './pages/AddressManagement';
 import ImportExport from './pages/ImportExport';
 import UserManagement from './pages/UserManagement';
+import BroadcastMessages from './pages/BroadcastMessages';
 import StakeholdersDirectory from './pages/StakeholdersDirectory';
 import AuditTrail from './pages/AuditTrail';
 import NotFound from './pages/NotFound';
@@ -19,6 +21,7 @@ import About from './pages/About';
 function App() {
   return (
     <AuthProvider>
+      <BroadcastMessageAlert />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -32,7 +35,8 @@ function App() {
           <Route path="about" element={<About />} />
          
           <Route path="settings" element={<Settings />}>
-            <Route index element={<Navigate to="address" replace />} />
+            <Route index element={<Navigate to="broadcast" replace />} />
+            <Route path="broadcast" element={<BroadcastMessages />} />
             <Route path="address" element={<AddressManagement />} />
             <Route path="import-export" element={<ImportExport />} />
             <Route path="users" element={<UserManagement />} />

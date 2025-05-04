@@ -57,6 +57,8 @@ function Login() {
 
       // Store user info in localStorage
       localStorage.setItem('user', JSON.stringify(staff));
+      
+      // Redirect to dashboard
       window.location.href = '/';
     } catch (error) {
       console.error('Login error:', error);

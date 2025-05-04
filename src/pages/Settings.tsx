@@ -1,4 +1,4 @@
-import { ChevronRight, Database, FileText, Home, Users } from 'lucide-react';
+import { ChevronRight, Database, FileText, Home, MessageSquare, Users } from 'lucide-react';
 import { Link, Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -12,6 +12,12 @@ function Settings() {
   }
 
   const menuItems = [
+    {
+      title: 'Broadcast Messages',
+      path: '/settings/broadcast',
+      icon: <MessageSquare className="w-5 h-5" />,
+      description: 'Manage temporary messages shown to users after login.',
+    },
     {
       title: 'Address Management',
       path: '/settings/address',

@@ -173,12 +173,21 @@ function Register() {
                   <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  {...register('username')}
+                  {...register('username', {
+                    onChange: (e) => {
+                      // Only allow letters and numbers and convert to lowercase
+                      const value = e.target.value;
+                      const sanitized = value.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                      if (value !== sanitized) {
+                        e.target.value = sanitized;
+                      }
+                    }
+                  })}
                   id="username"
                   type="text"
                   autoComplete="username"
                   className={`appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border ${errors.username ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
-                  placeholder="Enter username"
+                  placeholder="Enter username (letters and numbers only)"
                 />
                 {touchedFields.username && !errors.username && (
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">

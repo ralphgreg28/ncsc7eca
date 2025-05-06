@@ -15,7 +15,7 @@ interface User {
   extension_name: string | null;
   birth_date: string;
   sex: 'Male' | 'Female';
-  position: 'Administrator' | 'PDO';
+  position: 'Administrator' | 'PDO' | 'LGU' | 'NCSC Admin';
   status: 'Active' | 'Inactive';
   last_login: string | null;
   assignments?: Assignment[];
@@ -31,7 +31,7 @@ interface UserFormData {
   extension_name?: string;
   birth_date: string;
   sex: 'Male' | 'Female';
-  position: 'Administrator' | 'PDO';
+  position: 'Administrator' | 'PDO' | 'LGU' | 'NCSC Admin';
   status: 'Active' | 'Inactive';
 }
 
@@ -389,8 +389,8 @@ function UserManagement() {
 
         if (error) throw error;
         
-        // If the user is a PDO and there are assignments, update them
-        if (data.position === 'PDO' && assignments.length > 0) {
+        // If the user is a PDO or LGU and there are assignments, update them
+        if ((data.position === 'PDO' || data.position === 'LGU') && assignments.length > 0) {
           // Check if the staff_assignments table exists by querying it
           const { error: tableCheckError } = await supabase
             .from('staff_assignments')
@@ -454,8 +454,8 @@ function UserManagement() {
 
         if (error) throw error;
         
-        // If the new user is a PDO and there are assignments, save them
-        if (data.position === 'PDO' && assignments.length > 0 && newUser && newUser.length > 0) {
+        // If the new user is a PDO or LGU and there are assignments, save them
+        if ((data.position === 'PDO' || data.position === 'LGU') && assignments.length > 0 && newUser && newUser.length > 0) {
           const userId = newUser[0].id;
           
           // Check if the staff_assignments table exists by querying it
@@ -540,8 +540,8 @@ function UserManagement() {
     setSelectedLgu('');
     setLgus([]);
     
-    // If user is a PDO, fetch their assignments
-    if (user.position === 'PDO') {
+    // If user is a PDO or LGU, fetch their assignments
+    if (user.position === 'PDO' || user.position === 'LGU') {
       await fetchAssignments(user.id);
     }
     
@@ -560,7 +560,7 @@ function UserManagement() {
       extension_name: '',
       birth_date: '',
       sex: 'Male',
-      position: 'PDO',
+      position: 'Administrator' as 'Administrator' | 'PDO' | 'LGU' | 'NCSC Admin',
       status: 'Active',
     });
     
@@ -898,6 +898,10 @@ function UserManagement() {
                     >
                       <option value="Administrator">Administrator</option>
                       <option value="PDO">PDO</option>
+                      <option value="LGU">LGU Stakeholder</option>
+                      <option value="NCSC Admin">NCSC Stakeholder</option>
+
+
                     </select>
                   </div>
                   
@@ -915,7 +919,7 @@ function UserManagement() {
               </div>
 
               {/* PDO Assignments Section - Only visible for PDO users */}
-              {watchPosition === 'PDO' && (
+              {(watchPosition === 'PDO' || watchPosition === 'LGU') && (
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">
                     Province & LGU Assignments

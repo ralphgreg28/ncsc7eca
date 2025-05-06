@@ -45,7 +45,7 @@ function Register() {
     
     switch (currentStep) {
       case 1:
-        fieldsToValidate = ['username', 'email', 'password', 'confirmPassword'];
+        fieldsToValidate = ['username', 'email', 'password', 'confirmPassword', 'position'];
         break;
       case 2:
         fieldsToValidate = ['firstName', 'lastName'];
@@ -114,7 +114,7 @@ function Register() {
           extension_name: formattedData.extensionName,
           birth_date: formattedData.birthDate,
           sex: formattedData.sex,
-          position: 'PDO',
+          position: formattedData.position,
           status: 'Inactive' 
         });
 
@@ -131,8 +131,8 @@ function Register() {
   };
 
   // Calculate step completion status
-  const isStep1Complete = !errors.username && !errors.email && !errors.password && !errors.confirmPassword && 
-    touchedFields.username && touchedFields.email && touchedFields.password && touchedFields.confirmPassword;
+  const isStep1Complete = !errors.username && !errors.email && !errors.position && !errors.password && !errors.confirmPassword && 
+    touchedFields.username && touchedFields.email && touchedFields.position && touchedFields.password && touchedFields.confirmPassword;
   
   const isStep2Complete = !errors.firstName && !errors.lastName && 
     touchedFields.firstName && touchedFields.lastName;
@@ -241,6 +241,39 @@ function Register() {
               )}
             </div>
 
+            {/* Position */}
+            <div>
+              <label htmlFor="position" className="block text-sm font-medium text-gray-700">
+                Position <span className="text-red-500">*</span>
+              </label>
+              <div className="relative mt-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <UserCircle className="h-5 w-5 text-gray-400" />
+                </div>
+                <select
+                  {...register('position')}
+                  id="position"
+                  className={`appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border ${errors.position ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
+                >
+                  <option value="">Select position...</option>              
+                  <option value="PDO">Project Development Officer</option>
+                  <option value="LGU">LGU Stakeholder (OSCA, LSWDO, Focal)</option>
+                  <option value="NCSC Admin">NCSC Staff</option>
+                  <option value="Administrator">Administrator</option>
+                </select>
+                {touchedFields.position && !errors.position && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  </div>
+                )}
+              </div>
+              {errors.position && (
+                <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.position.message}
+                </p>
+              )}
+            </div>
+
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -331,6 +364,12 @@ function Register() {
               )}
             </div>
           </div>
+
+
+
+
+
+
         );
       case 2:
         return (
@@ -563,7 +602,7 @@ function Register() {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg transition-all duration-300">
         <div>
           <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
-            NCSC Staff Registration
+            NCSC Staff / LGU Stakeholders Registration
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Already have an account?{' '}

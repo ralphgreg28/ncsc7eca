@@ -30,6 +30,9 @@ export const registerSchema = z.object({
   password: passwordSchema,
   confirmPassword: passwordSchema,
   email: z.string().email('Invalid email format'),
+  position: z.enum(['Administrator', 'PDO', 'LGU', 'NCSC Admin'], {
+    errorMap: () => ({ message: 'Position is required' }),
+  }),
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   middleName: z.string().optional(),

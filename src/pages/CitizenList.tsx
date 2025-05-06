@@ -129,8 +129,8 @@ function CitizenList() {
   ];
 
   useEffect(() => {
-    if (user && user.position === 'PDO') {
-      // For PDO users, first fetch assignments, then load data
+    if (user && (user.position === 'PDO' || user.position === 'LGU')) {
+      // For PDO and LGU users, first fetch assignments, then load data
       // Don't load any data until assignments are loaded
       setLoading(true); // Keep loading state true until assignments are loaded
       fetchUserAssignments();
@@ -141,20 +141,23 @@ function CitizenList() {
     }
   }, [user]);
 
-  // Only fetch citizens when assignments are loaded for PDO users
+  // Only fetch citizens when assignments are loaded for PDO or LGU users
   useEffect(() => {
-    if (user?.position === 'PDO' && !loadingAssignments) {
+    if ((user?.position === 'PDO' || user?.position === 'LGU') && !loadingAssignments) {
       fetchCitizens();
     }
   }, [userAssignments, loadingAssignments]);
 
-  // Fetch assignments for PDO users
+  // Fetch assignments for PDO and LGU users
   const fetchUserAssignments = async () => {
     if (!user) return;
     
     try {
       setLoadingAssignments(true);
       
+      
+      
+      // For PDO users, continue with the normal assignment fetching
       // Check if the staff_assignments table exists
       const { error: tableCheckError } = await supabase
         .from('staff_assignments')
@@ -362,14 +365,14 @@ function CitizenList() {
     try {
       setLoading(true);
       
-      // For PDO users, don't fetch any data until assignments are loaded
-      if (user?.position === 'PDO' && loadingAssignments) {
+      // For PDO or LGU users, don't fetch any data until assignments are loaded
+      if ((user?.position === 'PDO' || user?.position === 'LGU') && loadingAssignments) {
         // Return early without fetching any data
         return;
       }
       
-      // For PDO users with no assignments, show no data
-      if (user?.position === 'PDO' && userAssignments.length === 0) {
+      // For PDO or LGU users with no assignments, show no data
+      if ((user?.position === 'PDO' || user?.position === 'LGU') && userAssignments.length === 0) {
         setCitizens([]);
         setTotalRecords(0);
         setLoading(false);
@@ -386,8 +389,8 @@ function CitizenList() {
         );
       }
 
-      // For PDO users, restrict to assigned provinces and LGUs
-      if (user && user.position === 'PDO' && userAssignments.length > 0) {
+      // For PDO or LGU users, restrict to assigned provinces and LGUs
+      if (user && (user.position === 'PDO' || user.position === 'LGU') && userAssignments.length > 0) {
         // Get unique province codes from assignments
         const assignedProvinceCodes = [...new Set(userAssignments.map(a => a.province_code))];
         
@@ -561,15 +564,15 @@ function CitizenList() {
       setExportLoading(true);
       toast.info('Starting export...');
       
-      // For PDO users, don't export any data until assignments are loaded
-      if (user?.position === 'PDO' && loadingAssignments) {
+      // For PDO or LGU users, don't export any data until assignments are loaded
+      if ((user?.position === 'PDO' || user?.position === 'LGU') && loadingAssignments) {
         toast.warning('Please wait until your assignments are loaded before exporting data.');
         setExportLoading(false);
         return;
       }
       
-      // For PDO users with no assignments, show no data
-      if (user?.position === 'PDO' && userAssignments.length === 0) {
+      // For PDO or LGU users with no assignments, show no data
+      if ((user?.position === 'PDO' || user?.position === 'LGU') && userAssignments.length === 0) {
         toast.info('No data to export - You have no assigned areas.');
         setExportLoading(false);
         return;
@@ -585,8 +588,8 @@ function CitizenList() {
         );
       }
 
-      // For PDO users, restrict to assigned provinces and LGUs
-      if (user && user.position === 'PDO' && userAssignments.length > 0) {
+      // For PDO or LGU users, restrict to assigned provinces and LGUs
+      if (user && (user.position === 'PDO' || user.position === 'LGU') && userAssignments.length > 0) {
         // Get unique province codes from assignments
         const assignedProvinceCodes = [...new Set(userAssignments.map(a => a.province_code))];
         
@@ -1088,7 +1091,7 @@ function CitizenList() {
         </div>
       )}
 
-      {loadingAssignments && user?.position === 'PDO' && (
+      {loadingAssignments && (user?.position === 'PDO' || user?.position === 'LGU') && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center">
           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-3"></div>
           <p className="text-blue-700">
@@ -1289,6 +1292,7 @@ function CitizenList() {
   >
     <Eye className="h-4 w-4" />
   </button>
+  {(user?.position === 'Administrator' || user?.position === 'LGU') && (  
   <button
     onClick={() => setEditingCitizen(citizen)}
     className="text-blue-600 hover:text-blue-900 transition-colors duration-150 p-1 rounded-full"
@@ -1296,6 +1300,7 @@ function CitizenList() {
   >
     <Edit className="h-4 w-4" />
   </button>
+  )}
   {user?.position === 'Administrator' && (
     <button
       onClick={() => setShowDeleteConfirm(citizen.id)}

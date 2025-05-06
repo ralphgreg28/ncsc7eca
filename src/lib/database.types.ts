@@ -286,7 +286,7 @@ export interface Database {
           extension_name: string | null
           birth_date: string
           sex: 'Male' | 'Female'
-          position: 'Administrator' | 'PDO'
+          position: 'Administrator' | 'PDO' | 'LGU' | 'NCSC Admin'
           status: 'Active' | 'Inactive'
           last_login: string | null
         }
@@ -302,7 +302,7 @@ export interface Database {
           extension_name?: string | null
           birth_date: string
           sex: 'Male' | 'Female'
-          position: 'Administrator' | 'PDO'
+          position: 'Administrator' | 'PDO' | 'LGU' | 'NCSC Admin'
           status?: 'Active' | 'Inactive'
           last_login?: string | null
         }
@@ -318,7 +318,7 @@ export interface Database {
           extension_name?: string | null
           birth_date?: string
           sex?: 'Male' | 'Female'
-          position?: 'Administrator' | 'PDO'
+          position?: 'Administrator' | 'PDO' | 'LGU' | 'NCSC Admin'
           status?: 'Active' | 'Inactive'
           last_login?: string | null
         }

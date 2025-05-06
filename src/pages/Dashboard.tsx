@@ -842,7 +842,7 @@ function Dashboard() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LGU</th>
+                    <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LGU</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Paid</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unpaid</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Encoded</th>
@@ -857,31 +857,34 @@ function Dashboard() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {lguStats.map((lgu) => (
                     <tr key={lgu.name} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-2 py-1 whitespace-nowrap text-sm font-small text-gray-900">
                         {lgu.name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 font-small">
                         {lgu.paid}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-yellow-600 font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-yellow-600 font-small">
                         {lgu.unpaid}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600 font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600 font-small">
                         {lgu.encoded}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600 font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600 font-small">
                         {lgu.validated}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600 font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600 font-small">
                         {lgu.cleanlisted}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600 font-medium">
-                        {lgu.disqualified}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600 font-small">
+                        {lgu.liquidated}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600 font-small">
+                        {lgu.disqualified} 
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-small">
                         {lgu.total}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-900">
                         {lgu.total > 0 ? ((lgu.paid / lgu.total) * 100).toFixed(1) : '0.0'}%
                       </td>
                     </tr>

@@ -1,4 +1,4 @@
-import { X, Home, Users, Settings, AlertTriangle, UserPlus, ChevronRight, Info } from 'lucide-react';
+import { X, Home, Users, Settings, AlertTriangle, UserPlus, ChevronRight, Info, ClipboardList } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -31,6 +31,7 @@ function Sidebar({ open, onClose }: SidebarProps) {
       badge: 'Hot!'
     },
     { to: '/citizens/list', icon: <Users size={18} />, label: 'Senior Citizens Records' },
+    { to: '/citizens/encoded-monitor', icon: <ClipboardList size={18} />, label: 'Encoded Status Monitor' },
     { to: '/stakeholders', icon: <UserPlus size={18} />, label: 'Stakeholders Directory' },
     { to: '/citizens/duplicates', icon: <AlertTriangle size={18} />, label: 'Duplicate Check' },
     ...(user?.position === 'Administrator' ? [

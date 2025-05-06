@@ -32,7 +32,7 @@ interface PaginationState {
 
 // The database is configured to only store the 50 most recent audit logs
 // This is enforced by a trigger in the database
-const MAX_LOGS = 50;
+const MAX_LOGS = 500;
 
 function AuditTrail() {
   const [logs, setLogs] = useState<AuditLog[]>([]);

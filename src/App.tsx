@@ -13,6 +13,7 @@ import UserManagement from './pages/UserManagement';
 import BroadcastMessages from './pages/BroadcastMessages';
 import StakeholdersDirectory from './pages/StakeholdersDirectory';
 import AuditTrail from './pages/AuditTrail';
+import EncodedStatusMonitor from './pages/EncodedStatusMonitor';
 import NotFound from './pages/NotFound';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -31,6 +32,7 @@ function App() {
           <Route path="citizens/new" element={<CitizenForm />} />
           <Route path="citizens/list" element={<CitizenList />} />
           <Route path="citizens/duplicates" element={<DuplicateCheck />} />
+          <Route path="citizens/encoded-monitor" element={<EncodedStatusMonitor />} />
           <Route path="stakeholders" element={<StakeholdersDirectory />} />
           <Route path="about" element={<About />} />
          

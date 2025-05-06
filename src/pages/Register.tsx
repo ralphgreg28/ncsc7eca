@@ -212,7 +212,16 @@ function Register() {
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  {...register('email')}
+                  {...register('email', {
+                    onChange: (e) => {
+                      // Format email: convert to lowercase and remove spaces
+                      const value = e.target.value;
+                      const formatted = value.toLowerCase().replace(/\s/g, '');
+                      if (value !== formatted) {
+                        e.target.value = formatted;
+                      }
+                    }
+                  })}
                   id="email"
                   type="email"
                   autoComplete="email"
@@ -339,7 +348,21 @@ function Register() {
                     <UserCircle className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    {...register('lastName')}
+                    {...register('lastName', {
+                      onChange: (e) => {
+                        // Format to proper case as user types
+                        const value = e.target.value;
+                        const formatted = formatName(value);
+                        if (value !== formatted && e.target.selectionStart) {
+                          // Store cursor position
+                          const cursorPosition = e.target.selectionStart;
+                          // Update value
+                          e.target.value = formatted;
+                          // Restore cursor position
+                          e.target.setSelectionRange(cursorPosition, cursorPosition);
+                        }
+                      }
+                    })}
                     id="lastName"
                     type="text"
                     className={`appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border ${errors.lastName ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
@@ -367,7 +390,21 @@ function Register() {
                     <UserCircle className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    {...register('firstName')}
+                    {...register('firstName', {
+                      onChange: (e) => {
+                        // Format to proper case as user types
+                        const value = e.target.value;
+                        const formatted = formatName(value);
+                        if (value !== formatted && e.target.selectionStart) {
+                          // Store cursor position
+                          const cursorPosition = e.target.selectionStart;
+                          // Update value
+                          e.target.value = formatted;
+                          // Restore cursor position
+                          e.target.setSelectionRange(cursorPosition, cursorPosition);
+                        }
+                      }
+                    })}
                     id="firstName"
                     type="text"
                     className={`appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border ${errors.firstName ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
@@ -397,7 +434,21 @@ function Register() {
                     <UserCircle className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    {...register('middleName')}
+                    {...register('middleName', {
+                      onChange: (e) => {
+                        // Format to proper case as user types
+                        const value = e.target.value;
+                        const formatted = formatName(value);
+                        if (value !== formatted && e.target.selectionStart) {
+                          // Store cursor position
+                          const cursorPosition = e.target.selectionStart;
+                          // Update value
+                          e.target.value = formatted;
+                          // Restore cursor position
+                          e.target.setSelectionRange(cursorPosition, cursorPosition);
+                        }
+                      }
+                    })}
                     id="middleName"
                     type="text"
                     className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors duration-200"
@@ -414,13 +465,23 @@ function Register() {
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <UserCircle className="h-5 w-5 text-gray-400" />
                   </div>
-                  <input
+                  <select
                     {...register('extensionName')}
                     id="extensionName"
-                    type="text"
-                    className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors duration-200"
-                    placeholder="Extension name (Jr., Sr., III, etc.)"
-                  />
+                    className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors duration-200"
+                  >
+                    <option value="">None</option>
+                    <option value="Jr.">Jr.</option>
+                    <option value="Sr.">Sr.</option>
+                    <option value="I">I</option>
+                    <option value="II">II</option>
+                    <option value="III">III</option>
+                    <option value="IV">IV</option>
+                    <option value="V">V</option>
+                    <option value="MD">MD</option>
+                    <option value="PhD">PhD</option>
+                    <option value="Esq.">Esq.</option>
+                  </select>
                 </div>
               </div>
             </div>

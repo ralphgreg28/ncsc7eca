@@ -574,7 +574,7 @@ const deleteRecord = async (citizenId: number) => {
                 {...register('oscaId')}
                 className={`border ${errors.oscaId ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
                 placeholder="Enter OSCA ID (optional)"
-                ref={oscaIdRef}
+              // ref={oscaIdRef}
                 onChange={handleUppercase}
               />
               {errors.oscaId && <p className="form-error">{errors.oscaId.message}</p>}

@@ -1292,7 +1292,7 @@ function CitizenList() {
   >
     <Eye className="h-4 w-4" />
   </button>
-  {(user?.position === 'Administrator' || user?.position === 'LGU') && (  
+  {(user?.position === 'Administrator' || user?.position === 'PDO') && (  
   <button
     onClick={() => setEditingCitizen(citizen)}
     className="text-blue-600 hover:text-blue-900 transition-colors duration-150 p-1 rounded-full"

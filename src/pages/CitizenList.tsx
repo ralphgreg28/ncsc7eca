@@ -899,31 +899,59 @@ function CitizenList() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="btn-outline flex items-center"
+            className={`flex items-center px-4 py-2 rounded-md font-medium transition-colors duration-150 ${
+              showFilters 
+                ? 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100' 
+                : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
+            }`}
           >
             <Filter className="h-5 w-5 mr-2" />
             {showFilters ? 'Hide Filters' : 'Show Filters'}
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className={`h-5 w-5 ml-2 transition-transform duration-200 ${showFilters ? 'transform rotate-180' : ''}`} 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
           </button>
           <button 
             onClick={handleExport}
             className="btn-primary flex items-center"
             disabled={exportLoading}
           >
-            <Download className="h-5 w-5 mr-2" />
-            {exportLoading ? 'Exporting...' : 'Export to CSV'}
+            {exportLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <span>Exporting...</span>
+              </>
+            ) : (
+              <>
+                <Download className="h-5 w-5 mr-2" />
+                <span>Export to CSV</span>
+              </>
+            )}
           </button>
         </div>
       </div>
 
       {showFilters && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <Filter className="h-5 w-5 mr-2 text-blue-500" />
+              Filters
+            </h2>
             <button
               onClick={resetFilters}
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
             >
-              Reset Filters
+              <span className="mr-1">Reset All</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
             </button>
           </div>
 
@@ -1068,24 +1096,67 @@ function CitizenList() {
             </div>
           </div>
 
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              Status Filter
             </label>
             <div className="flex flex-wrap gap-2">
-              {statusOptions.map(status => (
-                <button
-                  key={status}
-                  onClick={() => toggleStatus(status)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    filters.status.includes(status)
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
+              {statusOptions.map(status => {
+                const isSelected = filters.status.includes(status);
+                let bgColor, textColor;
+                
+                switch(status) {
+                  case 'Encoded':
+                    bgColor = isSelected ? 'bg-gray-200' : 'bg-gray-100';
+                    textColor = isSelected ? 'text-gray-900' : 'text-gray-700';
+                    break;
+                  case 'Validated':
+                    bgColor = isSelected ? 'bg-blue-200' : 'bg-blue-50';
+                    textColor = isSelected ? 'text-blue-900' : 'text-blue-700';
+                    break;
+                  case 'Cleanlisted':
+                    bgColor = isSelected ? 'bg-green-200' : 'bg-green-50';
+                    textColor = isSelected ? 'text-green-900' : 'text-green-700';
+                    break;
+                  case 'Paid':
+                    bgColor = isSelected ? 'bg-emerald-200' : 'bg-emerald-50';
+                    textColor = isSelected ? 'text-emerald-900' : 'text-emerald-700';
+                    break;
+                  case 'Unpaid':
+                    bgColor = isSelected ? 'bg-yellow-200' : 'bg-yellow-50';
+                    textColor = isSelected ? 'text-yellow-900' : 'text-yellow-700';
+                    break;
+                  case 'Liquidated':
+                    bgColor = isSelected ? 'bg-purple-200' : 'bg-purple-50';
+                    textColor = isSelected ? 'text-purple-900' : 'text-purple-700';
+                    break;
+                  case 'Disqualified':
+                    bgColor = isSelected ? 'bg-red-200' : 'bg-red-50';
+                    textColor = isSelected ? 'text-red-900' : 'text-red-700';
+                    break;
+                  default:
+                    bgColor = isSelected ? 'bg-blue-200' : 'bg-blue-50';
+                    textColor = isSelected ? 'text-blue-900' : 'text-blue-700';
+                }
+                
+                return (
+                  <button
+                    key={status}
+                    onClick={() => toggleStatus(status)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium ${bgColor} ${textColor} transition-colors duration-150 hover:shadow-sm flex items-center`}
+                  >
+                    {isSelected && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                    {status}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -1104,19 +1175,21 @@ function CitizenList() {
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
-              <tr className="bg-gray-50">
+              <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 <th 
                   onClick={() => handleSort('last_name')}
                   className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
                 >
                   <div className="flex items-center space-x-1">
                     <span>Name</span>
-                    {getSortIcon('last_name')}
+                    <div className="w-4 h-4 flex items-center justify-center">
+                      {getSortIcon('last_name')}
+                    </div>
                   </div>
                 </th>
                 <th 
                   onClick={() => handleSort('birth_date')}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                  className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
                 >
                   <div className="flex items-center space-x-1">
                     <span>Birth Date</span>
@@ -1125,19 +1198,19 @@ function CitizenList() {
                 </th>
                 <th 
                   onClick={() => handleSort('sex')}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                  className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
                 >
                   <div className="flex items-center space-x-1">
                     <span>Sex</span>
                     {getSortIcon('sex')}
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Address
                 </th>
                 <th 
                   onClick={() => handleSort('status')}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                  className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
                 >
                   <div className="flex items-center space-x-1">
                     <span>Status</span>
@@ -1146,7 +1219,7 @@ function CitizenList() {
                 </th>
                 <th 
                   onClick={() => handleSort('payment_date')}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                  className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
                 >
                   <div className="flex items-center space-x-1">
                     <span>Payment Date</span>
@@ -1158,7 +1231,7 @@ function CitizenList() {
                 </th>
 <th 
                   onClick={() => handleSort('created_at')}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                  className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
                 >
                   <div className="flex items-center space-x-1">
                     <span>Encoded Date</span>
@@ -1166,7 +1239,7 @@ function CitizenList() {
                   </div>
                 </th>
                
-                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -1174,19 +1247,21 @@ function CitizenList() {
             <tbody className="divide-y divide-gray-200 bg-white">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center">
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                      <span className="ml-2 text-gray-500">Loading...</span>
+                  <td colSpan={9} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-t-2 border-blue-500 mb-4"></div>
+                      <span className="text-gray-500 text-lg">Loading records...</span>
+                      <p className="text-gray-400 text-sm mt-2">Please wait while we fetch the data</p>
                     </div>
                   </td>
                 </tr>
               ) : citizens.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
                     <div className="flex flex-col items-center justify-center">
-                      <AlertTriangle className="h-8 w-8 text-gray-400 mb-2" />
-                      <p>No records found</p>
+                      <AlertTriangle className="h-12 w-12 text-gray-400 mb-3" />
+                      <p className="text-lg font-medium">No records found</p>
+                      <p className="text-gray-400 text-sm mt-2">Try adjusting your filters to see more results</p>
                     </div>
                   </td>
                 </tr>
@@ -1196,10 +1271,10 @@ function CitizenList() {
                   return (
                     <tr 
                       key={citizen.id} 
-                      className="hover:bg-gray-50 transition-colors duration-150"
+                      className="hover:bg-gray-50 transition-colors duration-150 group"
                     >
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900 whitespace-nowrap group-hover:text-blue-700 transition-colors duration-150">
                           {citizen.last_name},
                         </div>
                         <div className="text-sm font-medium text-gray-900 whitespace-nowrap">
@@ -1211,115 +1286,158 @@ function CitizenList() {
                           {citizen.extension_name && `(${citizen.extension_name})`}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                      <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
                         {format(new Date(citizen.birth_date), 'MMM d, yyyy')}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          citizen.sex === 'Male' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          citizen.sex === 'Male' ? 'bg-blue-200 text-blue-800' : 'bg-pink-200 text-pink-800'
                         }`}>
+                          {citizen.sex === 'Male' ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          )}
                           {citizen.sex}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                      <div
-                        className={`text-sm text-gray-900 whitespace-nowrap p-2 rounded
-                          ${
+                        <div
+                          className={`text-sm text-gray-900 whitespace-nowrap p-2 rounded border ${
                             addressDetail?.province_name === 'BOHOL'
-                              ? 'bg-yellow-100'
+                              ? 'bg-yellow-50 border-yellow-200'
                               : addressDetail?.province_name === 'CEBU'
-                              ? 'bg-blue-100'
+                              ? 'bg-blue-50 border-blue-200'
                               : addressDetail?.province_name === 'NEGROS ORIENTAL'
-                              ? 'bg-green-100'
+                              ? 'bg-green-50 border-green-200'
                               : addressDetail?.province_name === 'SIQUIJOR'
-                              ? 'bg-purple-100'
-                              : ''
-                          }
-                        `}
-                      >
-                        {addressDetail ? (
-                          <>
-                            <div>{addressDetail.barangay_name}</div>
-                            <div className="text-gray-500 text-xs">
-                              <div className="whitespace-nowrap">{addressDetail.lgu_name}</div>
-                              <div className="whitespace-nowrap">{addressDetail.province_name}</div>
+                              ? 'bg-purple-50 border-purple-200'
+                              : 'bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          {addressDetail ? (
+                            <div className="flex flex-col text-center">
+                              <div className="font-medium">
+                                {addressDetail.barangay_name}
+                              </div>
+                              <div className="text-gray-500 text-xs mt-1 flex flex-col text-center">
+                                <div className="whitespace-nowrap flex items-center">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  </svg>
+                                  {addressDetail.lgu_name}
+                                </div>
+                                <div className="whitespace-nowrap flex items-center">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                                  </svg>
+                                  {addressDetail.province_name}
+                                </div>
+                              </div>
                             </div>
-                          </>
-                        ) : (
-                          'Loading...'
-                        )}
-                      </div>
-                    </td>
+                          ) : (
+                            <div className="flex items-center justify-center py-1">
+                              <div className="animate-pulse rounded-full h-4 w-4 border-b-2 border-t-2 border-gray-300 mr-2"></div>
+                              <span className="text-gray-400">Loading...</span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          citizen.status === 'Encoded' ? 'bg-gray-100 text-gray-800' :
-                          citizen.status === 'Validated' ? 'bg-blue-100 text-blue-800' :
-                          citizen.status === 'Cleanlisted' ? 'bg-green-100 text-green-800' :
-                          citizen.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' :
-                          citizen.status === 'Unpaid' ? 'bg-yellow-100 text-yellow-800' :
-                          citizen.status === 'Liquidated' ? 'bg-purple-100 text-purple-800' :
-                          'bg-red-100 text-red-800'
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          citizen.status === 'Encoded' ? 'bg-gray-200 text-gray-800' :
+                          citizen.status === 'Validated' ? 'bg-blue-200 text-blue-800' :
+                          citizen.status === 'Cleanlisted' ? 'bg-green-200 text-green-800' :
+                          citizen.status === 'Paid' ? 'bg-emerald-200 text-emerald-800' :
+                          citizen.status === 'Unpaid' ? 'bg-yellow-200 text-yellow-800' :
+                          citizen.status === 'Liquidated' ? 'bg-purple-200 text-purple-800' :
+                          'bg-red-200 text-red-800'
                         }`}>
+                          {citizen.status === 'Validated' && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                          {citizen.status === 'Cleanlisted' && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          )}
+                          {citizen.status === 'Paid' && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          )}
+                          {citizen.status === 'Unpaid' && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          )}
+                          {citizen.status === 'Disqualified' && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
                           {citizen.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                      <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap text-center ">
                         {citizen.payment_date ? format(new Date(citizen.payment_date), 'MMM d, yyyy') : '-'}
                       </td>
                       <td className="px-6 py-4">
-                          <div 
-                          className="text-sm text-gray-500 max-w-xs truncate" 
-                          title={citizen.remarks || '-'}
-                          >
-                          {citizen.remarks || '-'}
-                          </div>
-                      </td>
+                      <div 
+                        className="text-xs text-gray-500 w-[50px] line-clamp-5 text-center" 
+                        title={citizen.remarks || '-'}
+                      >
+                        {citizen.remarks || '-'}
+                      </div>
+                    </td>
 
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-500 max-w-xs truncate">
+                        <div className="text-xs text-gray-500 max-w-xs truncate">
                           {citizen.encoded_date ? format(new Date(citizen.encoded_date), 'MMM dd, yyyy') : '-'}
                         </div>      
-                        <div className="text-sm text-gray-500 max-w-xs truncate">
+                        <div className="text-xs text-gray-500 max-w-xs truncate">
                         {citizen.encoded_date ? format(new Date(citizen.encoded_date), 'hh:mm:ss a') : '-'}
                         </div>               
                       </td>
                      
-                      <td className="px-2 py-1 text-center whitespace-nowrap">
-  
-  <div>
-  <button
-    onClick={() => setViewingCitizen(citizen)}
-    className="text-gray-600 hover:text-gray-900 transition-colors duration-150 p-1 rounded-full"
-    title="View Details"
-  >
-    <Eye className="h-4 w-4" />
-  </button>
-  </div>
+                      <td className="px-4 py-4 text-center whitespace-nowrap">
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => setViewingCitizen(citizen)}
+                            className="text-gray-600 hover:text-gray-900 transition-colors duration-150 p-1.5 rounded-full hover:bg-gray-100"
+                            title="View Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
 
-  <div>
-  {(user?.position === 'Administrator' || user?.position === 'PDO') && (  
-  <button
-    onClick={() => setEditingCitizen(citizen)}
-    className="text-blue-600 hover:text-blue-900 transition-colors duration-150 p-1 rounded-full"
-    title="Edit Record"
-  >
-    <Edit className="h-4 w-4" />
-  </button>
-  )}
-  </div>
-  
-  <div>
-  {user?.position === 'Administrator' && (
-    <button
-      onClick={() => setShowDeleteConfirm(citizen.id)}
-      className="text-red-600 hover:text-red-900 transition-colors duration-150 p-1 rounded-full"
-      title="Delete Record"
-    >
-      <Trash2 className="h-4 w-4" />
-    </button>
-  )}
-  </div>
-</td>
+                          {(user?.position === 'Administrator' || user?.position === 'PDO') && (  
+                            <button
+                              onClick={() => setEditingCitizen(citizen)}
+                              className="text-blue-600 hover:text-blue-900 transition-colors duration-150 p-1.5 rounded-full hover:bg-blue-50"
+                              title="Edit Record"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                          )}
+                          
+                          {user?.position === 'Administrator' && (
+                            <button
+                              onClick={() => setShowDeleteConfirm(citizen.id)}
+                              className="text-red-600 hover:text-red-900 transition-colors duration-150 p-1.5 rounded-full hover:bg-red-50"
+                              title="Delete Record"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
 
                     </tr>
                   );
@@ -1331,27 +1449,54 @@ function CitizenList() {
 
         {!loading && citizens.length > 0 && (
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Showing {currentPage * PAGE_SIZE + 1} to {Math.min((currentPage + 1) * PAGE_SIZE, totalRecords)} of {totalRecords} records
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="text-sm text-gray-700 bg-white px-4 py-2 rounded-md border border-gray-200 shadow-sm">
+                <span className="font-medium">Showing</span> {currentPage * PAGE_SIZE + 1} - {Math.min((currentPage + 1) * PAGE_SIZE, totalRecords)} <span className="font-medium">of</span> {totalRecords} <span className="font-medium">records</span>
               </div>
-              <div className="flex items-center space-x-2">
+              
+              <div className="flex items-center bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+                <button
+                  onClick={() => setCurrentPage(0)}
+                  disabled={currentPage === 0}
+                  className={`p-2 border-r border-gray-200 hover:bg-gray-50 transition-colors ${currentPage === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="First Page"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                  </svg>
+                </button>
+                
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
                   disabled={currentPage === 0}
-                  className={`btn-outline p-2 ${currentPage === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-2 border-r border-gray-200 hover:bg-gray-50 transition-colors ${currentPage === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Previous Page"
                 >
-                  <ChevronLeft className="h-5 w-5" />
+                  <ChevronLeft className="h-5 w-5 text-gray-600" />
                 </button>
-                <span className="text-sm text-gray-700">
+                
+                <div className="px-4 py-2 text-sm font-medium text-gray-700 border-r border-gray-200">
                   Page {currentPage + 1} of {totalPages}
-                </span>
+                </div>
+                
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
                   disabled={currentPage >= totalPages - 1}
-                  className={`btn-outline p-2 ${currentPage >= totalPages - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-2 border-r border-gray-200 hover:bg-gray-50 transition-colors ${currentPage >= totalPages - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Next Page"
                 >
-                  <ChevronRight className="h-5 w-5" />
+                  <ChevronRight className="h-5 w-5 text-gray-600" />
+                </button>
+                
+                <button
+                  onClick={() => setCurrentPage(totalPages - 1)}
+                  disabled={currentPage >= totalPages - 1}
+                  className={`p-2 hover:bg-gray-50 transition-colors ${currentPage >= totalPages - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Last Page"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -1372,22 +1517,30 @@ function CitizenList() {
 
       {showDeleteConfirm && (
         <div className="modal-overlay flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Confirm Delete</h3>
-            <p className="text-sm text-gray-500 mb-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl border border-gray-200">
+            <div className="flex items-center mb-4 text-red-600">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <h3 className="text-xl font-semibold text-gray-900">Confirm Delete</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-6 pl-11">
               Are you sure you want to delete this record? This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowDeleteConfirm(null)}
-                className="btn-outline"
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition-colors duration-150"
               >
                 Cancel
               </button>
               <button
                 onClick={() => showDeleteConfirm && handleDelete(showDeleteConfirm)}
-                className="btn-danger"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md transition-colors duration-150 flex items-center"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
                 Delete
               </button>
             </div>

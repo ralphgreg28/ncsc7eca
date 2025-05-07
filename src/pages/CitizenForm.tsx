@@ -70,7 +70,7 @@ function CitizenForm() {
     lgu_name: '',
     barangay_name: ''
   });
-  const oscaIdRef = useRef<HTMLInputElement>(null);
+
   
   const { register, handleSubmit, watch, formState: { errors }, reset, setValue } = useForm<CitizenFormInput>();
   
@@ -232,12 +232,7 @@ function CitizenForm() {
     setStep(2);
     reset();
     
-    // Focus on OSCA ID field after form reset
-    setTimeout(() => {
-      if (oscaIdRef.current) {
-        oscaIdRef.current.focus();
-      }
-    }, 0);
+    
   };
   
   const onSecondSubmit: SubmitHandler<CitizenFormInput> = async (data) => {
@@ -574,8 +569,8 @@ const deleteRecord = async (citizenId: number) => {
                 {...register('oscaId')}
                 className={`border ${errors.oscaId ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
                 placeholder="Enter OSCA ID (optional)"
-              // ref={oscaIdRef}
                 onChange={handleUppercase}
+               
               />
               {errors.oscaId && <p className="form-error">{errors.oscaId.message}</p>}
               <p className="form-hint">Leave blank to set as N/A</p>

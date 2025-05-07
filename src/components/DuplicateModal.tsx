@@ -19,6 +19,7 @@ interface Citizen {
   rrn?: string;
   validator?: string | null;
   validation_date?: string | null;
+  status?: string | null;
 }
 
 interface DuplicateModalProps {
@@ -59,6 +60,11 @@ function DuplicateModal({
     barangay_name: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Set default status for new entry to "Encoded"
+  if (!newRecord.status) {
+    newRecord.status = "Encoded";
+  }
 
   useEffect(() => {
     // If newAddressDetails is already provided, use that
@@ -103,12 +109,28 @@ function DuplicateModal({
     return matchedFields.includes(field) ? 'bg-yellow-100' : '';
   };
 
+  // CSS styles for status badges
+  const getStatusStyle = (status: string | null | undefined) => {
+    if (!status) return {};
+    
+    const statusLower = status.toLowerCase();
+    if (statusLower === 'encoded') return { backgroundColor: '#87CEEB', color: 'white' };
+    if (statusLower === 'validated') return { backgroundColor: '#28A745', color: 'white' };
+    if (statusLower === 'cleanlisted') return { backgroundColor: '#008080', color: 'white' };
+    if (statusLower === 'paid') return { backgroundColor: '#006400', color: 'white' };
+    if (statusLower === 'unpaid') return { backgroundColor: '#FFA500', color: 'white' };
+    if (statusLower === 'liquidated') return { backgroundColor: '#DC3545', color: 'white' };
+    if (statusLower === 'disqualified') return { backgroundColor: '#808080', color: 'white' };
+    
+    return {};
+  };
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
 
-        <div className="relative bg-white rounded-lg max-w-4xl w-full mx-auto shadow-xl">
+        <div className="relative bg-white rounded-lg max-w-6xl w-full mx-auto shadow-xl">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-semibold text-red-600">Potential Duplicate Found</h3>
@@ -118,17 +140,17 @@ function DuplicateModal({
             </div>
           </div>
 
-          <div className="px-6 py-4">
-            <div className="mb-4 p-4 bg-yellow-50 rounded-md">
+          <div className="px-4 py-3">
+            <div className="mb-3 p-3 bg-yellow-50 rounded-md">
               <p className="text-yellow-800">
                 A potential duplicate record has been found. Please review the information below and choose how to proceed.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <h4 className="font-semibold text-lg text-gray-900">New Entry</h4>
-                <div className="space-y-2">
+                <div className="space-y-1 max-h-[60vh] overflow-y-auto pr-2">
                   <div className={`p-2 rounded ${getFieldStyle('last_name')}`}>
                     <span className="text-sm text-gray-500">Last Name</span>
                     <p className="font-medium">{newRecord.last_name}</p>
@@ -173,12 +195,21 @@ function DuplicateModal({
                     <span className="text-sm text-gray-500">RRN</span>
                     <p className="font-medium">{newRecord.rrn || 'N/A'}</p>
                   </div>
+                  <div className="p-2 rounded">
+                    <span className="text-sm text-gray-500">Status</span>
+                    <p 
+                      className="font-medium px-2 py-1 rounded-full text-center text-sm"
+                      style={getStatusStyle(newRecord.status)}
+                    >
+                      {newRecord.status || 'N/A'}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <h4 className="font-semibold text-lg text-gray-900">Existing Record</h4>
-                <div className="space-y-2">
+                <div className="space-y-1 max-h-[60vh] overflow-y-auto pr-2">
                   <div className={`p-2 rounded ${getFieldStyle('last_name')}`}>
                     <span className="text-sm text-gray-500">Last Name</span>
                     <p className="font-medium">{existingRecord.last_name}</p>
@@ -217,12 +248,21 @@ function DuplicateModal({
                     <span className="text-sm text-gray-500">RRN</span>
                     <p className="font-medium">{existingRecord.rrn || 'N/A'}</p>
                   </div>
+                  <div className="p-2 rounded">
+                    <span className="text-sm text-gray-500">Status</span>
+                    <p 
+                      className="font-medium px-2 py-1 rounded-full text-center text-sm"
+                      style={getStatusStyle(existingRecord.status)}
+                    >
+                      {existingRecord.status || 'N/A'}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end space-x-4">
+          <div className="px-4 py-3 bg-gray-50 rounded-b-lg flex justify-end space-x-3">
             <button onClick={onClose} className="btn-outline">
               Cancel & Edit
             </button>

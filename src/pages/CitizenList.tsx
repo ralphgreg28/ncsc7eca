@@ -1284,7 +1284,9 @@ function CitizenList() {
                         </div>               
                       </td>
                      
-                      <td className="px-2 py-2 text-right space-x-1 whitespace-nowrap">
+                      <td className="px-2 py-1 text-center whitespace-nowrap">
+  
+  <div>
   <button
     onClick={() => setViewingCitizen(citizen)}
     className="text-gray-600 hover:text-gray-900 transition-colors duration-150 p-1 rounded-full"
@@ -1292,6 +1294,9 @@ function CitizenList() {
   >
     <Eye className="h-4 w-4" />
   </button>
+  </div>
+
+  <div>
   {(user?.position === 'Administrator' || user?.position === 'PDO') && (  
   <button
     onClick={() => setEditingCitizen(citizen)}
@@ -1301,6 +1306,9 @@ function CitizenList() {
     <Edit className="h-4 w-4" />
   </button>
   )}
+  </div>
+  
+  <div>
   {user?.position === 'Administrator' && (
     <button
       onClick={() => setShowDeleteConfirm(citizen.id)}
@@ -1310,6 +1318,7 @@ function CitizenList() {
       <Trash2 className="h-4 w-4" />
     </button>
   )}
+  </div>
 </td>
 
                     </tr>

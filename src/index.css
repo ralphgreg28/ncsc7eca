@@ -8,7 +8,7 @@
   }
   
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gray-50 text-gray-900 min-h-screen;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -152,7 +152,7 @@
 
   /* Filter styles */
   .filter-section {
-    @apply bg-white rounded-lg shadow-sm p-6 mb-6;
+    @apply bg-white rounded-lg shadow-sm p-6 mb-6 w-full;
   }
 
   .filter-grid {
@@ -161,6 +161,12 @@
 
   .filter-input {
     @apply w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500;
+  }
+
+  /* Container for maximizing screen usage */
+  .max-container {
+    @apply w-full mx-auto;
+    max-width: 100%;
   }
 
   /* Table styles */
@@ -178,7 +184,7 @@
   }
 
   .table-header th {
-    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap;
+    @apply px-6 py-3 text-left text-xs font-small text-gray-500 uppercase tracking-wider whitespace-nowrap;
     background: inherit;
   }
 
@@ -239,12 +245,14 @@
 
   /* Modal styles */
   .modal-container {
-    @apply fixed inset-0 z-50 overflow-y-auto;
+    @apply fixed inset-0 z-50 overflow-y-auto flex items-center justify-center;
   }
 
   .modal-content {
-    @apply relative bg-white rounded-lg max-w-2xl mx-auto my-8 shadow-xl;
+    @apply relative bg-white rounded-lg max-w-2xl mx-auto shadow-xl;
     margin-bottom: 5rem;
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
   }
 
   .modal-header {
@@ -273,6 +281,50 @@
     .modal-content {
       @apply mx-4;
       margin-bottom: 4rem;
+    }
+  }
+  
+  /* Tablet optimization */
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .table-container {
+      max-height: calc(100vh - 12rem);
+    }
+    
+    .modal-content {
+      @apply max-w-3xl;
+      margin-bottom: 3rem;
+    }
+    
+    .filter-grid {
+      @apply grid-cols-2;
+    }
+  }
+  
+  /* Desktop optimization */
+  @media (min-width: 1025px) {
+    .table-container {
+      max-height: calc(100vh - 8rem);
+    }
+    
+    .modal-content {
+      @apply max-w-4xl;
+      margin-bottom: 2rem;
+    }
+    
+    .filter-grid {
+      @apply grid-cols-3 lg:grid-cols-4;
+    }
+    
+    .card {
+      @apply p-8;
+    }
+    
+    .table-cell {
+      @apply px-8 py-5;
+    }
+    
+    .table-header th {
+      @apply px-8 py-4;
     }
   }
 }

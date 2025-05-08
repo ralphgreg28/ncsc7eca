@@ -1226,10 +1226,10 @@ function CitizenList() {
                     {getSortIcon('payment_date')}
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Remarks
                 </th>
-<th 
+                <th 
                   onClick={() => handleSort('created_at')}
                   className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
                 >
@@ -1286,11 +1286,11 @@ function CitizenList() {
                           {citizen.extension_name && `(${citizen.extension_name})`}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
+                      <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap font-medium">
                         {format(new Date(citizen.birth_date), 'MMM d, yyyy')}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium  ${
                           citizen.sex === 'Male' ? 'bg-blue-200 text-blue-800' : 'bg-pink-200 text-pink-800'
                         }`}>
                           {citizen.sex === 'Male' ? (
@@ -1320,19 +1320,19 @@ function CitizenList() {
                           }`}
                         >
                           {addressDetail ? (
-                            <div className="flex flex-col text-center">
+                            <div className="flex flex-col text-left">
                               <div className="font-medium">
                                 {addressDetail.barangay_name}
                               </div>
-                              <div className="text-gray-500 text-xs mt-1 flex flex-col text-center">
-                                <div className="whitespace-nowrap flex items-center">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <div className="text-gray-500 text-xs mt-1 flex flex-col text-left">
+                                <div className="whitespace-nowrap flex items-center font-medium">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                   </svg>
                                   {addressDetail.lgu_name}
                                 </div>
-                                <div className="whitespace-nowrap flex items-center">
+                                <div className="whitespace-nowrap flex items-left">
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
                                   </svg>
@@ -1386,12 +1386,12 @@ function CitizenList() {
                           {citizen.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap text-center ">
+                      <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap text-center w-[50px]">
                         {citizen.payment_date ? format(new Date(citizen.payment_date), 'MMM d, yyyy') : '-'}
                       </td>
                       <td className="px-6 py-4">
                       <div 
-                        className="text-xs text-gray-500 w-[50px] line-clamp-5 text-center" 
+                        className="text-[9px] text-gray-500 w-[100px] line-clamp-5 text-center" 
                         title={citizen.remarks || '-'}
                       >
                         {citizen.remarks || '-'}
@@ -1399,10 +1399,10 @@ function CitizenList() {
                     </td>
 
                       <td className="px-6 py-4">
-                        <div className="text-xs text-gray-500 max-w-xs truncate">
+                        <div className="text-[11px] text-gray-500 max-w-xs truncate w-[70px]">
                           {citizen.encoded_date ? format(new Date(citizen.encoded_date), 'MMM dd, yyyy') : '-'}
                         </div>      
-                        <div className="text-xs text-gray-500 max-w-xs truncate">
+                        <div className="text-[10px] text-gray-500 max-w-xs truncate">
                         {citizen.encoded_date ? format(new Date(citizen.encoded_date), 'hh:mm:ss a') : '-'}
                         </div>               
                       </td>

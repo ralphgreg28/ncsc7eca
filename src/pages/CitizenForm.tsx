@@ -543,7 +543,7 @@ const deleteRecord = async (citizenId: number) => {
       </div>
       
       <h1 className="text-2xl font-bold text-blue-800 mb-6">
-        {step === 1 ? 'Register New Senior Citizen - First Entry' : 'Register New Senior Citizen - Verify Data'}
+        {step === 1 ? 'Register New Senior Citizen - 1st Entry (Application Form)' : 'Verify Data using Primary ID / Secondary ID'}
       </h1>
       
       {step === 2 && (

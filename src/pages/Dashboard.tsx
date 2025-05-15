@@ -45,6 +45,10 @@ interface Stats {
     quarter: string;
     count: number;
   }[];
+  byMonth: {
+    month: string;
+    count: number;
+  }[];
   paymentStats: {
     paid: number;
     unpaid: number;
@@ -106,6 +110,7 @@ function Dashboard() {
     bySex: [],
     byAge: [],
     byQuarter: [],
+    byMonth: [],
     paymentStats: {
       encoded: 0,
       validated: 0,
@@ -366,6 +371,20 @@ function Dashboard() {
             }).length
           }));
 
+          // Calculate monthly distribution based on birth date
+          const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+          ];
+          
+          const byMonth = monthNames.map((month, index) => ({
+            month,
+            count: filteredCitizens.filter(citizen => {
+              const date = new Date(citizen.birth_date);
+              return date.getMonth() === index;
+            }).length
+          }));
+
           const paymentStats = {
             paid: filteredCitizens.filter(c => c.status === 'Paid').length,
             unpaid: filteredCitizens.filter(c => c.status === 'Unpaid').length,
@@ -482,6 +501,7 @@ function Dashboard() {
             bySex,
             byAge,
             byQuarter,
+            byMonth,
             paymentStats,
             provinceStats,
             paidBySpecificAge
@@ -775,6 +795,29 @@ function Dashboard() {
          </div>
     
         
+        {/* Monthly Distribution Chart */}
+        <div className="mt-6">
+          <h3 className="text-md font-semibold mb-4">Monthly Distribution by Birth Date</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Distribution of records by birth month for easy data analysis
+          </p>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={stats.byMonth}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="count" name="Number of Records" fill="#1d3694" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
         <div className="mt-6">
           <h3 className="text-md font-semibold mb-4">Provincial Statistics</h3>
           <div className="overflow-x-auto">

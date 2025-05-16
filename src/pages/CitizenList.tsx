@@ -18,6 +18,7 @@ interface Filters {
   paymentDateTo: string;
   birthYears: string[];
   birthQuarters: string[];
+  birthMonths: string[]; // Format: YYYY-MM (e.g., 2023-01)
   remarks: string;
   searchTerm: string;
 }
@@ -94,6 +95,8 @@ function CitizenList() {
     lgus: {},
     barangays: {}
   });
+  const [showMonthFilter, setShowMonthFilter] = useState(false);
+  const [monthSearchTerm, setMonthSearchTerm] = useState('');
   const { user } = useAuth();
   const [userAssignments, setUserAssignments] = useState<Assignment[]>([]);
   const [loadingAssignments, setLoadingAssignments] = useState(false);
@@ -114,6 +117,7 @@ function CitizenList() {
     paymentDateTo: '',
     birthYears: [],
     birthQuarters: [],
+    birthMonths: [], // Add the new birthMonths property
     remarks: '',
     searchTerm: ''
   });
@@ -600,6 +604,131 @@ function CitizenList() {
           }
       }
       
+      // Apply specific month filter (YYYY-MM format)
+      if (filters.birthMonths.length > 0) {
+        // Create a temporary array to hold all the filtered citizens
+        let monthFilteredCitizens: any[] = [];
+        
+        // For each selected month in YYYY-MM format, add a filter
+        for (const monthYearStr of filters.birthMonths) {
+          const [year, month] = monthYearStr.split('-');
+          
+          // Calculate start and end dates for the specific month
+          const startDate = `${year}-${month}-01`;
+          
+          // Calculate the end date (first day of next month)
+          let nextMonth = parseInt(month) + 1;
+          let nextMonthYear = parseInt(year);
+          if (nextMonth > 12) {
+            nextMonth = 1;
+            nextMonthYear += 1;
+          }
+          const endDate = `${nextMonthYear}-${nextMonth.toString().padStart(2, '0')}-01`;
+          
+          // Clone the query for this specific month filter
+          const monthQuery = supabase
+            .from('citizens')
+            .select('id')
+            .gte('birth_date', startDate)
+            .lt('birth_date', endDate);
+          
+          // Apply all the previous filters to this query
+          if (filters.provinceCode) monthQuery.eq('province_code', filters.provinceCode);
+          if (filters.lguCode) monthQuery.eq('lgu_code', filters.lguCode);
+          if (filters.barangayCode) monthQuery.eq('barangay_code', filters.barangayCode);
+          if (filters.status.length > 0) monthQuery.in('status', filters.status);
+          if (filters.paymentDateFrom) monthQuery.gte('payment_date', filters.paymentDateFrom);
+          if (filters.paymentDateTo) monthQuery.lte('payment_date', filters.paymentDateTo);
+          if (filters.remarks) monthQuery.ilike('remarks', `%${filters.remarks}%`);
+          if (filters.searchTerm) {
+            monthQuery.or(
+              `last_name.ilike.%${filters.searchTerm}%,` +
+              `first_name.ilike.%${filters.searchTerm}%,` +
+              `middle_name.ilike.%${filters.searchTerm}%`
+            );
+          }
+          
+          // Execute the query for this specific month
+          const { data: monthData, error: monthError } = await monthQuery;
+          
+          if (monthError) {
+            console.error('Error filtering by specific month:', monthError);
+          } else if (monthData && monthData.length > 0) {
+            // Add the IDs from this month to our filtered list
+            monthFilteredCitizens = [...monthFilteredCitizens, ...monthData.map(c => c.id)];
+          }
+        }
+        
+        // If we have any results from the month filter, apply them to the main query
+        if (monthFilteredCitizens.length > 0) {
+          // For large result sets, we need to handle them in batches
+          if (monthFilteredCitizens.length > 1000) {
+            toast.warning(`Found ${monthFilteredCitizens.length} records matching birth month filter. Processing in batches.`);
+            
+            // Process in batches of 1000
+            const batches = [];
+            for (let i = 0; i < monthFilteredCitizens.length; i += 1000) {
+              batches.push(monthFilteredCitizens.slice(i, i + 1000));
+            }
+            
+            // Create a union query for each batch
+            let batchResults: any[] = [];
+            for (const batch of batches) {
+              const batchQuery = supabase
+                .from('citizens')
+                .select('*')
+                .in('id', batch);
+              
+              // Apply other filters that might have been applied to the main query
+              if (filters.provinceCode) batchQuery.eq('province_code', filters.provinceCode);
+              if (filters.lguCode) batchQuery.eq('lgu_code', filters.lguCode);
+              if (filters.barangayCode) batchQuery.eq('barangay_code', filters.barangayCode);
+              if (filters.status.length > 0) batchQuery.in('status', filters.status);
+              if (filters.paymentDateFrom) batchQuery.gte('payment_date', filters.paymentDateFrom);
+              if (filters.paymentDateTo) batchQuery.lte('payment_date', filters.paymentDateTo);
+              if (filters.remarks) batchQuery.ilike('remarks', `%${filters.remarks}%`);
+              
+              const { data, error } = await batchQuery;
+              if (error) {
+                console.error('Error processing batch:', error);
+              } else if (data) {
+                batchResults = [...batchResults, ...data];
+              }
+            }
+            
+            // Sort the results according to the current sort field and order
+            batchResults.sort((a, b) => {
+              if (sortOrder === 'asc') {
+                return a[sortField] > b[sortField] ? 1 : -1;
+              } else {
+                return a[sortField] < b[sortField] ? 1 : -1;
+              }
+            });
+            
+            // Apply pagination to the sorted results
+            const paginatedResults = batchResults.slice(
+              currentPage * PAGE_SIZE, 
+              (currentPage + 1) * PAGE_SIZE
+            );
+            
+            setCitizens(paginatedResults);
+            setTotalRecords(batchResults.length);
+            await fetchAddressDetails(paginatedResults);
+            setLoading(false);
+            return;
+          } else {
+            // For smaller result sets, use the standard approach
+            query = query.in('id', monthFilteredCitizens);
+          }
+        } else if (filters.birthMonths.length > 0) {
+          // If no results match the month filter but months were selected, return no results
+          setCitizens([]);
+          setTotalRecords(0);
+          setLoading(false);
+          return;
+        }
+      }
+      
       // Apply birth quarter filter
       if (filters.birthQuarters.length > 0) {
         // Get all months from selected quarters
@@ -1052,6 +1181,129 @@ function CitizenList() {
         }
       }
 
+      // Apply specific month filter (YYYY-MM format)
+      if (filters.birthMonths.length > 0) {
+        // Create a temporary array to hold all the filtered citizens
+        let monthFilteredCitizens: any[] = [];
+        
+        // For each selected month in YYYY-MM format, add a filter
+        for (const monthYearStr of filters.birthMonths) {
+          const [year, month] = monthYearStr.split('-');
+          
+          // Calculate start and end dates for the specific month
+          const startDate = `${year}-${month}-01`;
+          
+          // Calculate the end date (first day of next month)
+          let nextMonth = parseInt(month) + 1;
+          let nextMonthYear = parseInt(year);
+          if (nextMonth > 12) {
+            nextMonth = 1;
+            nextMonthYear += 1;
+          }
+          const endDate = `${nextMonthYear}-${nextMonth.toString().padStart(2, '0')}-01`;
+          
+          // Clone the query for this specific month filter
+          const monthQuery = supabase
+            .from('citizens')
+            .select('id')
+            .gte('birth_date', startDate)
+            .lt('birth_date', endDate);
+          
+          // Apply all the previous filters to this query
+          if (filters.provinceCode) monthQuery.eq('province_code', filters.provinceCode);
+          if (filters.lguCode) monthQuery.eq('lgu_code', filters.lguCode);
+          if (filters.barangayCode) monthQuery.eq('barangay_code', filters.barangayCode);
+          if (filters.status.length > 0) monthQuery.in('status', filters.status);
+          if (filters.paymentDateFrom) monthQuery.gte('payment_date', filters.paymentDateFrom);
+          if (filters.paymentDateTo) monthQuery.lte('payment_date', filters.paymentDateTo);
+          if (filters.remarks) monthQuery.ilike('remarks', `%${filters.remarks}%`);
+          if (filters.searchTerm) {
+            monthQuery.or(
+              `last_name.ilike.%${filters.searchTerm}%,` +
+              `first_name.ilike.%${filters.searchTerm}%,` +
+              `middle_name.ilike.%${filters.searchTerm}%`
+            );
+          }
+          
+          // Execute the query for this specific month
+          const { data: monthData, error: monthError } = await monthQuery;
+          
+          if (monthError) {
+            console.error('Error filtering by specific month for export:', monthError);
+          } else if (monthData && monthData.length > 0) {
+            // Add the IDs from this month to our filtered list
+            monthFilteredCitizens = [...monthFilteredCitizens, ...monthData.map(c => c.id)];
+          }
+        }
+        
+        // If we have any results from the month filter, apply them to the main query
+        if (monthFilteredCitizens.length > 0) {
+          // For large result sets, we need to handle them in batches
+          if (monthFilteredCitizens.length > 1000) {
+            toast.warning(`Found ${monthFilteredCitizens.length} records matching birth month filter. Processing in batches for export.`);
+            
+            // Process in batches of 1000
+            const batches = [];
+            for (let i = 0; i < monthFilteredCitizens.length; i += 1000) {
+              batches.push(monthFilteredCitizens.slice(i, i + 1000));
+            }
+            
+            // Create a union query for each batch
+            let batchResults: any[] = [];
+            let batchCount = 0;
+            
+            for (const batch of batches) {
+              batchCount++;
+              toast.info(`Processing batch ${batchCount} of ${batches.length}...`, {
+                autoClose: 1000,
+                toastId: `batch-progress-${batchCount}`
+              });
+              
+              const batchQuery = supabase
+                .from('citizens')
+                .select('*')
+                .in('id', batch);
+              
+              // Apply other filters that might have been applied to the main query
+              if (filters.provinceCode) batchQuery.eq('province_code', filters.provinceCode);
+              if (filters.lguCode) batchQuery.eq('lgu_code', filters.lguCode);
+              if (filters.barangayCode) batchQuery.eq('barangay_code', filters.barangayCode);
+              if (filters.status.length > 0) batchQuery.in('status', filters.status);
+              if (filters.paymentDateFrom) batchQuery.gte('payment_date', filters.paymentDateFrom);
+              if (filters.paymentDateTo) batchQuery.lte('payment_date', filters.paymentDateTo);
+              if (filters.remarks) batchQuery.ilike('remarks', `%${filters.remarks}%`);
+              
+              const { data, error } = await batchQuery;
+              if (error) {
+                console.error('Error processing batch:', error);
+              } else if (data) {
+                batchResults = [...batchResults, ...data];
+              }
+            }
+            
+            // Sort the results according to the current sort field and order
+            batchResults.sort((a, b) => {
+              if (sortOrder === 'asc') {
+                return a[sortField] > b[sortField] ? 1 : -1;
+              } else {
+                return a[sortField] < b[sortField] ? 1 : -1;
+              }
+            });
+            
+            // Return the batch results for export
+            return batchResults;
+          } else {
+            // For smaller result sets, use the standard approach
+            query = query.in('id', monthFilteredCitizens);
+          }
+        } else if (filters.birthMonths.length > 0) {
+          // If no results match the month filter but months were selected, return no results
+          toast.info('No data to export - No citizens match the birth month filter');
+          setExportLoading(false);
+          return;
+        }
+      }
+
       if (filters.remarks) {
         query = query.ilike('remarks', `%${filters.remarks}%`);
       }
@@ -1084,31 +1336,45 @@ function CitizenList() {
 
       toast.info('Preparing export file...');
 
-      const exportData = citizens.map(citizen => ({
-        'ID': citizen.id,
-        'Last Name': citizen.last_name,
-        'First Name': citizen.first_name,
-        'Middle Name': citizen.middle_name || '',
-        'Extension Name': citizen.extension_name || '',
-        'Birth Date': format(new Date(citizen.birth_date), 'MM/dd/yyyy'),
-        'Sex': citizen.sex,
-        'Province': provinceMap[citizen.province_code] || citizen.province_code,
-        'City/Municipality': lguMap[citizen.lgu_code] || citizen.lgu_code,
-        'Barangay': barangayMap[citizen.barangay_code] || citizen.barangay_code,
-        'Status': citizen.status,
-        'Payment Date': citizen.payment_date ? format(new Date(citizen.payment_date), 'MM/dd/yyyy') : '',
-        'OSCA ID': citizen.osca_id || 'N/A',
-        'RRN': citizen.rrn || 'N/A',
-        'Validator': citizen.validator || '',
-        'Validation Date': citizen.validation_date ? format(new Date(citizen.validation_date), 'MM/dd/yyyy') : '',
-        'Remarks': citizen.remarks || '',
-        'Date Registered': format(new Date(citizen.created_at), 'MM/dd/yyyy HH:mm:ss'),
-        'Province Code': citizen.province_code,
-        'LGU Code': citizen.lgu_code,
-        'Barangay Code': citizen.barangay_code,
-        'Encoded By': citizen.encoded_by || '',
-        'Encoded Date': format(new Date(citizen.encoded_date), 'MM/dd/yyyy HH:mm:ss')
-      }));
+  // Remove duplicate entries by using a Map with citizen ID as key
+  const uniqueCitizens = new Map();
+  citizens.forEach(citizen => {
+    // Only add the citizen if it's not already in the map
+    if (!uniqueCitizens.has(citizen.id)) {
+      uniqueCitizens.set(citizen.id, citizen);
+    }
+  });
+  
+  // Convert the Map values back to an array
+  const uniqueCitizensArray = Array.from(uniqueCitizens.values());
+  
+  toast.info(`Processing ${uniqueCitizensArray.length} unique records...`);
+  
+  const exportData = uniqueCitizensArray.map(citizen => ({
+    'ID': citizen.id,
+    'Last Name': citizen.last_name,
+    'First Name': citizen.first_name,
+    'Middle Name': citizen.middle_name || '',
+    'Extension Name': citizen.extension_name || '',
+    'Birth Date': format(new Date(citizen.birth_date), 'MM/dd/yyyy'),
+    'Sex': citizen.sex,
+    'Province': provinceMap[citizen.province_code] || citizen.province_code,
+    'City/Municipality': lguMap[citizen.lgu_code] || citizen.lgu_code,
+    'Barangay': barangayMap[citizen.barangay_code] || citizen.barangay_code,
+    'Status': citizen.status,
+    'Payment Date': citizen.payment_date ? format(new Date(citizen.payment_date), 'MM/dd/yyyy') : '',
+    'OSCA ID': citizen.osca_id || 'N/A',
+    'RRN': citizen.rrn || 'N/A',
+    'Validator': citizen.validator || '',
+    'Validation Date': citizen.validation_date ? format(new Date(citizen.validation_date), 'MM/dd/yyyy') : '',
+    'Remarks': citizen.remarks || '',
+    'Date Registered': format(new Date(citizen.created_at), 'MM/dd/yyyy HH:mm:ss'),
+    'Province Code': citizen.province_code,
+    'LGU Code': citizen.lgu_code,
+    'Barangay Code': citizen.barangay_code,
+    'Encoded By': citizen.encoded_by || '',
+    'Encoded Date': format(new Date(citizen.encoded_date), 'MM/dd/yyyy HH:mm:ss')
+  }));
 
       const csv = Papa.unparse(exportData);
       const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1153,6 +1419,7 @@ function CitizenList() {
       paymentDateTo: '',
       birthYears: [],
       birthQuarters: [],
+      birthMonths: [], // Include birthMonths in reset
       remarks: '',
       searchTerm: ''
     });
@@ -1384,105 +1651,203 @@ function CitizenList() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Birth Year
+                Birth Month Filter
               </label>
-              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border border-gray-300 rounded-md">
-                {availableBirthYears.map(year => {
-                  const isSelected = filters.birthYears.includes(year);
-                  return (
+              <div className="relative">
+                <button
+                  onClick={() => setShowMonthFilter(!showMonthFilter)}
+                  className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
+                >
+                  <span>
+                    {filters.birthMonths.length > 0 
+                      ? `${filters.birthMonths.length} month${filters.birthMonths.length > 1 ? 's' : ''} selected` 
+                      : 'Select months...'}
+                  </span>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className={`h-5 w-5 transition-transform duration-200 ${showMonthFilter ? 'transform rotate-180' : ''}`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {/* Selected months tags */}
+                {filters.birthMonths.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {filters.birthMonths.map(month => {
+                      const [year, monthNum] = month.split('-');
+                      const monthName = new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleString('default', { month: 'short' });
+                      return (
+                        <span 
+                          key={month} 
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        >
+                          {monthName} {year}
+                          <button
+                            onClick={() => {
+                              const newMonths = filters.birthMonths.filter(m => m !== month);
+                              handleFilterChange('birthMonths', newMonths);
+                            }}
+                            className="ml-1 text-blue-600 hover:text-blue-800"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </span>
+                      );
+                    })}
                     <button
-                      key={year}
-                      onClick={() => {
-                        const newYears = isSelected
-                          ? filters.birthYears.filter(y => y !== year)
-                          : [...filters.birthYears, year];
-                        handleFilterChange('birthYears', newYears);
-                      }}
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        isSelected 
-                          ? 'bg-blue-200 text-blue-800' 
-                          : 'bg-gray-100 text-gray-700'
-                      } transition-colors duration-150 hover:shadow-sm`}
+                      onClick={() => handleFilterChange('birthMonths', [])}
+                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
                     >
-                      {isSelected && (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                      {year}
+                      Clear All
                     </button>
-                  );
-                })}
-                {availableBirthYears.length === 0 && (
-                  <span className="text-xs text-gray-500 p-1">Loading available years...</span>
+                  </div>
+                )}
+                
+                {/* Dropdown */}
+                {showMonthFilter && (
+                  <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-96 overflow-y-auto">
+                    {/* Search bar */}
+                    <div className="sticky top-0 bg-white p-2 border-b border-gray-200">
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Search className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={monthSearchTerm}
+                          onChange={(e) => setMonthSearchTerm(e.target.value)}
+                          placeholder="Search year or month..."
+                          className="pl-10 w-full rounded-md border-gray-300 text-sm py-1"
+                        />
+                      </div>
+                      <div className="flex justify-between mt-2">
+                        <button
+                          onClick={() => {
+                            // Select all months for all years
+                            const allMonths: string[] = [];
+                            availableBirthYears.forEach(year => {
+                              for (let month = 1; month <= 12; month++) {
+                                allMonths.push(`${year}-${month.toString().padStart(2, '0')}`);
+                              }
+                            });
+                            handleFilterChange('birthMonths', allMonths);
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          Select All
+                        </button>
+                        <button
+                          onClick={() => handleFilterChange('birthMonths', [])}
+                          className="text-xs text-red-600 hover:text-red-800 font-medium"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Year groups */}
+                    <div className="p-2">
+                      {availableBirthYears
+                        .filter(year => 
+                          monthSearchTerm === '' || 
+                          year.includes(monthSearchTerm)
+                        )
+                        .map(year => {
+                          const monthsForYear = Array.from({ length: 12 }, (_, i) => {
+                            const monthNum = (i + 1).toString().padStart(2, '0');
+                            const monthValue = `${year}-${monthNum}`;
+                            const monthName = new Date(parseInt(year), i).toLocaleString('default', { month: 'long' });
+                            return { value: monthValue, name: monthName };
+                          });
+                          
+                          const filteredMonths = monthsForYear.filter(month => 
+                            monthSearchTerm === '' || 
+                            month.name.toLowerCase().includes(monthSearchTerm.toLowerCase()) ||
+                            year.includes(monthSearchTerm)
+                          );
+                          
+                          if (filteredMonths.length === 0) return null;
+                          
+                          return (
+                            <div key={year} className="mb-3">
+                              <div className="flex items-center justify-between mb-1">
+                                <h3 className="text-sm font-semibold text-gray-700">{year}</h3>
+                                <button
+                                  onClick={() => {
+                                    const yearMonths = monthsForYear.map(m => m.value);
+                                    const allSelected = yearMonths.every(m => filters.birthMonths.includes(m));
+                                    
+                                    if (allSelected) {
+                                      // Remove all months for this year
+                                      const newMonths = filters.birthMonths.filter(m => !m.startsWith(year));
+                                      handleFilterChange('birthMonths', newMonths);
+                                    } else {
+                                      // Add all months for this year
+                                      const newMonths = [
+                                        ...filters.birthMonths.filter(m => !m.startsWith(year)),
+                                        ...yearMonths
+                                      ];
+                                      handleFilterChange('birthMonths', newMonths);
+                                    }
+                                  }}
+                                  className="text-xs text-blue-600 hover:text-blue-800"
+                                >
+                                  {monthsForYear.every(m => filters.birthMonths.includes(m.value)) 
+                                    ? 'Deselect All' 
+                                    : 'Select All'}
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-3 gap-1">
+                                {filteredMonths.map(month => {
+                                  const isSelected = filters.birthMonths.includes(month.value);
+                                  return (
+                                    <button
+                                      key={month.value}
+                                      onClick={() => {
+                                        const newMonths = isSelected
+                                          ? filters.birthMonths.filter(m => m !== month.value)
+                                          : [...filters.birthMonths, month.value];
+                                        handleFilterChange('birthMonths', newMonths);
+                                      }}
+                                      className={`px-2 py-1 rounded text-xs font-medium ${
+                                        isSelected 
+                                          ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' 
+                                          : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                      } transition-colors duration-150 text-left flex items-center`}
+                                    >
+                                      <span className={`w-4 h-4 mr-1 rounded-sm border ${
+                                        isSelected 
+                                          ? 'bg-blue-500 border-blue-500' 
+                                          : 'border-gray-300'
+                                      } flex items-center justify-center`}>
+                                        {isSelected && (
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                          </svg>
+                                        )}
+                                      </span>
+                                      {month.name}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Birth Quarter
-              </label>
-              <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 border border-gray-300 rounded-md">
-                {[
-                  { id: 'Q1', label: '1st Quarter (Jan-Mar)', color: 'bg-green-100 text-green-800', selectedColor: 'bg-green-200 text-green-800' },
-                  { id: 'Q2', label: '2nd Quarter (Apr-Jun)', color: 'bg-yellow-100 text-yellow-800', selectedColor: 'bg-yellow-200 text-yellow-800' },
-                  { id: 'Q3', label: '3rd Quarter (Jul-Sep)', color: 'bg-orange-100 text-orange-800', selectedColor: 'bg-orange-200 text-orange-800' },
-                  { id: 'Q4', label: '4th Quarter (Oct-Dec)', color: 'bg-red-100 text-red-800', selectedColor: 'bg-red-200 text-red-800' }
-                ].map((quarter) => {
-                  const isSelected = filters.birthQuarters.includes(quarter.id);
-                  return (
-                    <button
-                      key={quarter.id}
-                      onClick={() => {
-                        const newQuarters = isSelected
-                          ? filters.birthQuarters.filter(q => q !== quarter.id)
-                          : [...filters.birthQuarters, quarter.id];
-                        handleFilterChange('birthQuarters', newQuarters);
-                      }}
-                      className={`px-2 py-2 rounded text-xs font-medium ${
-                        isSelected 
-                          ? quarter.selectedColor
-                          : quarter.color
-                      } transition-colors duration-150 hover:shadow-sm`}
-                    >
-                      {isSelected && (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="inline h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                      {quarter.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Payment Date Range
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs text-gray-500">From</label>
-                  <input
-                    type="date"
-                    value={filters.paymentDateFrom}
-                    onChange={(e) => handleFilterChange('paymentDateFrom', e.target.value)}
-                    className="w-full rounded-md border-gray-300"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500">To</label>
-                  <input
-                    type="date"
-                    value={filters.paymentDateTo}
-                    onChange={(e) => handleFilterChange('paymentDateTo', e.target.value)}
-                    className="w-full rounded-md border-gray-300"
-                  />
-                </div>
-              </div>
-            </div>
+            
+           
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

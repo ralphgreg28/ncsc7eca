@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/Layout';
 import BroadcastMessageAlert from './components/BroadcastMessageAlert';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import CitizenForm from './pages/CitizenForm';
 import CitizenList from './pages/CitizenList';
@@ -28,7 +29,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         
         <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
+          <Route index element={<Home />} />
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="citizens/new" element={<CitizenForm />} />
           <Route path="citizens/list" element={<CitizenList />} />
           <Route path="citizens/duplicates" element={<DuplicateCheck />} />

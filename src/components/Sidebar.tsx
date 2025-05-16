@@ -1,4 +1,4 @@
-import { X, Home, Users, Settings, AlertTriangle, UserPlus, ChevronRight, Info, ClipboardList } from 'lucide-react';
+import { X, Home, Users, Settings, AlertTriangle, UserPlus, ChevronRight, Info, ClipboardList, BarChart2 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -23,7 +23,8 @@ function Sidebar({ open, onClose }: SidebarProps) {
   const { user } = useAuth();
 
   const items: NavItem[] = [
-    { to: '/', icon: <Home size={18} />, label: 'Dashboard' },
+    { to: '/', icon: <Home size={18} />, label: 'Home' },
+    { to: '/dashboard', icon: <BarChart2 size={18} />, label: 'Dashboard' },
     
     ...((user?.position === 'PDO' || user?.position === 'Administrator') ? [
     { 

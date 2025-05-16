@@ -30,14 +30,14 @@ function NotFound() {
       <p className="mt-4 text-gray-500">The page you are looking for doesn't exist or has been moved.</p>
       
       <div className="mt-6 text-lg text-blue-600 font-medium">
-        Redirecting to Dashboard in <span className="font-bold">{countdown}</span> seconds...
+        Redirecting to Home in <span className="font-bold">{countdown}</span> seconds...
       </div>
       
       <button 
         onClick={() => navigate('/')}
         className="mt-8 btn-primary"
       >
-        Go to Dashboard Now
+        Go to Home Now
       </button>
     </div>
   );

@@ -327,4 +327,25 @@
       @apply px-8 py-4;
     }
   }
+  
+  /* Animation utilities */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  
+  /* Session management styles */
+  .session-alert {
+    @apply fixed bottom-4 right-4 z-50 max-w-sm bg-white rounded-lg shadow-lg border border-amber-200 p-4 animate-fade-in;
+  }
 }

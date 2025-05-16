@@ -17,7 +17,7 @@ interface Filters {
   paymentDateFrom: string;
   paymentDateTo: string;
   birthYears: string[];
-  birthMonths: string[];
+  birthQuarters: string[];
   remarks: string;
   searchTerm: string;
 }
@@ -104,7 +104,7 @@ function CitizenList() {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalRecords, setTotalRecords] = useState(0);
   const [availableBirthYears, setAvailableBirthYears] = useState<string[]>([]);
-  const [availableBirthMonths, setAvailableBirthMonths] = useState<string[]>([]);
+  // Quarters are fixed, so we don't need a state for them
   const [filters, setFilters] = useState<Filters>({
     provinceCode: '',
     lguCode: '',
@@ -113,7 +113,7 @@ function CitizenList() {
     paymentDateFrom: '',
     paymentDateTo: '',
     birthYears: [],
-    birthMonths: [],
+    birthQuarters: [],
     remarks: '',
     searchTerm: ''
   });
@@ -130,25 +130,41 @@ function CitizenList() {
     'Disqualified'
   ];
 
-  // Fetch available birth years and months from the database
+  // Fetch available birth years from the database
   const fetchAvailableBirthYearsAndMonths = async () => {
     try {
-      // Fetch distinct birth years
+      // Use a more efficient query to get distinct years directly from the database
       const { data: yearsData, error: yearsError } = await supabase
-        .from('citizens')
-        .select('birth_date')
-        .order('birth_date');
+        .rpc('get_distinct_birth_years');
       
-      if (yearsError) throw yearsError;
-      
-      if (yearsData) {
-        // Extract years from birth_date and remove duplicates
-        const years = [...new Set(yearsData.map(c => 
-          new Date(c.birth_date).getFullYear().toString()
-        ))].sort((a, b) => parseInt(b) - parseInt(a)); // Sort descending (newest first)
+      if (yearsError) {
+        // If the RPC function doesn't exist, fall back to client-side extraction
+        console.warn('RPC function not available, falling back to client-side extraction:', yearsError);
+        
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('citizens')
+          .select('birth_date');
+        
+        if (fallbackError) throw fallbackError;
+        
+        if (fallbackData) {
+          // Extract years from birth_date and remove duplicates
+          const years = [...new Set(fallbackData.map(c => 
+            new Date(c.birth_date).getFullYear().toString()
+          ))].sort((a, b) => parseInt(b) - parseInt(a)); // Sort descending (newest first)
+          
+          setAvailableBirthYears(years);
+        }
+      } else if (yearsData) {
+        // Sort years in descending order (newest first)
+        const years = yearsData.map((item: { year: number }) => item.year.toString())
+          .sort((a: string, b: string) => parseInt(b) - parseInt(a));
         
         setAvailableBirthYears(years);
       }
+      
+      // Quarters are fixed, so we don't need to set them
+      
     } catch (error) {
       console.error('Error fetching birth years:', error);
     }
@@ -524,59 +540,164 @@ function CitizenList() {
         query = query.lte('payment_date', filters.paymentDateTo);
       }
 
-      // Apply birth year filters if selected
+      // Apply birth year filter
       if (filters.birthYears.length > 0) {
-        const yearConditions = [];
+        // Create a temporary array to hold all the filtered citizens
+        let yearFilteredCitizens: any[] = [];
         
-        // For each selected year, create a date range condition
+        // For each selected year, add a filter
         for (const year of filters.birthYears) {
-          yearConditions.push(`and(birth_date.gte.${year}-01-01,birth_date.lt.${parseInt(year)+1}-01-01)`);
-        }
-        
-        if (yearConditions.length > 0) {
-          query = query.or(yearConditions.join(','));
-        }
-      }
-      
-      // Apply birth month filters if selected
-      if (filters.birthMonths.length > 0) {
-        // Get all available years for creating month ranges
-        const allYears = [...new Set(availableBirthYears)];
-        const monthConditions = [];
-        
-        // For each selected month, create conditions for that month across all years
-        for (const month of filters.birthMonths) {
-          // Format the month with leading zero if needed
-          const formattedMonth = month.padStart(2, '0');
+          const startDate = `${year}-01-01`;
+          const endDate = `${parseInt(year) + 1}-01-01`;
           
-          // If we have available years, create a condition for each year-month combination
-          if (allYears.length > 0) {
-            for (const year of allYears) {
-              // For each year, create a condition for the specific month
-              // This checks if birth_date is within the specific month of the specific year
-              const startDate = `${year}-${formattedMonth}-01`;
-              
-              // Calculate the end date (first day of next month)
-              let nextMonth = parseInt(month) + 1;
-              let nextMonthYear = parseInt(year);
-              if (nextMonth > 12) {
-                nextMonth = 1;
-                nextMonthYear += 1;
-              }
-              const endDate = `${nextMonthYear}-${String(nextMonth).padStart(2, '0')}-01`;
-              
-              monthConditions.push(`and(birth_date.gte.${startDate},birth_date.lt.${endDate})`);
-            }
-          } else {
-            // Fallback if no years are available - use a generic month filter across all years
-            // This is less efficient but will work
-            monthConditions.push(`birth_date.ilike.%-${formattedMonth}-%`);
+          // Clone the query for this specific year filter
+          const yearQuery = supabase
+            .from('citizens')
+            .select('id')
+            .gte('birth_date', startDate)
+            .lt('birth_date', endDate);
+          
+          // Apply all the previous filters to this query
+          if (filters.provinceCode) yearQuery.eq('province_code', filters.provinceCode);
+          if (filters.lguCode) yearQuery.eq('lgu_code', filters.lguCode);
+          if (filters.barangayCode) yearQuery.eq('barangay_code', filters.barangayCode);
+          if (filters.status.length > 0) yearQuery.in('status', filters.status);
+          if (filters.paymentDateFrom) yearQuery.gte('payment_date', filters.paymentDateFrom);
+          if (filters.paymentDateTo) yearQuery.lte('payment_date', filters.paymentDateTo);
+          if (filters.remarks) yearQuery.ilike('remarks', `%${filters.remarks}%`);
+          if (filters.searchTerm) {
+            yearQuery.or(
+              `last_name.ilike.%${filters.searchTerm}%,` +
+              `first_name.ilike.%${filters.searchTerm}%,` +
+              `middle_name.ilike.%${filters.searchTerm}%`
+            );
+          }
+          
+          // Execute the query for this year
+          const { data: yearData, error: yearError } = await yearQuery;
+          
+          if (yearError) {
+            console.error('Error filtering by birth year:', yearError);
+          } else if (yearData && yearData.length > 0) {
+            // Add the IDs from this year to our filtered list
+            yearFilteredCitizens = [...yearFilteredCitizens, ...yearData.map(c => c.id)];
           }
         }
         
-        // Apply the month filters using OR conditions
-        if (monthConditions.length > 0) {
-          query = query.or(monthConditions.join(','));
+        // If we have any results from the year filter, apply them to the main query
+          if (yearFilteredCitizens.length > 0) {
+            // Check if we hit the limit
+            if (yearFilteredCitizens.length >= 1000) {
+              toast.warning('Birth Year filter is limited to 1000 records. Some records may not be shown.');
+            }
+            query = query.in('id', yearFilteredCitizens);
+          } else if (filters.birthYears.length > 0) {
+            // If no results match the year filter but years were selected, return no results
+            setCitizens([]);
+            setTotalRecords(0);
+            setLoading(false);
+            return;
+          }
+      }
+      
+      // Apply birth quarter filter
+      if (filters.birthQuarters.length > 0) {
+        // Get all months from selected quarters
+        let allMonths: number[] = [];
+        
+        filters.birthQuarters.forEach(quarter => {
+          switch(quarter) {
+            case 'Q1': // 1st Quarter (Jan-Mar)
+              allMonths = [...allMonths, 1, 2, 3];
+              break;
+            case 'Q2': // 2nd Quarter (Apr-Jun)
+              allMonths = [...allMonths, 4, 5, 6];
+              break;
+            case 'Q3': // 3rd Quarter (Jul-Sep)
+              allMonths = [...allMonths, 7, 8, 9];
+              break;
+            case 'Q4': // 4th Quarter (Oct-Dec)
+              allMonths = [...allMonths, 10, 11, 12];
+              break;
+          }
+        });
+        
+        // Remove duplicates
+        allMonths = [...new Set(allMonths)];
+        
+        if (allMonths.length > 0) {
+          // Create a temporary array to hold all the filtered citizens
+          let monthFilteredCitizens: any[] = [];
+          
+          try {
+            // Try to use the RPC function if it exists
+            const { data: monthData, error: monthError } = await supabase
+              .rpc('filter_citizens_by_birth_month', {
+                months: allMonths
+              });
+            
+            if (monthError) {
+              throw monthError;
+            }
+            
+            if (monthData && monthData.length > 0) {
+              // Use the IDs returned from the RPC function
+              monthFilteredCitizens = monthData.map((c: any) => c.id);
+            }
+          } catch (error) {
+            // If the RPC function doesn't exist or fails, fall back to client-side filtering
+            console.warn('RPC function not available, falling back to client-side filtering:', error);
+            
+            // Clone the query for month filtering
+            const monthQuery = supabase
+              .from('citizens')
+              .select('id, birth_date');
+            
+            // Apply all the previous filters to this query
+            if (filters.provinceCode) monthQuery.eq('province_code', filters.provinceCode);
+            if (filters.lguCode) monthQuery.eq('lgu_code', filters.lguCode);
+            if (filters.barangayCode) monthQuery.eq('barangay_code', filters.barangayCode);
+            if (filters.status.length > 0) monthQuery.in('status', filters.status);
+            if (filters.paymentDateFrom) monthQuery.gte('payment_date', filters.paymentDateFrom);
+            if (filters.paymentDateTo) monthQuery.lte('payment_date', filters.paymentDateTo);
+            if (filters.remarks) monthQuery.ilike('remarks', `%${filters.remarks}%`);
+            if (filters.searchTerm) {
+              monthQuery.or(
+                `last_name.ilike.%${filters.searchTerm}%,` +
+                `first_name.ilike.%${filters.searchTerm}%,` +
+                `middle_name.ilike.%${filters.searchTerm}%`
+              );
+            }
+            
+            // Execute the query
+            const { data: fallbackData, error: fallbackError } = await monthQuery;
+            
+            if (fallbackError) {
+              console.error('Error filtering by birth month:', fallbackError);
+            } else if (fallbackData && fallbackData.length > 0) {
+              // Filter citizens by month client-side
+              monthFilteredCitizens = fallbackData
+                .filter(c => {
+                  const birthMonth = new Date(c.birth_date).getMonth() + 1; // +1 because getMonth() is 0-indexed
+                  return allMonths.includes(birthMonth);
+                })
+                .map(c => c.id);
+            }
+          }
+          
+          if (monthFilteredCitizens.length > 0) {
+            // Check if we hit the limit
+            if (monthFilteredCitizens.length >= 1000) {
+              toast.warning('Birth Quarter filter is limited to 1000 records. Some records may not be shown.');
+            }
+            query = query.in('id', monthFilteredCitizens);
+          } else {
+            // No citizens match the month filter
+            setCitizens([]);
+            setTotalRecords(0);
+            setLoading(false);
+            return;
+          }
         }
       }
 
@@ -769,59 +890,165 @@ function CitizenList() {
         query = query.lte('payment_date', filters.paymentDateTo);
       }
 
-      // Apply birth year filters if selected
+      // Apply birth year filter
       if (filters.birthYears.length > 0) {
-        const yearConditions = [];
+        // Create a temporary array to hold all the filtered citizens
+        let yearFilteredCitizens: any[] = [];
         
-        // For each selected year, create a date range condition
+        // For each selected year, add a filter
         for (const year of filters.birthYears) {
-          yearConditions.push(`and(birth_date.gte.${year}-01-01,birth_date.lt.${parseInt(year)+1}-01-01)`);
-        }
-        
-        if (yearConditions.length > 0) {
-          query = query.or(yearConditions.join(','));
-        }
-      }
-      
-      // Apply birth month filters if selected
-      if (filters.birthMonths.length > 0) {
-        // Get all available years for creating month ranges
-        const allYears = [...new Set(availableBirthYears)];
-        const monthConditions = [];
-        
-        // For each selected month, create conditions for that month across all years
-        for (const month of filters.birthMonths) {
-          // Format the month with leading zero if needed
-          const formattedMonth = month.padStart(2, '0');
+          const startDate = `${year}-01-01`;
+          const endDate = `${parseInt(year) + 1}-01-01`;
           
-          // If we have available years, create a condition for each year-month combination
-          if (allYears.length > 0) {
-            for (const year of allYears) {
-              // For each year, create a condition for the specific month
-              // This checks if birth_date is within the specific month of the specific year
-              const startDate = `${year}-${formattedMonth}-01`;
-              
-              // Calculate the end date (first day of next month)
-              let nextMonth = parseInt(month) + 1;
-              let nextMonthYear = parseInt(year);
-              if (nextMonth > 12) {
-                nextMonth = 1;
-                nextMonthYear += 1;
-              }
-              const endDate = `${nextMonthYear}-${String(nextMonth).padStart(2, '0')}-01`;
-              
-              monthConditions.push(`and(birth_date.gte.${startDate},birth_date.lt.${endDate})`);
-            }
-          } else {
-            // Fallback if no years are available - use a generic month filter across all years
-            // This is less efficient but will work
-            monthConditions.push(`birth_date.ilike.%-${formattedMonth}-%`);
+          // Clone the query for this specific year filter
+          const yearQuery = supabase
+            .from('citizens')
+            .select('id')
+            .gte('birth_date', startDate)
+            .lt('birth_date', endDate);
+          
+          // Apply all the previous filters to this query
+          if (filters.provinceCode) yearQuery.eq('province_code', filters.provinceCode);
+          if (filters.lguCode) yearQuery.eq('lgu_code', filters.lguCode);
+          if (filters.barangayCode) yearQuery.eq('barangay_code', filters.barangayCode);
+          if (filters.status.length > 0) yearQuery.in('status', filters.status);
+          if (filters.paymentDateFrom) yearQuery.gte('payment_date', filters.paymentDateFrom);
+          if (filters.paymentDateTo) yearQuery.lte('payment_date', filters.paymentDateTo);
+          if (filters.remarks) yearQuery.ilike('remarks', `%${filters.remarks}%`);
+          if (filters.searchTerm) {
+            yearQuery.or(
+              `last_name.ilike.%${filters.searchTerm}%,` +
+              `first_name.ilike.%${filters.searchTerm}%,` +
+              `middle_name.ilike.%${filters.searchTerm}%`
+            );
+          }
+          
+          // Execute the query for this year
+          const { data: yearData, error: yearError } = await yearQuery;
+          
+          if (yearError) {
+            console.error('Error filtering by birth year:', yearError);
+          } else if (yearData && yearData.length > 0) {
+            // Add the IDs from this year to our filtered list
+            yearFilteredCitizens = [...yearFilteredCitizens, ...yearData.map(c => c.id)];
           }
         }
         
-        // Apply the month filters using OR conditions
-        if (monthConditions.length > 0) {
-          query = query.or(monthConditions.join(','));
+        // If we have any results from the year filter, apply them to the main query
+          if (yearFilteredCitizens.length > 0) {
+            // Check if we hit the limit
+            if (yearFilteredCitizens.length >= 1000) {
+              toast.warning('Birth Year filter is limited to 1000 records for export. Some records may not be included.');
+            }
+            query = query.in('id', yearFilteredCitizens);
+          } else if (filters.birthYears.length > 0) {
+            // If no results match the year filter but years were selected, return no results
+            toast.info('No data to export - No citizens match the birth year filter');
+            setExportLoading(false);
+            return;
+          }
+      }
+      
+      // Apply birth quarter filter
+      if (filters.birthQuarters.length > 0) {
+        // Get all months from selected quarters
+        let allMonths: number[] = [];
+        
+        filters.birthQuarters.forEach(quarter => {
+          switch(quarter) {
+            case 'Q1': // 1st Quarter (Jan-Mar)
+              allMonths = [...allMonths, 1, 2, 3];
+              break;
+            case 'Q2': // 2nd Quarter (Apr-Jun)
+              allMonths = [...allMonths, 4, 5, 6];
+              break;
+            case 'Q3': // 3rd Quarter (Jul-Sep)
+              allMonths = [...allMonths, 7, 8, 9];
+              break;
+            case 'Q4': // 4th Quarter (Oct-Dec)
+              allMonths = [...allMonths, 10, 11, 12];
+              break;
+          }
+        });
+        
+        // Remove duplicates
+        allMonths = [...new Set(allMonths)];
+        
+        if (allMonths.length > 0) {
+          // Create a temporary array to hold all the filtered citizens
+          let monthFilteredCitizens: any[] = [];
+          
+          try {
+            // Try to use the RPC function if it exists
+            const { data: monthData, error: monthError } = await supabase
+              .rpc('filter_citizens_by_birth_month', {
+                months: allMonths
+              });
+            
+            if (monthError) {
+              throw monthError;
+            }
+            
+            if (monthData && monthData.length > 0) {
+              // Use the IDs returned from the RPC function
+              monthFilteredCitizens = monthData.map((c: any) => c.id);
+            }
+          } catch (error) {
+            // If the RPC function doesn't exist or fails, fall back to client-side filtering
+            console.warn('RPC function not available for export, falling back to client-side filtering:', error);
+            
+            // Clone the query for month filtering
+            const monthQuery = supabase
+              .from('citizens')
+              .select('id, birth_date');
+            
+            // Apply all the previous filters to this query
+            if (filters.provinceCode) monthQuery.eq('province_code', filters.provinceCode);
+            if (filters.lguCode) monthQuery.eq('lgu_code', filters.lguCode);
+            if (filters.barangayCode) monthQuery.eq('barangay_code', filters.barangayCode);
+            if (filters.status.length > 0) monthQuery.in('status', filters.status);
+            if (filters.paymentDateFrom) monthQuery.gte('payment_date', filters.paymentDateFrom);
+            if (filters.paymentDateTo) monthQuery.lte('payment_date', filters.paymentDateTo);
+            if (filters.remarks) monthQuery.ilike('remarks', `%${filters.remarks}%`);
+            if (filters.searchTerm) {
+              monthQuery.or(
+                `last_name.ilike.%${filters.searchTerm}%,` +
+                `first_name.ilike.%${filters.searchTerm}%,` +
+                `middle_name.ilike.%${filters.searchTerm}%`
+              );
+            }
+            
+            // Execute the query
+            const { data: fallbackData, error: fallbackError } = await monthQuery;
+            
+            if (fallbackError) {
+              console.error('Error filtering by birth month for export:', fallbackError);
+              toast.error('Failed to filter by birth month');
+              setExportLoading(false);
+              return;
+            } else if (fallbackData && fallbackData.length > 0) {
+              // Filter citizens by month client-side
+              monthFilteredCitizens = fallbackData
+                .filter(c => {
+                  const birthMonth = new Date(c.birth_date).getMonth() + 1; // +1 because getMonth() is 0-indexed
+                  return allMonths.includes(birthMonth);
+                })
+                .map(c => c.id);
+            }
+          }
+          
+          if (monthFilteredCitizens.length > 0) {
+            // Check if we hit the limit
+            if (monthFilteredCitizens.length >= 1000) {
+              toast.warning('Birth Quarter filter is limited to 1000 records for export. Some records may not be included.');
+            }
+            query = query.in('id', monthFilteredCitizens);
+          } else {
+            // No citizens match the month filter
+            toast.info('No data to export - No citizens match the birth quarter filter');
+            setExportLoading(false);
+            return;
+          }
         }
       }
 
@@ -925,7 +1152,7 @@ function CitizenList() {
       paymentDateFrom: '',
       paymentDateTo: '',
       birthYears: [],
-      birthMonths: [],
+      birthQuarters: [],
       remarks: '',
       searchTerm: ''
     });
@@ -1194,25 +1421,29 @@ function CitizenList() {
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Birth Month
+                Birth Quarter
               </label>
-              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border border-gray-300 rounded-md">
-                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, index) => {
-                  const monthValue = String(index + 1).padStart(2, '0');
-                  const isSelected = filters.birthMonths.includes(monthValue);
+              <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 border border-gray-300 rounded-md">
+                {[
+                  { id: 'Q1', label: '1st Quarter (Jan-Mar)', color: 'bg-green-100 text-green-800', selectedColor: 'bg-green-200 text-green-800' },
+                  { id: 'Q2', label: '2nd Quarter (Apr-Jun)', color: 'bg-yellow-100 text-yellow-800', selectedColor: 'bg-yellow-200 text-yellow-800' },
+                  { id: 'Q3', label: '3rd Quarter (Jul-Sep)', color: 'bg-orange-100 text-orange-800', selectedColor: 'bg-orange-200 text-orange-800' },
+                  { id: 'Q4', label: '4th Quarter (Oct-Dec)', color: 'bg-red-100 text-red-800', selectedColor: 'bg-red-200 text-red-800' }
+                ].map((quarter) => {
+                  const isSelected = filters.birthQuarters.includes(quarter.id);
                   return (
                     <button
-                      key={month}
+                      key={quarter.id}
                       onClick={() => {
-                        const newMonths = isSelected
-                          ? filters.birthMonths.filter(m => m !== monthValue)
-                          : [...filters.birthMonths, monthValue];
-                        handleFilterChange('birthMonths', newMonths);
+                        const newQuarters = isSelected
+                          ? filters.birthQuarters.filter(q => q !== quarter.id)
+                          : [...filters.birthQuarters, quarter.id];
+                        handleFilterChange('birthQuarters', newQuarters);
                       }}
-                      className={`px-2 py-1 rounded text-xs font-medium ${
+                      className={`px-2 py-2 rounded text-xs font-medium ${
                         isSelected 
-                          ? 'bg-blue-200 text-blue-800' 
-                          : 'bg-gray-100 text-gray-700'
+                          ? quarter.selectedColor
+                          : quarter.color
                       } transition-colors duration-150 hover:shadow-sm`}
                     >
                       {isSelected && (
@@ -1220,7 +1451,7 @@ function CitizenList() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       )}
-                      {month}
+                      {quarter.label}
                     </button>
                   );
                 })}

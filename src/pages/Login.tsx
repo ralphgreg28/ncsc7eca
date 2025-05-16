@@ -3,62 +3,32 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Lock, User, AlertCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { loginUser } from '../lib/auth';
 import { loginSchema } from '../lib/schemas';
 import type { LoginInput } from '../lib/schemas';
 
 function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const { register, handleSubmit, formState: { errors } } = useForm<LoginInput>();
 
   const onSubmit = async (data: LoginInput) => {
     try {
       setLoading(true);
+      console.log('Login attempt for:', data.identifier);
 
-      const { data: staff, error } = await supabase
-        .from('staff')
-        .select('*')
-        .eq('username', data.identifier)
-        .single();
+      const result = await loginUser(data.identifier, data.password, rememberMe);
+      console.log('Login result:', { success: result.success, hasUser: !!result.user });
 
-      if (error) {
-        console.error('Database error:', error);
-        toast.error('An error occurred while logging in');
+      if (!result.success && result.error) {
+        console.log('Login failed:', result.error);
+        toast.error(result.error.message);
         return;
       }
 
-      if (!staff) {
-        toast.error('Invalid username or password');
-        return;
-      }
-
-      // Compare password hash
-      if (staff.password_hash !== data.password) {
-        toast.error('Invalid username or password');
-        return;
-      }
-
-      // Check if user is active
-      if (staff.status !== 'Active') {
-        toast.error('Your account is not active. Please contact an administrator.');
-        return;
-      }
-
-      // Update last login
-      const { error: updateError } = await supabase
-        .from('staff')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', staff.id);
-
-      if (updateError) {
-        console.error('Failed to update last login:', updateError);
-      }
-
-      // Store user info in localStorage
-      localStorage.setItem('user', JSON.stringify(staff));
-      
-      // Redirect to dashboard
+      console.log('Login successful, redirecting to dashboard...');
+      // Use window.location for a full page reload to ensure proper initialization
       window.location.href = '/';
     } catch (error) {
       console.error('Login error:', error);
@@ -174,10 +144,28 @@ function Login() {
             </button>
           </div>
 
-          <div className="mt-4 text-center">
-            <div className="flex items-center justify-center text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-amber-500 mr-2 flex-shrink-0" />
-              <span>Forgot password? Contact your administrator for assistance.</span>
+          <div className="mt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  Remember me for 7 days
+                </label>
+              </div>
+            </div>
+            
+            <div className="mt-4 text-center">
+              <div className="flex items-center justify-center text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
+                <AlertCircle className="h-4 w-4 text-amber-500 mr-2 flex-shrink-0" />
+                <span>Forgot password? Contact your administrator for assistance.</span>
+              </div>
             </div>
           </div>
         </form>

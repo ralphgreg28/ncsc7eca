@@ -70,7 +70,9 @@ function CitizenForm() {
     lgu_name: '',
     barangay_name: ''
   });
-
+  
+  // Add a ref to track if a submission is in progress
+  const isSubmitting = useRef(false);
   
   const { register, handleSubmit, watch, formState: { errors }, reset, setValue } = useForm<CitizenFormInput>();
   
@@ -268,7 +270,13 @@ function CitizenForm() {
   };
 
   const saveRecord = async (data: CitizenFormInput) => {
+  // Prevent duplicate submissions
+  if (isSubmitting.current) {
+    return;
+  }
+  
   try {
+    isSubmitting.current = true;
     setLoading(true);
 
     // Get the next ID using the function
@@ -336,11 +344,18 @@ function CitizenForm() {
     toast.error('Failed to save record. Please try again.');
   } finally {
     setLoading(false);
+    isSubmitting.current = false;
   }
 };
 
 const updateRecord = async (data: CitizenFormInput, citizenId: number) => {
+  // Prevent duplicate submissions
+  if (isSubmitting.current) {
+    return;
+  }
+  
   try {
+    isSubmitting.current = true;
     setLoading(true);
 
     // Fetch the old record first
@@ -405,13 +420,20 @@ const updateRecord = async (data: CitizenFormInput, citizenId: number) => {
     toast.error('Failed to update record. Please try again.');
   } finally {
     setLoading(false);
+    isSubmitting.current = false;
   }
 };
 
 
 // Delete record function
 const deleteRecord = async (citizenId: number) => {
+  // Prevent duplicate submissions
+  if (isSubmitting.current) {
+    return;
+  }
+  
   try {
+    isSubmitting.current = true;
     setLoading(true);
 
     // Fetch the record before deleting it
@@ -447,14 +469,21 @@ const deleteRecord = async (citizenId: number) => {
     toast.error('Failed to delete record. Please try again.');
   } finally {
     setLoading(false);
+    isSubmitting.current = false;
   }
 };
 
 
   const updateExistingRecord = async () => {
     if (!duplicateRecord || !firstEntry) return;
+    
+    // Prevent duplicate submissions
+    if (isSubmitting.current) {
+      return;
+    }
 
     try {
+      isSubmitting.current = true;
       setLoading(true);
       
       const { error } = await supabase
@@ -511,6 +540,7 @@ const deleteRecord = async (citizenId: number) => {
     } finally {
       setLoading(false);
       setShowDuplicateModal(false);
+      isSubmitting.current = false;
     }
   };
   

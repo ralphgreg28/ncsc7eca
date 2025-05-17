@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MessageSquare, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import type { Database } from '../lib/database.types';
@@ -101,8 +102,8 @@ function Home() {
       <div className="bg-white rounded-lg shadow-sm p-6">
         <h2 className="text-lg font-semibold mb-4">Quick Links</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <a 
-            href="/dashboard" 
+          <Link 
+            to="/dashboard" 
             className="bg-blue-50 hover:bg-blue-100 transition-colors p-4 rounded-lg flex flex-col items-center text-center"
           >
             <div className="bg-blue-100 p-3 rounded-full mb-3">
@@ -112,9 +113,9 @@ function Home() {
             </div>
             <h3 className="font-medium text-blue-900">Dashboard</h3>
             <p className="text-sm text-blue-700 mt-1">View analytics and statistics</p>
-          </a>
-          <a 
-            href="/citizens/list" 
+          </Link>
+          <Link 
+            to="/citizens/list" 
             className="bg-indigo-50 hover:bg-indigo-100 transition-colors p-4 rounded-lg flex flex-col items-center text-center"
           >
             <div className="bg-indigo-100 p-3 rounded-full mb-3">
@@ -124,10 +125,10 @@ function Home() {
             </div>
             <h3 className="font-medium text-indigo-900">Senior Citizens Records</h3>
             <p className="text-sm text-indigo-700 mt-1">View and manage senior citizens</p>
-          </a>
+          </Link>
           
-          <a 
-            href="/citizens/new" 
+          <Link 
+            to="/citizens/new" 
             className="bg-green-50 hover:bg-green-100 transition-colors p-4 rounded-lg flex flex-col items-center text-center"
           >
             <div className="bg-green-100 p-3 rounded-full mb-3">
@@ -137,10 +138,10 @@ function Home() {
             </div>
             <h3 className="font-medium text-green-900">Encode Potential ECA Beneficiary</h3>
             <p className="text-sm text-green-700 mt-1">Register a new senior citizen</p>
-          </a>
+          </Link>
           
-          <a 
-            href="/citizens/duplicates" 
+          <Link 
+            to="/citizens/duplicates" 
             className="bg-amber-50 hover:bg-amber-100 transition-colors p-4 rounded-lg flex flex-col items-center text-center"
           >
             <div className="bg-amber-100 p-3 rounded-full mb-3">
@@ -150,7 +151,7 @@ function Home() {
             </div>
             <h3 className="font-medium text-amber-900">Duplicate Check</h3>
             <p className="text-sm text-amber-700 mt-1">Find and manage duplicate records</p>
-          </a>
+          </Link>
         </div>
       </div>
     </div>

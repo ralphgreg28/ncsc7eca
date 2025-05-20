@@ -312,7 +312,8 @@ function CitizenForm() {
     if (error) throw error;
 
     // Insert audit log for creation
-    await logAudit({
+   /* 
+   await logAudit({
       action: 'create',
       table_name: 'citizens',
       record_id: nextId.toString(),
@@ -336,6 +337,8 @@ function CitizenForm() {
       },
       staff_id: user?.id
     });
+
+    */
 
     toast.success('Senior citizen record saved successfully!');
     navigate('/citizens/list');

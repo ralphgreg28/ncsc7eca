@@ -4,7 +4,6 @@ import { toast } from 'react-toastify';
 import { AlertCircle, Calendar, Check, Edit, MessageSquare, Plus, Trash2, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { logAudit } from '../lib/audit';
 import type { Database } from '../lib/database.types';
 
 type BroadcastMessage = Database['public']['Tables']['broadcast_messages']['Row'];
@@ -70,15 +69,7 @@ function BroadcastMessages() {
           .eq('id', editingId);
 
         if (error) throw error;
-
-        await logAudit({
-          action: 'UPDATE_BROADCAST_MESSAGE',
-          details: { message_id: editingId },
-          table_name: 'broadcast_messages',
-          record_id: editingId.toString(),
-          staff_id: user?.id
-        });
-
+       
         toast.success('Broadcast message updated successfully');
       } else {
         // Create new message
@@ -96,14 +87,7 @@ function BroadcastMessages() {
 
         if (error) throw error;
 
-        await logAudit({
-          action: 'CREATE_BROADCAST_MESSAGE',
-          details: { message_id: newMessage.id },
-          table_name: 'broadcast_messages',
-          record_id: newMessage.id.toString(),
-          staff_id: user?.id
-        });
-
+        
         toast.success('Broadcast message created successfully');
       }
 
@@ -140,14 +124,7 @@ function BroadcastMessages() {
 
       if (error) throw error;
 
-      await logAudit({
-        action: 'DELETE_BROADCAST_MESSAGE',
-        details: { message_id: id },
-        table_name: 'broadcast_messages',
-        record_id: id.toString(),
-        staff_id: user?.id
-      });
-
+     
       toast.success('Broadcast message deleted successfully');
       fetchMessages();
     } catch (error) {
@@ -165,14 +142,7 @@ function BroadcastMessages() {
 
       if (error) throw error;
 
-      await logAudit({
-        action: 'UPDATE_BROADCAST_MESSAGE_STATUS',
-        details: { message_id: id, is_active: !currentStatus },
-        table_name: 'broadcast_messages',
-        record_id: id.toString(),
-        staff_id: user?.id
-      });
-
+      
       toast.success(`Broadcast message ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
       fetchMessages();
     } catch (error) {

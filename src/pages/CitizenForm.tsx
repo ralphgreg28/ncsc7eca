@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { format, differenceInYears } from 'date-fns';
 import { toast } from 'react-toastify';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Calendar, User, MapPin, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -74,11 +74,49 @@ function CitizenForm() {
   // Add a ref to track if a submission is in progress
   const isSubmitting = useRef(false);
   
-  const { register, handleSubmit, watch, formState: { errors }, reset, setValue } = useForm<CitizenFormInput>();
+  const { register, handleSubmit, watch, formState: { errors }, reset, setValue, getValues } = useForm<CitizenFormInput>();
   
   const birthDate = watch('birthDate');
   const selectedProvinceCode = watch('provinceCode');
   const selectedLguCode = watch('lguCode');
+  
+  // Watch all fields for real-time validation in step 2
+  const watchAllFields = watch();
+  
+  // State to track field matches/mismatches in step 2
+  const [fieldMatches, setFieldMatches] = useState<Record<string, boolean>>({});
+  const [mismatchCount, setMismatchCount] = useState(0);
+  
+  // Effect to check field matches in step 2
+  useEffect(() => {
+    if (step === 2 && firstEntry) {
+      const fieldsToCompare = [
+        'lastName', 'firstName', 'middleName', 'extensionName', 
+        'birthDate', 'sex', 'provinceCode', 'lguCode', 'barangayCode',
+        'oscaId', 'rrn', 'validator', 'validationDate'
+      ];
+      
+      const currentMatches: Record<string, boolean> = {};
+      let mismatches = 0;
+      
+      fieldsToCompare.forEach(field => {
+        const firstValue = firstEntry[field as keyof CitizenFormInput] || '';
+        const currentValue = watchAllFields[field as keyof CitizenFormInput] || '';
+        
+        // Only mark as matched if the field has a value and matches
+        const isMatch = currentValue !== '' && firstValue === currentValue;
+        currentMatches[field] = isMatch;
+        
+        // Count mismatches only for fields that have values
+        if (currentValue !== '' && firstValue !== currentValue) {
+          mismatches++;
+        }
+      });
+      
+      setFieldMatches(currentMatches);
+      setMismatchCount(mismatches);
+    }
+  }, [watchAllFields, firstEntry, step]);
   
   useEffect(() => {
     if (birthDate) {
@@ -563,107 +601,250 @@ const deleteRecord = async (citizenId: number) => {
 
  
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6">
-      <div className="mb-6">
+    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-6">
         <button 
           type="button" 
           onClick={goBack}
-          className="flex items-center text-gray-600 hover:text-gray-900"
+          className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
         >
-          <ArrowLeft size={16} className="mr-1" />
+          <ArrowLeft size={18} className="mr-2" />
           {step === 2 ? 'Back to First Entry' : 'Back'}
         </button>
+        
+        {/* Step indicator */}
+        <div className="flex items-center">
+          <div className={`flex items-center justify-center w-8 h-8 rounded-full ${step === 1 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'} mr-2`}>
+            1
+          </div>
+          <div className={`w-8 h-1 ${step === 2 ? 'bg-blue-600' : 'bg-gray-300'} mx-1`}></div>
+          <div className={`flex items-center justify-center w-8 h-8 rounded-full ${step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'}`}>
+            2
+          </div>
+        </div>
       </div>
       
-      <h1 className="text-2xl font-bold text-blue-800 mb-6">
-        {step === 1 ? 'Register New Senior Citizen - 1st Entry (Application Form)' : 'Verify Data using Primary ID / Secondary ID'}
+      <h1 className="text-2xl font-bold text-blue-800 mb-4 text-center">
+        {step === 1 ? 'Register New Senior Citizen' : 'Verify Senior Citizen Data'}
       </h1>
       
+      <p className="text-gray-600 mb-6 text-center">
+        {step === 1 ? 'Complete the application form with citizen information' : 'Verify data using primary or secondary ID'}
+      </p>
+      
       {step === 2 && (
-        <div className="mb-6 p-4 bg-blue-50 rounded-md">
-          <p className="text-blue-700">
-            Please enter the information again to verify accuracy. 
-            Both entries must match exactly to save the record.
-          </p>
+        <div className="mb-6">
+          <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-md flex items-start mb-4">
+            <AlertCircle size={20} className="text-blue-600 mr-2 mt-1 flex-shrink-0" />
+            <div>
+              <p className="text-blue-700 font-medium">
+                Verification Step
+              </p>
+              <p className="text-blue-700">
+                Please enter the information again to verify accuracy. 
+                Both entries must match exactly to save the record.
+              </p>
+            </div>
+          </div>
+          
+          {/* Validation Status */}
+          {Object.keys(fieldMatches).length > 0 && (
+            <div className={`p-4 rounded-md mb-4 ${mismatchCount > 0 ? 'bg-yellow-50 border border-yellow-300' : 'bg-green-50 border border-green-300'}`}>
+              <div className="flex items-center mb-2">
+                {mismatchCount > 0 ? (
+                  <>
+                    <AlertCircle size={18} className="text-yellow-600 mr-2" />
+                    <h3 className="text-yellow-700 font-medium">Validation in Progress</h3>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={18} className="text-green-600 mr-2" />
+                    <h3 className="text-green-700 font-medium">All Fields Match!</h3>
+                  </>
+                )}
+              </div>
+              
+              {mismatchCount > 0 && (
+                <p className="text-yellow-700 text-sm">
+                  {mismatchCount} field(s) don't match the first entry. Please check highlighted fields.
+                </p>
+              )}
+            </div>
+          )}
+          
+          {/* First Entry Summary */}
+          <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+            <h3 className="text-gray-700 font-medium mb-3 flex items-center">
+              <CheckCircle size={16} className="text-green-600 mr-2" />
+              First Entry Summary
+            </h3>
+            {firstEntry && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                <div>
+                  <span className="text-gray-500">Last Name:</span> 
+                  <span className="ml-1 font-medium">{firstEntry.lastName}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">First Name:</span> 
+                  <span className="ml-1 font-medium">{firstEntry.firstName}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Middle Name:</span> 
+                  <span className="ml-1 font-medium">{firstEntry.middleName || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Extension Name:</span> 
+                  <span className="ml-1 font-medium">{firstEntry.extensionName || 'None'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Birth Date:</span> 
+                  <span className="ml-1 font-medium">{firstEntry.birthDate}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Sex:</span> 
+                  <span className="ml-1 font-medium">{firstEntry.sex}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">OSCA ID:</span> 
+                  <span className="ml-1 font-medium">{firstEntry.oscaId || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">RRN:</span> 
+                  <span className="ml-1 font-medium">{firstEntry.rrn || 'N/A'}</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
       
-      <form onSubmit={handleSubmit(step === 1 ? onFirstSubmit : onSecondSubmit)}>
-        <div className="bg-gray-50 p-4 rounded-md mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h2>
+      <form onSubmit={handleSubmit(step === 1 ? onFirstSubmit : onSecondSubmit)} className="space-y-6">
+        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="flex items-center mb-4">
+            <User size={20} className="text-blue-600 mr-2" />
+            <h2 className="text-lg font-semibold text-gray-800">Personal Information</h2>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
              <div className="form-group">
-              <label htmlFor="oscaId">OSCA ID</label>
+              <label htmlFor="oscaId" className="text-gray-700 font-medium mb-1">
+                OSCA ID <span className="text-gray-400 text-sm font-normal">(optional)</span>
+              </label>
               <input
                 id="oscaId"
                 type="text"
                 {...register('oscaId')}
-                className={`border ${errors.oscaId ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
-                placeholder="Enter OSCA ID (optional)"
+                className={`border ${errors.oscaId ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'} rounded-md p-2 w-full transition-colors`}
+                placeholder="Enter OSCA ID"
                 onChange={handleUppercase}
-               
               />
-              {errors.oscaId && <p className="form-error">{errors.oscaId.message}</p>}
-              <p className="form-hint">Leave blank to set as N/A</p>
+              {errors.oscaId && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.oscaId.message}
+                </p>
+              )}
+              <p className="text-gray-500 text-sm mt-1">Leave blank to set as N/A</p>
             </div>
 
             <div className="form-group">
-              <label htmlFor="rrn">RRN (Regional Reference Number)</label>
+              <label htmlFor="rrn" className="text-gray-700 font-medium mb-1">
+                RRN <span className="text-gray-400 text-sm font-normal">(Regional Reference Number, optional)</span>
+              </label>
               <input
                 id="rrn"
                 type="text"
                 {...register('rrn')}
-                className={`border ${errors.rrn ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
-                placeholder="Enter RRN (optional)"
+                className={`border ${errors.rrn ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'} rounded-md p-2 w-full transition-colors`}
+                placeholder="Enter RRN"
                 onChange={handleUppercase}
               />
-              {errors.rrn && <p className="form-error">{errors.rrn.message}</p>}
-              <p className="form-hint">Leave blank to set as N/A</p>
+              {errors.rrn && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.rrn.message}
+                </p>
+              )}
+              <p className="text-gray-500 text-sm mt-1">Leave blank to set as N/A</p>
             </div>
             
             <div className="form-group">
-              <label htmlFor="lastName">Last Name *</label>
+              <label htmlFor="lastName" className="flex items-center text-gray-700 font-medium mb-1">
+                Last Name <span className="text-red-500 ml-1">*</span>
+              </label>
               <input
                 id="lastName"
                 type="text"
                 {...register('lastName', { required: 'Last name is required' })}
-                className={`border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
+                className={`border ${
+                  errors.lastName 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.lastName
+                      ? fieldMatches.lastName
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                } rounded-md p-2 w-full transition-colors`}
                 onChange={handleUppercase}
               />
-              {errors.lastName && <p className="form-error">{errors.lastName.message}</p>}
+              {errors.lastName && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.lastName.message}
+                </p>
+              )}
             </div>
             
             <div className="form-group">
-              <label htmlFor="firstName">First Name *</label>
+              <label htmlFor="firstName" className="flex items-center text-gray-700 font-medium mb-1">
+                First Name <span className="text-red-500 ml-1">*</span>
+              </label>
               <input
                 id="firstName"
                 type="text"
                 {...register('firstName', { required: 'First name is required' })}
-                className={`border ${errors.firstName ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
+                className={`border ${
+                  errors.firstName 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.firstName
+                      ? fieldMatches.firstName
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                } rounded-md p-2 w-full transition-colors`}
                 onChange={handleUppercase}
               />
-              {errors.firstName && <p className="form-error">{errors.firstName.message}</p>}
+              {errors.firstName && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.firstName.message}
+                </p>
+              )}
             </div>
             
             <div className="form-group">
-              <label htmlFor="middleName">Middle Name</label>
+              <label htmlFor="middleName" className="text-gray-700 font-medium mb-1">
+                Middle Name <span className="text-gray-400 text-sm font-normal">(optional)</span>
+              </label>
               <input
                 id="middleName"
                 type="text"
                 {...register('middleName')}
-                className="border border-gray-300 rounded-md p-2 w-full"
+                className="border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md p-2 w-full transition-colors"
+                placeholder="Enter middle name"
                 onChange={handleUppercase}
               />
             </div>
             
             <div className="form-group">
-              <label htmlFor="extensionName">Extension Name</label>
+              <label htmlFor="extensionName" className="text-gray-700 font-medium mb-1">
+                Extension Name <span className="text-gray-400 text-sm font-normal">(optional)</span>
+              </label>
               <select
                 id="extensionName"
                 {...register('extensionName')}
-                className="border border-gray-300 rounded-md p-2 w-full"
+                className="border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md p-2 w-full transition-colors"
               >
                 {EXTENSION_NAMES.map(ext => (
                   <option key={ext} value={ext}>{ext || 'None'}</option>
@@ -674,46 +855,98 @@ const deleteRecord = async (citizenId: number) => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div className="form-group">
-              <label htmlFor="birthDate">Birth Date *</label>
-              <input
-                id="birthDate"
-                type="date"
-                max={format(new Date(), 'yyyy-MM-dd')}
-                {...register('birthDate', { required: 'Birth date is required' })}
-                className={`border ${errors.birthDate ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
-              />
-              {errors.birthDate && <p className="form-error">{errors.birthDate.message}</p>}
-              {age !== null && <p className="form-hint">Age: {age} years old</p>}
+              <label htmlFor="birthDate" className="flex items-center text-gray-700 font-medium mb-1">
+                Birth Date <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Calendar size={16} className="text-gray-500" />
+                </div>
+                <input
+                  id="birthDate"
+                  type="date"
+                  max={format(new Date(), 'yyyy-MM-dd')}
+                  {...register('birthDate', { required: 'Birth date is required' })}
+                  className={`border ${
+                    errors.birthDate 
+                      ? 'border-red-500 bg-red-50' 
+                      : step === 2 && watchAllFields.birthDate
+                        ? fieldMatches.birthDate
+                          ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                          : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                        : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                  } rounded-md p-2 pl-10 w-full transition-colors`}
+                />
+              </div>
+              {errors.birthDate && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.birthDate.message}
+                </p>
+              )}
+              {age !== null && (
+                <p className="text-gray-600 text-sm mt-1">
+                  Age: <span className="font-medium">{age} years old</span>
+                </p>
+              )}
             </div>
             
             <div className="form-group">
-              <label htmlFor="sex">Sex *</label>
+              <label htmlFor="sex" className="flex items-center text-gray-700 font-medium mb-1">
+                Sex <span className="text-red-500 ml-1">*</span>
+              </label>
               <select
                 id="sex"
                 {...register('sex', { required: 'Sex is required' })}
-                className={`border ${errors.sex ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
+                className={`border ${
+                  errors.sex 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.sex
+                      ? fieldMatches.sex
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                } rounded-md p-2 w-full transition-colors`}
               >
                 <option value="">Select...</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
               </select>
-              {errors.sex && <p className="form-error">{errors.sex.message}</p>}
+              {errors.sex && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.sex.message}
+                </p>
+              )}
             </div>
 
            
           </div>
         </div>
         
-        <div className="bg-gray-50 p-4 rounded-md mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Address Information</h2>
+        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="flex items-center mb-4">
+            <MapPin size={20} className="text-blue-600 mr-2" />
+            <h2 className="text-lg font-semibold text-gray-800">Address Information</h2>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-group">
-              <label htmlFor="provinceCode">Province *</label>
+              <label htmlFor="provinceCode" className="flex items-center text-gray-700 font-medium mb-1">
+                Province <span className="text-red-500 ml-1">*</span>
+              </label>
               <select
                 id="provinceCode"
                 {...register('provinceCode', { required: 'Province is required' })}
-                className={`border ${errors.provinceCode ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
+                className={`border ${
+                  errors.provinceCode 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.provinceCode
+                      ? fieldMatches.provinceCode
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                } rounded-md p-2 w-full transition-colors`}
               >
                 <option value="">Select Province</option>
                 {provinces.map(province => (
@@ -722,87 +955,178 @@ const deleteRecord = async (citizenId: number) => {
                   </option>
                 ))}
               </select>
-              {errors.provinceCode && <p className="form-error">{errors.provinceCode.message}</p>}
+              {errors.provinceCode && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.provinceCode.message}
+                </p>
+              )}
             </div>
             
             <div className="form-group">
-              <label htmlFor="lguCode">City/Municipality *</label>
+              <label htmlFor="lguCode" className="flex items-center text-gray-700 font-medium mb-1">
+                City/Municipality <span className="text-red-500 ml-1">*</span>
+              </label>
               <select
                 id="lguCode"
                 {...register('lguCode', { required: 'City/Municipality is required' })}
-                className={`border ${errors.lguCode ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
+                className={`border ${
+                  errors.lguCode 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.lguCode && selectedProvinceCode
+                      ? fieldMatches.lguCode
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : selectedProvinceCode
+                        ? 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        : 'border-gray-200 bg-gray-100'
+                } rounded-md p-2 w-full transition-colors`}
                 disabled={!selectedProvinceCode}
               >
-                <option value="">Select City/Municipality</option>
+                <option value="">
+                  {selectedProvinceCode ? 'Select City/Municipality' : 'Select Province first'}
+                </option>
                 {lgus.map(lgu => (
                   <option key={lgu.code} value={lgu.code}>
                     {lgu.name}
                   </option>
                 ))}
               </select>
-              {errors.lguCode && <p className="form-error">{errors.lguCode.message}</p>}
+              {errors.lguCode && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.lguCode.message}
+                </p>
+              )}
             </div>
             
             <div className="form-group">
-              <label htmlFor="barangayCode">Barangay *</label>
+              <label htmlFor="barangayCode" className="flex items-center text-gray-700 font-medium mb-1">
+                Barangay <span className="text-red-500 ml-1">*</span>
+              </label>
               <select
                 id="barangayCode"
                 {...register('barangayCode', { required: 'Barangay is required' })}
-                className={`border ${errors.barangayCode ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
+                className={`border ${
+                  errors.barangayCode 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.barangayCode && selectedLguCode
+                      ? fieldMatches.barangayCode
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : selectedLguCode
+                        ? 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        : 'border-gray-200 bg-gray-100'
+                } rounded-md p-2 w-full transition-colors`}
                 disabled={!selectedLguCode}
               >
-                <option value="">Select Barangay</option>
+                <option value="">
+                  {selectedLguCode ? 'Select Barangay' : 'Select City/Municipality first'}
+                </option>
                 {barangays.map(barangay => (
                   <option key={barangay.code} value={barangay.code}>
                     {barangay.name}
                   </option>
                 ))}
               </select>
-              {errors.barangayCode && <p className="form-error">{errors.barangayCode.message}</p>}
+              {errors.barangayCode && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.barangayCode.message}
+                </p>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-md mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Validation Information</h2>
+        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm">
+          <div className="flex items-center mb-4">
+            <CheckCircle size={20} className="text-blue-600 mr-2" />
+            <h2 className="text-lg font-semibold text-gray-800">Validation Information</h2>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-group">
-              <label htmlFor="validator">Validator *</label>
+              <label htmlFor="validator" className="flex items-center text-gray-700 font-medium mb-1">
+                Validator <span className="text-red-500 ml-1">*</span>
+              </label>
               <select
                 id="validator"
                 {...register('validator', { required: 'Validator is required' })}
-                className={`border ${errors.validator ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
+                className={`border ${
+                  errors.validator 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.validator
+                      ? fieldMatches.validator
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                } rounded-md p-2 w-full transition-colors`}
               >
                 <option value="">Select Validator...</option>
                 {VALIDATORS.map(validator => (
                   <option key={validator} value={validator}>{validator}</option>
                 ))}
               </select>
-              {errors.validator && <p className="form-error">{errors.validator.message}</p>}
+              {errors.validator && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.validator.message}
+                </p>
+              )}
             </div>
             
             <div className="form-group">
-              <label htmlFor="validationDate">Date of Validation *</label>
-              <input
-                id="validationDate"
-                type="date"
-                {...register('validationDate', { required: 'Date of validation is required' })}
-                className={`border ${errors.validationDate ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 w-full`}
-                max={format(new Date(), 'yyyy-MM-dd')}
-              />
-              {errors.validationDate && <p className="form-error">{errors.validationDate.message}</p>}
+              <label htmlFor="validationDate" className="flex items-center text-gray-700 font-medium mb-1">
+                Date of Validation <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Calendar size={16} className="text-gray-500" />
+                </div>
+                <input
+                  id="validationDate"
+                  type="date"
+                  {...register('validationDate', { required: 'Date of validation is required' })}
+                  className={`border ${
+                    errors.validationDate 
+                      ? 'border-red-500 bg-red-50' 
+                      : step === 2 && watchAllFields.validationDate
+                        ? fieldMatches.validationDate
+                          ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                          : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                        : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                  } rounded-md p-2 pl-10 w-full transition-colors`}
+                  max={format(new Date(), 'yyyy-MM-dd')}
+                />
+              </div>
+              {errors.validationDate && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.validationDate.message}
+                </p>
+              )}
             </div>
           </div>
         </div>
         
-        <div className="flex justify-end">
+        <div className="flex justify-end mt-8">
           <button
             type="submit"
-            className={`btn-primary ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             disabled={loading}
           >
-            {loading ? 'Processing...' : step === 1 ? 'Next: Verify Data' : 'Save Record'}
+            {loading ? (
+              <>
+                <Loader size={18} className="animate-spin mr-2" />
+                Processing...
+              </>
+            ) : (
+              <>
+                {step === 1 ? 'Next: Verify Data' : 'Save Record'}
+                {step === 1 ? null : <CheckCircle size={18} className="ml-2" />}
+              </>
+            )}
           </button>
         </div>
       </form>

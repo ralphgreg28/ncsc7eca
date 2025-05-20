@@ -87,6 +87,10 @@ function CitizenForm() {
   const [fieldMatches, setFieldMatches] = useState<Record<string, boolean>>({});
   const [mismatchCount, setMismatchCount] = useState(0);
   
+  // Refs to track previous values to prevent unnecessary updates
+  const prevMatchesRef = useRef<Record<string, boolean>>({});
+  const prevMismatchCountRef = useRef<number>(0);
+  
   // Effect to check field matches in step 2
   useEffect(() => {
     if (step === 2 && firstEntry) {
@@ -113,8 +117,19 @@ function CitizenForm() {
         }
       });
       
-      setFieldMatches(currentMatches);
-      setMismatchCount(mismatches);
+      // Only update state if there's an actual change
+      const matchesChanged = JSON.stringify(currentMatches) !== JSON.stringify(prevMatchesRef.current);
+      const mismatchCountChanged = mismatches !== prevMismatchCountRef.current;
+      
+      if (matchesChanged) {
+        prevMatchesRef.current = currentMatches;
+        setFieldMatches(currentMatches);
+      }
+      
+      if (mismatchCountChanged) {
+        prevMismatchCountRef.current = mismatches;
+        setMismatchCount(mismatches);
+      }
     }
   }, [watchAllFields, firstEntry, step]);
   

@@ -735,7 +735,15 @@ const deleteRecord = async (citizenId: number) => {
                 id="oscaId"
                 type="text"
                 {...register('oscaId')}
-                className={`border ${errors.oscaId ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'} rounded-md p-2 w-full transition-colors`}
+                className={`border ${
+                  errors.oscaId 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.oscaId
+                      ? fieldMatches.oscaId
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                } rounded-md p-2 w-full transition-colors`}
                 placeholder="Enter OSCA ID"
                 onChange={handleUppercase}
               />
@@ -756,7 +764,15 @@ const deleteRecord = async (citizenId: number) => {
                 id="rrn"
                 type="text"
                 {...register('rrn')}
-                className={`border ${errors.rrn ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'} rounded-md p-2 w-full transition-colors`}
+                className={`border ${
+                  errors.rrn 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.rrn
+                      ? fieldMatches.rrn
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                } rounded-md p-2 w-full transition-colors`}
                 placeholder="Enter RRN"
                 onChange={handleUppercase}
               />
@@ -831,7 +847,15 @@ const deleteRecord = async (citizenId: number) => {
                 id="middleName"
                 type="text"
                 {...register('middleName')}
-                className="border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md p-2 w-full transition-colors"
+                className={`border ${
+                  errors.middleName 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.middleName
+                      ? fieldMatches.middleName
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                } rounded-md p-2 w-full transition-colors`}
                 placeholder="Enter middle name"
                 onChange={handleUppercase}
               />
@@ -844,7 +868,15 @@ const deleteRecord = async (citizenId: number) => {
               <select
                 id="extensionName"
                 {...register('extensionName')}
-                className="border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md p-2 w-full transition-colors"
+                className={`border ${
+                  errors.extensionName 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.extensionName
+                      ? fieldMatches.extensionName
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                } rounded-md p-2 w-full transition-colors`}
               >
                 {EXTENSION_NAMES.map(ext => (
                   <option key={ext} value={ext}>{ext || 'None'}</option>

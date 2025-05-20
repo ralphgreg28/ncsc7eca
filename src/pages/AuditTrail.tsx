@@ -110,9 +110,12 @@ function AuditTrail() {
       if (filters.staff) {
         countQuery = countQuery.eq('staff_id', filters.staff);
       }
-      if (filters.search) {
-        countQuery = countQuery.or(`details->>'new'::text ilike '%${filters.search}%', details->>'old'::text ilike '%${filters.search}%'`);
+     if (filters.search) {
+        countQuery = countQuery.or(`details->>new.ilike.*${filters.search}*,details->>old.ilike.*${filters.search}*`);
       }
+
+      
+
       
       const { count, error: countError } = await countQuery;
       
@@ -142,9 +145,9 @@ function AuditTrail() {
       if (filters.staff) {
         dataQuery = dataQuery.eq('staff_id', filters.staff);
       }
+      
       if (filters.search) {
-        // Search in details as JSON - using proper JSON containment search
-        dataQuery = dataQuery.or(`details->>'new'::text ilike '%${filters.search}%', details->>'old'::text ilike '%${filters.search}%'`);
+        dataQuery = dataQuery.or(`details->>new.ilike.*${filters.search}*,details->>old.ilike.*${filters.search}*`);
       }
 
       // Order by most recent first

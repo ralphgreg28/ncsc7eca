@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { format, differenceInYears } from 'date-fns';
 import { toast } from 'react-toastify';
@@ -73,6 +73,9 @@ function CitizenForm() {
   
   // Add a ref to track if a submission is in progress
   const isSubmitting = useRef(false);
+  
+  // Add a ref for scrolling to top
+  const formTopRef = useRef<HTMLDivElement>(null);
   
   const { register, handleSubmit, watch, formState: { errors }, reset, setValue, getValues } = useForm<CitizenFormInput>();
   
@@ -282,16 +285,25 @@ function CitizenForm() {
     }
   };
   
+  // Scroll to top function
+  const scrollToTop = useCallback(() => {
+    formTopRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+  
   const onFirstSubmit: SubmitHandler<CitizenFormInput> = (data) => {
     setFirstEntry(data);
     setStep(2);
     reset();
     
-    
+    // Scroll to top after form submission
+    scrollToTop();
   };
   
   const onSecondSubmit: SubmitHandler<CitizenFormInput> = async (data) => {
     if (!firstEntry) return;
+    
+    // Scroll to top after form submission
+    scrollToTop();
     
     const fieldsToCompare = [
       'lastName', 'firstName', 'middleName', 'extensionName', 
@@ -616,7 +628,7 @@ const deleteRecord = async (citizenId: number) => {
 
  
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6" ref={formTopRef}>
       <div className="flex justify-between items-center mb-6">
         <button 
           type="button" 

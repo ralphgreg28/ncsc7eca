@@ -160,7 +160,7 @@ function EncodedStatusMonitor() {
         console.error('Error checking status values:', error);
       }
 
-      // Build the query - more flexible approach
+      // Build the query - remove artificial limit to fetch all records
       let query = supabase
         .from('citizens')
         .select(`
@@ -172,23 +172,19 @@ function EncodedStatusMonitor() {
           lgu_code,
           status
         `);
-      
-      // Try without status filter first to see if we get any data
-      // If we need to filter by status later, we can add it back
 
-      console.log('Querying all citizens to check data structure');
-
-      // Apply date filters - simplified approach
       console.log('Date filters:', filters.startDate, filters.endDate);
       
-      if (filters.startDate) {
-        // Filter by start date on both fields
-        query = query.or(`encoded_date.gte.${filters.startDate},created_at.gte.${filters.startDate}`);
-      }
-      
-      if (filters.endDate) {
-        // Filter by end date on both fields
-        query = query.or(`encoded_date.lte.${filters.endDate},created_at.lte.${filters.endDate}`);
+      // Apply date filters correctly - use encoded_date primarily, fallback to created_at
+      if (filters.startDate && filters.endDate) {
+        // Use date range filtering on encoded_date (which is the primary field for encoding dates)
+        query = query
+          .gte('encoded_date', `${filters.startDate}T00:00:00.000Z`)
+          .lte('encoded_date', `${filters.endDate}T23:59:59.999Z`);
+      } else if (filters.startDate) {
+        query = query.gte('encoded_date', `${filters.startDate}T00:00:00.000Z`);
+      } else if (filters.endDate) {
+        query = query.lte('encoded_date', `${filters.endDate}T23:59:59.999Z`);
       }
       if (filters.province) {
         query = query.eq('province_code', filters.province);
@@ -204,11 +200,109 @@ function EncodedStatusMonitor() {
         query = query.ilike('encoded_by', `%${filters.staff}%`);
       }
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      console.log('Raw data from Supabase:', data);
+      // First get the count to see how many records we need to fetch
+      let countQuery = supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true });
+        
+      // Apply same filters to count query
+      if (filters.startDate && filters.endDate) {
+        countQuery = countQuery
+          .gte('encoded_date', `${filters.startDate}T00:00:00.000Z`)
+          .lte('encoded_date', `${filters.endDate}T23:59:59.999Z`);
+      } else if (filters.startDate) {
+        countQuery = countQuery.gte('encoded_date', `${filters.startDate}T00:00:00.000Z`);
+      } else if (filters.endDate) {
+        countQuery = countQuery.lte('encoded_date', `${filters.endDate}T23:59:59.999Z`);
+      }
+      if (filters.province) {
+        countQuery = countQuery.eq('province_code', filters.province);
+      }
+      if (filters.lgu) {
+        countQuery = countQuery.eq('lgu_code', filters.lgu);
+      }
+      if (filters.status) {
+        countQuery = countQuery.eq('status', filters.status);
+      }
+      if (filters.staff) {
+        countQuery = countQuery.ilike('encoded_by', `%${filters.staff}%`);
+      }
+      
+      const { count, error: countError } = await countQuery;
+      
+      if (countError) {
+        console.error('Error getting count:', countError);
+        throw countError;
+      }
+      
+      console.log('Total available records matching filters:', count);
+      
+      // Now fetch all records using pagination if needed
+      let allData: any[] = [];
+      const pageSize = 1000; // Supabase's default limit
+      let currentPage = 0;
+      
+      if (count && count > 0) {
+        const totalPages = Math.ceil(count / pageSize);
+        console.log(`Fetching ${count} records across ${totalPages} pages...`);
+        
+        for (let page = 0; page < totalPages; page++) {
+          console.log(`Fetching page ${page + 1} of ${totalPages}...`);
+          
+          // Build query for this page
+          let pageQuery = supabase
+            .from('citizens')
+            .select(`
+              id,
+              created_at,
+              encoded_date,
+              encoded_by,
+              province_code,
+              lgu_code,
+              status
+            `)
+            .range(page * pageSize, (page + 1) * pageSize - 1);
+          
+          // Apply same filters to page query
+          if (filters.startDate && filters.endDate) {
+            pageQuery = pageQuery
+              .gte('encoded_date', `${filters.startDate}T00:00:00.000Z`)
+              .lte('encoded_date', `${filters.endDate}T23:59:59.999Z`);
+          } else if (filters.startDate) {
+            pageQuery = pageQuery.gte('encoded_date', `${filters.startDate}T00:00:00.000Z`);
+          } else if (filters.endDate) {
+            pageQuery = pageQuery.lte('encoded_date', `${filters.endDate}T23:59:59.999Z`);
+          }
+          if (filters.province) {
+            pageQuery = pageQuery.eq('province_code', filters.province);
+          }
+          if (filters.lgu) {
+            pageQuery = pageQuery.eq('lgu_code', filters.lgu);
+          }
+          if (filters.status) {
+            pageQuery = pageQuery.eq('status', filters.status);
+          }
+          if (filters.staff) {
+            pageQuery = pageQuery.ilike('encoded_by', `%${filters.staff}%`);
+          }
+          
+          const { data: pageData, error: pageError } = await pageQuery;
+          
+          if (pageError) {
+            console.error(`Error fetching page ${page + 1}:`, pageError);
+            throw pageError;
+          }
+          
+          if (pageData) {
+            allData = allData.concat(pageData);
+            console.log(`Page ${page + 1} returned ${pageData.length} records. Total so far: ${allData.length}`);
+          }
+        }
+      }
+      
+      const data = allData;
+      console.log('Final data array:', data);
+      console.log('Total records fetched:', data?.length);
 
       // Get all province and LGU data for lookup
       const { data: allProvinces, error: provincesError } = await supabase
@@ -588,10 +682,9 @@ function EncodedStatusMonitor() {
                 >
                   <option value="">All Statuses</option>
                   <option value="Encoded">Encoded</option>
-                  <option value="Verified">Verified</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Rejected">Rejected</option>
-                  <option value="Pending">Pending</option>
+                  <option value="Validated">Validated</option>
+                  <option value="Cleanlisted">Cleanlisted</option>
+                  <option value="Paid">Paid</option>
                   <option value="Unpaid">Unpaid</option>
                   <option value="Liquidated">Liquidated</option>
                   <option value="Disqualified">Disqualified</option>

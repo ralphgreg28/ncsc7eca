@@ -346,6 +346,53 @@ export interface Database {
           created_at?: string
         }
       }
+      expanded_centenarian_cash_gifts: {
+        Row: {
+          eca_id: number
+          citizen_id: number
+          eca_year: number
+          birth_date: string
+          eca_type: 'octogenarian_80' | 'octogenarian_85' | 'nonagenarian_90' | 'nonagenarian_95' | 'centenarian_100'
+          eca_status: 'Applied' | 'Validated' | 'Paid' | 'Unpaid' | 'Disqualified'
+          payment_date: string | null
+          cash_amount: number
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          updated_by: string | null
+          remarks: string | null
+        }
+        Insert: {
+          eca_id?: number
+          citizen_id: number
+          eca_year: number
+          birth_date: string
+          eca_type: 'octogenarian_80' | 'octogenarian_85' | 'nonagenarian_90' | 'nonagenarian_95' | 'centenarian_100'
+          eca_status?: 'Applied' | 'Validated' | 'Paid' | 'Unpaid' | 'Disqualified'
+          payment_date?: string | null
+          cash_amount: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          updated_by?: string | null
+          remarks?: string | null
+        }
+        Update: {
+          eca_id?: number
+          citizen_id?: number
+          eca_year?: number
+          birth_date?: string
+          eca_type?: 'octogenarian_80' | 'octogenarian_85' | 'nonagenarian_90' | 'nonagenarian_95' | 'centenarian_100'
+          eca_status?: 'Applied' | 'Validated' | 'Paid' | 'Unpaid' | 'Disqualified'
+          payment_date?: string | null
+          cash_amount?: number
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          updated_by?: string | null
+          remarks?: string | null
+        }
+      }
     }
     Views: {
       [_ in never]: never

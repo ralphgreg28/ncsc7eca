@@ -591,8 +591,8 @@ function CitizenList() {
         // If we have any results from the year filter, apply them to the main query
           if (yearFilteredCitizens.length > 0) {
             // Check if we hit the limit
-            if (yearFilteredCitizens.length >= 1000) {
-              toast.warning('Birth Year filter is limited to 1000 records. Some records may not be shown.');
+            if (yearFilteredCitizens.length >= 10000) {
+              toast.warning('Birth Year filter is limited to 10000 records. Some records may not be shown.');
             }
             query = query.in('id', yearFilteredCitizens);
           } else if (filters.birthYears.length > 0) {

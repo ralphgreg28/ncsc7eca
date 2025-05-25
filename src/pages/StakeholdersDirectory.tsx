@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { Edit2, Plus, X, Phone, Mail, Search, Filter, Download, Eye, Trash2, AlertTriangle } from 'lucide-react';
+import { Edit2, Plus, X, Phone, Mail, Search, Filter, Download, Eye, Trash2, AlertTriangle, Users, MapPin, Briefcase, RefreshCw } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import DuplicateStakeholderModal from '../components/DuplicateStakeholderModal';
@@ -580,21 +580,69 @@ function StakeholdersDirectory() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Stakeholders Directory</h1>
-          <p className="mt-1 text-gray-600">{stakeholders.length} stakeholders found</p>
+    <div className="min-h-screen bg-gray-50 space-y-8">
+      {/* Enhanced Header with Statistics */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Users className="h-8 w-8 text-blue-600" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Stakeholders Directory</h1>
+              <p className="text-gray-600 mt-1">Manage and organize stakeholder information</p>
+            </div>
+          </div>
+          
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-blue-700">{stakeholders.length}</div>
+              <div className="text-sm text-blue-600">Total</div>
+            </div>
+            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-purple-700">
+                {stakeholders.filter(s => positions.find(p => p.id === s.position_id)?.level === 'province').length}
+              </div>
+              <div className="text-sm text-purple-600">Province</div>
+            </div>
+            <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-green-700">
+                {stakeholders.filter(s => positions.find(p => p.id === s.position_id)?.level === 'lgu').length}
+              </div>
+              <div className="text-sm text-green-600">LGU</div>
+            </div>
+            <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-amber-700">
+                {stakeholders.filter(s => positions.find(p => p.id === s.position_id)?.level === 'barangay').length}
+              </div>
+              <div className="text-sm text-amber-600">Barangay</div>
+            </div>
+          </div>
         </div>
         
-        <div className="flex items-center space-x-4">
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-3 mt-6 pt-6 border-t border-gray-200">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="btn-outline flex items-center"
+            className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              showFilters 
+                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
           >
-            <Filter className="h-5 w-5 mr-2" />
+            <Filter className="h-4 w-4 mr-2" />
             {showFilters ? 'Hide Filters' : 'Show Filters'}
           </button>
+          
+          <button
+            onClick={fetchStakeholders}
+            className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </button>
+          
           <button 
             onClick={async () => {
               try {
@@ -809,35 +857,100 @@ function StakeholdersDirectory() {
 </div>
 
 
-   {/* Stakeholders List */}
-<div className="bg-white rounded-lg shadow overflow-hidden">
-  <div className="overflow-x-auto">
-    <table className="min-w-full table-auto divide-y divide-gray-200 text-sm">
-      <thead className="bg-gray-50">
-        <tr>
-          <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Position</th>
-          <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-          <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</th>
-          <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact Info</th>
-          <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Last Updated</th>
-          <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-        </tr>
-      </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
-        {loading ? (
-          <tr>
-            <td colSpan={6} className="text-center py-2">
-              <div className="flex items-center justify-center space-x-2">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                <span className="text-xs text-gray-500">Loading...</span>
-              </div>
-            </td>
-          </tr>
-        ) : stakeholders.length === 0 ? (
-          <tr>
-            <td colSpan={6} className="text-center py-2 text-gray-500">No stakeholders found</td>
-          </tr>
-        ) : (
+      {/* Stakeholders List */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        {/* Table Header */}
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            <Briefcase className="h-5 w-5 mr-2 text-gray-600" />
+            Stakeholders ({stakeholders.length})
+          </h2>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <div className="flex items-center">
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    Position
+                  </div>
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <div className="flex items-center">
+                    <Users className="h-4 w-4 mr-2" />
+                    Name
+                  </div>
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <div className="flex items-center">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Location
+                  </div>
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact Info</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Last Updated</th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-100">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-16">
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      <div className="relative">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent absolute top-0"></div>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-gray-900">Loading stakeholders...</p>
+                        <p className="text-xs text-gray-500 mt-1">Please wait while we fetch the data</p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : stakeholders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-16">
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      <div className="p-4 bg-gray-100 rounded-full">
+                        <Users className="h-12 w-12 text-gray-400" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-medium text-gray-900">No stakeholders found</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {filters.search || filters.position || filters.province || filters.lgu || filters.barangay
+                            ? 'Try adjusting your filters or search terms'
+                            : 'Get started by adding your first stakeholder'
+                          }
+                        </p>
+                        {!filters.search && !filters.position && !filters.province && !filters.lgu && !filters.barangay && (
+                          <button
+                            onClick={() => {
+                              setEditingStakeholder(null);
+                              reset({
+                                name: '',
+                                position_id: 0,
+                                province_code: '',
+                                lgu_code: '',
+                                barangay_code: '',
+                                phones: ['', '', ''],
+                                emails: ['', '', '']
+                              });
+                              setShowModal(true);
+                            }}
+                            className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add First Stakeholder
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
           stakeholders.map((stakeholder) => {
             const position = positions.find(p => p.id === stakeholder.position_id);
             const provinceName = addressDetails.provinces[stakeholder.province_code] || 'Unknown Province';
@@ -848,89 +961,124 @@ function StakeholdersDirectory() {
             const emails = stakeholder.contacts.filter(c => c.type === 'email').sort((a, b) => a.priority - b.priority);
 
             return (
-              <tr key={stakeholder.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getPositionColor(stakeholder.position_id)}`}>
+              <tr key={stakeholder.id} className="hover:bg-blue-50/50 transition-colors duration-200">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getPositionColor(stakeholder.position_id)}`}>
                     {position?.name || 'Unknown Position'}
                   </span>
                 </td>
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <div className="font-medium text-gray-900">{stakeholder.name}</div>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 h-10 w-10">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center">
+                        <span className="text-sm font-medium text-white">
+                          {stakeholder.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <div className="text-sm font-medium text-gray-900">{stakeholder.name}</div>
+                    </div>
+                  </div>
                 </td>
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <div className="space-y-1">
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getProvinceColor(stakeholder.province_code)}`}>
+                <td className="px-6 py-4">
+                  <div className="space-y-2">
+                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getProvinceColor(stakeholder.province_code)}`}>
                       {provinceName}
                     </span>
-                    {lguName && <div className="text-xs text-gray-500">{lguName}</div>}
-                    {barangayName && <div className="text-xs text-gray-500">{barangayName}</div>}
+                    {lguName && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {lguName}
+                      </div>
+                    )}
+                    {barangayName && (
+                      <div className="flex items-center text-sm text-gray-500">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {barangayName}
+                      </div>
+                    )}
                   </div>
                 </td>
-                <td className="px-4 py-2">
+                <td className="px-6 py-4">
+                  <div className="space-y-2">
+                    {phones.slice(0, 2).map((phone, index) => (
+                      <div key={`phone-${index}`} className="flex items-center text-sm text-gray-600">
+                        <div className="flex-shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mr-2">
+                          <Phone className="h-3 w-3 text-green-600" />
+                        </div>
+                        <span className="truncate">{phone.value}</span>
+                      </div>
+                    ))}
+                    {emails.slice(0, 2).map((email, index) => (
+                      <div key={`email-${index}`} className="flex items-center text-sm text-gray-600">
+                        <div className="flex-shrink-0 w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                          <Mail className="h-3 w-3 text-blue-600" />
+                        </div>
+                        <span className="truncate">{email.value}</span>
+                      </div>
+                    ))}
+                    {(phones.length + emails.length) > 4 && (
+                      <div className="text-xs text-gray-400">
+                        +{(phones.length + emails.length) - 4} more
+                      </div>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-500">
                   <div className="space-y-1">
-                    {phones.map((phone, index) => (
-                      <div key={`phone-${index}`} className="flex items-center text-xs text-gray-500">
-                        <Phone className="h-4 w-4 text-gray-400 mr-1" />
-                        {phone.value}
-                      </div>
-                    ))}
-                    {emails.map((email, index) => (
-                      <div key={`email-${index}`} className="flex items-center text-xs text-gray-500">
-                        <Mail className="h-4 w-4 text-gray-400 mr-1" />
-                        {email.value}
-                      </div>
-                    ))}
+                    <div>{new Date(stakeholder.updated_at).toLocaleDateString()}</div>
+                    <div className="text-xs">{new Date(stakeholder.updated_at).toLocaleTimeString()}</div>
+                    {stakeholder.updated_by && (
+                      <div className="text-xs text-gray-400">by {stakeholder.updated_by}</div>
+                    )}
                   </div>
                 </td>
-                <td className="px-4 py-2 text-xs text-gray-500">
-                  <div>{new Date(stakeholder.updated_at).toLocaleString()}</div>
-                  {stakeholder.updated_by && (
-                    <div className="text-xs text-gray-400">by {stakeholder.updated_by}</div>
-                  )}
-                </td>
-                <td className="px-4 py-2 text-right text-xs font-medium space-x-2">
-                  <button
-                    onClick={() => setShowViewModal(stakeholder)}
-                    className="text-gray-600 hover:text-gray-900 transition-colors"
-                    aria-label="View Details"
-                  >
-                    <Eye className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditingStakeholder(stakeholder);
-                      const phones = stakeholder.contacts
-                        .filter(c => c.type === 'phone')
-                        .sort((a, b) => a.priority - b.priority)
-                        .map(c => c.value);
-                      const emails = stakeholder.contacts
-                        .filter(c => c.type === 'email')
-                        .sort((a, b) => a.priority - b.priority)
-                        .map(c => c.value);
+                <td className="px-6 py-4 text-right">
+                  <div className="flex items-center justify-end space-x-2">
+                    <button
+                      onClick={() => setShowViewModal(stakeholder)}
+                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                      title="View Details"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingStakeholder(stakeholder);
+                        const phones = stakeholder.contacts
+                          .filter(c => c.type === 'phone')
+                          .sort((a, b) => a.priority - b.priority)
+                          .map(c => c.value);
+                        const emails = stakeholder.contacts
+                          .filter(c => c.type === 'email')
+                          .sort((a, b) => a.priority - b.priority)
+                          .map(c => c.value);
 
-                      reset({
-                        name: stakeholder.name,
-                        position_id: stakeholder.position_id,
-                        province_code: stakeholder.province_code,
-                        lgu_code: stakeholder.lgu_code || undefined,
-                        barangay_code: stakeholder.barangay_code || undefined,
-                        phones: [...phones, '', '', ''].slice(0, 3),
-                        emails: [...emails, '', '', ''].slice(0, 3)
-                      });
-                      setShowModal(true);
-                    }}
-                    className="text-blue-600 hover:text-blue-900 transition-colors"
-                    aria-label="Edit"
-                  >
-                    <Edit2 className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(stakeholder.id)}
-                    className="text-red-600 hover:text-red-900 transition-colors"
-                    aria-label="Delete"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
+                        reset({
+                          name: stakeholder.name,
+                          position_id: stakeholder.position_id,
+                          province_code: stakeholder.province_code,
+                          lgu_code: stakeholder.lgu_code || undefined,
+                          barangay_code: stakeholder.barangay_code || undefined,
+                          phones: [...phones, '', '', ''].slice(0, 3),
+                          emails: [...emails, '', '', ''].slice(0, 3)
+                        });
+                        setShowModal(true);
+                      }}
+                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                      title="Edit"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteConfirm(stakeholder.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             );

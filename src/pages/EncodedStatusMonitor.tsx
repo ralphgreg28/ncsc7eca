@@ -1,7 +1,25 @@
 import { useState, useEffect } from 'react';
 import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { supabase } from '../lib/supabase';
-import { RefreshCw, Download, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, BarChart2 } from 'lucide-react';
+import { 
+  RefreshCw, 
+  Download, 
+  Filter, 
+  ChevronDown, 
+  ChevronUp, 
+  ChevronLeft, 
+  ChevronRight, 
+  BarChart2,
+  Calendar,
+  Users,
+  Building,
+  FileText,
+  TrendingUp,
+  Eye,
+  EyeOff,
+  Search,
+  AlertCircle
+} from 'lucide-react';
 
 interface DailyEncodingStats {
   date: string;
@@ -364,360 +382,460 @@ function EncodedStatusMonitor() {
     document.body.removeChild(link);
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Encoded Status Monitor</h1>
-          <p className="mt-1 text-gray-600">Daily encoding counts by staff per LGU</p>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="btn-outline flex items-center space-x-2"
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            <span>{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
-            {showFilters ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </button>
-          <button
-            onClick={resetFilters}
-            className="btn-outline flex items-center"
-            title="Reset Filters"
-          >
-            <RefreshCw className="h-5 w-5 mr-2" />
-            Reset Filters
-          </button>
-          <button
-            onClick={exportToCSV}
-            className="btn-primary flex items-center"
-            disabled={dailyStats.length === 0}
-          >
-            <Download className="h-5 w-5 mr-2" />
-            Export CSV
-          </button>
-        </div>
-      </div>
+  // Calculate summary statistics for overview cards
+  const totalRecords = dailyStats.reduce((sum, stat) => sum + stat.count, 0);
+  const uniqueProvinces = new Set(dailyStats.map(stat => stat.province_name)).size;
+  const uniqueLGUs = new Set(dailyStats.map(stat => stat.lgu_name)).size;
+  const uniqueStaff = new Set(dailyStats.map(stat => stat.staff_name)).size;
 
-      {showFilters && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold mb-4">Filters</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Date Range</label>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="date"
-                  value={filters.startDate}
-                  onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <input
-                  type="date"
-                  value={filters.endDate}
-                  onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <BarChart2 className="h-6 w-6 text-blue-600" />
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900">Encoded Status Monitor</h1>
+              </div>
+              <p className="text-gray-600">Track daily encoding progress and performance metrics across all LGUs</p>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  showFilters 
+                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
+                <span className="sm:hidden">Filters</span>
+                {showFilters ? (
+                  <ChevronUp className="h-4 w-4 ml-2" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                )}
+              </button>
+              <button
+                onClick={resetFilters}
+                className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                title="Reset Filters"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
+              <button
+                onClick={exportToCSV}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={dailyStats.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Export CSV</span>
+                <span className="sm:hidden">Export</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Overview Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Records</p>
+                <p className="text-2xl font-bold text-gray-900">{totalRecords.toLocaleString()}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <FileText className="h-6 w-6 text-blue-600" />
               </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Province</label>
-              <select
-                value={filters.province}
-                onChange={(e) => setFilters(prev => ({ ...prev, province: e.target.value }))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">All Provinces</option>
-                {provinces.map(province => (
-                  <option key={province.code} value={province.code}>
-                    {province.name}
-                  </option>
-                ))}
-              </select>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Provinces</p>
+                <p className="text-2xl font-bold text-gray-900">{uniqueProvinces}</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg">
+                <Building className="h-6 w-6 text-green-600" />
+              </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">LGU</label>
-              <select
-                value={filters.lgu}
-                onChange={(e) => setFilters(prev => ({ ...prev, lgu: e.target.value }))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                disabled={!filters.province}
-              >
-                <option value="">All LGUs</option>
-                {lgus.map(lgu => (
-                  <option key={lgu.code} value={lgu.code}>
-                    {lgu.name}
-                  </option>
-                ))}
-              </select>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active LGUs</p>
+                <p className="text-2xl font-bold text-gray-900">{uniqueLGUs}</p>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <Building className="h-6 w-6 text-purple-600" />
+              </div>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Encoder Name</label>
-              <input
-                type="text"
-                value={filters.staff}
-                onChange={(e) => setFilters(prev => ({ ...prev, staff: e.target.value }))}
-                placeholder="Filter by staff name"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Status</label>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">All Statuses</option>
-                <option value="Encoded">Encoded</option>
-                <option value="Verified">Verified</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Pending">Pending</option>
-                <option value="Unpaid">Unpaid</option>
-                <option value="Liquidated">Liquidated</option>
-                <option value="Disqualified">Disqualified</option>
-              </select>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Staff</p>
+                <p className="text-2xl font-bold text-gray-900">{uniqueStaff}</p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <Users className="h-6 w-6 text-orange-600" />
+              </div>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Summary Section */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center">
-            <h2 className="text-lg font-semibold">Summary</h2>
-            <button
-              onClick={() => setShowSummary(!showSummary)}
-              className="ml-2 p-1 rounded-md text-gray-500 hover:text-blue-600 hover:bg-blue-50"
-            >
-              {showSummary ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
-          </div>
-          <div className="flex items-center">
-            <BarChart2 className="h-5 w-5 text-blue-600 mr-2" />
-            <div className="text-sm text-gray-600">
-              Total Records: <span className="font-semibold text-blue-600">{dailyStats.reduce((sum, stat) => sum + stat.count, 0)}</span>
+        {/* Filters Section */}
+        {showFilters && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <Filter className="h-5 w-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Calendar className="h-4 w-4" />
+                  Date Range
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="date"
+                    value={filters.startDate}
+                    onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                  />
+                  <input
+                    type="date"
+                    value={filters.endDate}
+                    onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                  <Building className="h-4 w-4" />
+                  Province
+                </label>
+                <select
+                  value={filters.province}
+                  onChange={(e) => setFilters(prev => ({ ...prev, province: e.target.value }))}
+                  className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                >
+                  <option value="">All Provinces</option>
+                  {provinces.map(province => (
+                    <option key={province.code} value={province.code}>
+                      {province.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                  <Building className="h-4 w-4" />
+                  LGU
+                </label>
+                <select
+                  value={filters.lgu}
+                  onChange={(e) => setFilters(prev => ({ ...prev, lgu: e.target.value }))}
+                  className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm disabled:bg-gray-50 disabled:text-gray-500"
+                  disabled={!filters.province}
+                >
+                  <option value="">All LGUs</option>
+                  {lgus.map(lgu => (
+                    <option key={lgu.code} value={lgu.code}>
+                      {lgu.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                  <Search className="h-4 w-4" />
+                  Encoder Name
+                </label>
+                <input
+                  type="text"
+                  value={filters.staff}
+                  onChange={(e) => setFilters(prev => ({ ...prev, staff: e.target.value }))}
+                  placeholder="Search by staff name..."
+                  className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                />
+              </div>
+              
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                  <TrendingUp className="h-4 w-4" />
+                  Status
+                </label>
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                  className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="Encoded">Encoded</option>
+                  <option value="Verified">Verified</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Rejected">Rejected</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="Liquidated">Liquidated</option>
+                  <option value="Disqualified">Disqualified</option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
-        
-        {showSummary && (
-          <>
-            <div className="flex mb-4 space-x-2">
+        )}
+
+        {/* Summary Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <BarChart2 className="h-5 w-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Summary Analytics</h2>
               <button
-                onClick={() => setSummaryType('province')}
-                className={`px-3 py-1 text-sm rounded-md ${summaryType === 'province' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                onClick={() => setShowSummary(!showSummary)}
+                className="p-1 rounded-md text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
               >
-                By Province
-              </button>
-              <button
-                onClick={() => setSummaryType('lgu')}
-                className={`px-3 py-1 text-sm rounded-md ${summaryType === 'lgu' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              >
-                By LGU
-              </button>
-              <button
-                onClick={() => setSummaryType('staff')}
-                className={`px-3 py-1 text-sm rounded-md ${summaryType === 'staff' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              >
-                By Staff
-              </button>
-              <button
-                onClick={() => setSummaryType('status')}
-                className={`px-3 py-1 text-sm rounded-md ${summaryType === 'status' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              >
-                By Status
+                {showSummary ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            
-            <div className="overflow-x-auto mt-2">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {summaryType === 'province' ? 'Province' : 
-                       summaryType === 'lgu' ? 'LGU' : 
-                       summaryType === 'staff' ? 'Staff' : 'Status'}
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Count</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {(() => {
-                    // Calculate summary statistics based on selected type
-                    const summaryMap = new Map<string, number>();
-                    
-                    dailyStats.forEach(stat => {
-                      const key = summaryType === 'province' ? stat.province_name :
-                                 summaryType === 'lgu' ? stat.lgu_name :
-                                 summaryType === 'staff' ? stat.staff_name : 
-                                 stat.status || 'Unknown';
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <TrendingUp className="h-4 w-4 text-blue-600" />
+              <span>Total: <span className="font-semibold text-blue-600">{totalRecords.toLocaleString()}</span> records</span>
+            </div>
+          </div>
+          
+          {showSummary && (
+            <>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {[
+                  { key: 'province', label: 'By Province', icon: Building },
+                  { key: 'lgu', label: 'By LGU', icon: Building },
+                  { key: 'staff', label: 'By Staff', icon: Users },
+                  { key: 'status', label: 'By Status', icon: TrendingUp }
+                ].map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => setSummaryType(key as any)}
+                    className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      summaryType === key 
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 mr-2" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="overflow-hidden rounded-lg border border-gray-200">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {summaryType === 'province' ? 'Province' : 
+                         summaryType === 'lgu' ? 'LGU' : 
+                         summaryType === 'staff' ? 'Staff Member' : 'Status'}
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Total Records
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Percentage
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {(() => {
+                      // Calculate summary statistics based on selected type
+                      const summaryMap = new Map<string, number>();
                       
-                      const currentCount = summaryMap.get(key) || 0;
-                      summaryMap.set(key, currentCount + stat.count);
-                    });
-                    
-                    // Convert to array and sort by count (highest first)
-                    const summaryArray = Array.from(summaryMap.entries())
-                      .map(([name, count]) => ({ name, count }))
-                      .sort((a, b) => b.count - a.count);
-                    
-                    return summaryArray.map((item, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {item.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-600 font-medium">
-                          {item.count}
-                        </td>
-                      </tr>
-                    ));
-                  })()}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-      </div>
-      
-      {/* Main Table Section */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Daily Encoding Counts</h2>
-          <div className="text-sm text-gray-600">
-            Page Records: <span className="font-semibold text-blue-600">
-              {Math.min(dailyStats.length, pagination.currentPage * pagination.recordsPerPage) - 
-               Math.min(dailyStats.length, (pagination.currentPage - 1) * pagination.recordsPerPage)}
-            </span>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Province</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LGU</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Encoder</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Records</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center">
-                    <div className="flex justify-center">
-                      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                    <p className="mt-2 text-sm text-gray-500">Loading data...</p>
-                  </td>
-                </tr>
-              ) : dailyStats.length > 0 ? (
-                // Get current page of records
-                dailyStats
-                  .slice(
-                    (pagination.currentPage - 1) * pagination.recordsPerPage,
-                    pagination.currentPage * pagination.recordsPerPage
-                  )
-                  .map((stat, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {format(parseISO(stat.date), 'MMM d, yyyy')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {stat.province_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {stat.lgu_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {stat.staff_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {stat.status || 'Unknown'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-600 font-medium">
-                      {stat.count}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center">
-                    <div className="text-center py-4">
-                      <p className="text-gray-500 mb-2">No citizen data found for the selected filters</p>
-                      <p className="text-sm text-gray-400">
-                        This could be because:
-                      </p>
-                      <ul className="text-sm text-gray-400 list-disc list-inside mt-2">
-                        <li>There are no citizens in the database for the selected filters</li>
-                        <li>The encoded_date field might be empty or in a different format</li>
-                        <li>The selected date range doesn't contain any records</li>
-                        <li>The selected province/LGU doesn't have any records</li>
-                      </ul>
-                      <p className="text-sm text-blue-500 mt-4">
-                        Try adjusting your filters or check the browser console for debugging information
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                      dailyStats.forEach(stat => {
+                        const key = summaryType === 'province' ? stat.province_name :
+                                   summaryType === 'lgu' ? stat.lgu_name :
+                                   summaryType === 'staff' ? stat.staff_name : 
+                                   stat.status || 'Unknown';
+                        
+                        const currentCount = summaryMap.get(key) || 0;
+                        summaryMap.set(key, currentCount + stat.count);
+                      });
+                      
+                      // Convert to array and sort by count (highest first)
+                      const summaryArray = Array.from(summaryMap.entries())
+                        .map(([name, count]) => ({ name, count }))
+                        .sort((a, b) => b.count - a.count);
+                      
+                      return summaryArray.map((item, index) => {
+                        const percentage = totalRecords > 0 ? (item.count / totalRecords * 100) : 0;
+                        return (
+                          <tr key={index} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {item.name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-600 font-semibold">
+                              {item.count.toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+                              {percentage.toFixed(1)}%
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
         
-        {/* Pagination Controls */}
-        {dailyStats.length > 0 && (
-          <div className="mt-6 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-700">
-                Showing {Math.min(dailyStats.length, (pagination.currentPage - 1) * pagination.recordsPerPage + 1)} to {Math.min(dailyStats.length, pagination.currentPage * pagination.recordsPerPage)} of {dailyStats.length} records
-              </span>
-              <select
-                value={pagination.recordsPerPage}
-                onChange={(e) => setPagination(prev => ({ ...prev, currentPage: 1, recordsPerPage: Number(e.target.value) }))}
-                className="ml-2 block w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-              >
-                <option value={50}>50 per page</option>
-                <option value={100}>100 per page</option>
-              </select>
+        {/* Main Table Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Daily Encoding Records</h2>
             </div>
-            
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
-                disabled={pagination.currentPage === 1}
-                className={`p-2 rounded-md ${pagination.currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'}`}
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              
-              <span className="text-sm text-gray-700">
-                Page {pagination.currentPage} of {Math.ceil(dailyStats.length / pagination.recordsPerPage)}
-              </span>
-              
-              <button
-                onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
-                disabled={pagination.currentPage >= Math.ceil(dailyStats.length / pagination.recordsPerPage)}
-                className={`p-2 rounded-md ${pagination.currentPage >= Math.ceil(dailyStats.length / pagination.recordsPerPage) ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'}`}
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
+            <div className="text-sm text-gray-600">
+              Showing {Math.min(dailyStats.length, pagination.currentPage * pagination.recordsPerPage) - 
+               Math.min(dailyStats.length, (pagination.currentPage - 1) * pagination.recordsPerPage)} of {dailyStats.length} records
             </div>
           </div>
-        )}
+          
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Province</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LGU</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Encoder</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Records</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <p className="text-sm text-gray-500">Loading encoding data...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : dailyStats.length > 0 ? (
+                  // Get current page of records
+                  dailyStats
+                    .slice(
+                      (pagination.currentPage - 1) * pagination.recordsPerPage,
+                      pagination.currentPage * pagination.recordsPerPage
+                    )
+                    .map((stat, index) => (
+                    <tr key={index} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {format(parseISO(stat.date), 'MMM d, yyyy')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {stat.province_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {stat.lgu_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {stat.staff_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                          stat.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                          stat.status === 'Verified' ? 'bg-blue-100 text-blue-800' :
+                          stat.status === 'Encoded' ? 'bg-yellow-100 text-yellow-800' :
+                          stat.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                          stat.status === 'Pending' ? 'bg-orange-100 text-orange-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {stat.status || 'Unknown'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-600 font-semibold">
+                        {stat.count.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <AlertCircle className="h-12 w-12 text-gray-400 mb-4" />
+                        <p className="text-gray-500 mb-2">No encoding data found</p>
+                        <p className="text-sm text-gray-400">
+                          Try adjusting your filters or check if there are records in the selected date range
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Pagination Controls */}
+          {dailyStats.length > 0 && (
+            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-700">
+                  Showing {Math.min(dailyStats.length, (pagination.currentPage - 1) * pagination.recordsPerPage + 1)} to {Math.min(dailyStats.length, pagination.currentPage * pagination.recordsPerPage)} of {dailyStats.length} records
+                </span>
+                <select
+                  value={pagination.recordsPerPage}
+                  onChange={(e) => setPagination(prev => ({ ...prev, currentPage: 1, recordsPerPage: Number(e.target.value) }))}
+                  className="ml-2 block w-full sm:w-auto rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                >
+                  <option value={50}>50 per page</option>
+                  <option value={100}>100 per page</option>
+                </select>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
+                  disabled={pagination.currentPage === 1}
+                  className={`p-2 rounded-lg ${pagination.currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'} transition-colors`}
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                
+                <span className="text-sm text-gray-700">
+                  Page {pagination.currentPage} of {Math.ceil(dailyStats.length / pagination.recordsPerPage)}
+                </span>
+                
+                <button
+                  onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
+                  disabled={pagination.currentPage >= Math.ceil(dailyStats.length / pagination.recordsPerPage)}
+                  className={`p-2 rounded-lg ${pagination.currentPage >= Math.ceil(dailyStats.length / pagination.recordsPerPage) ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'} transition-colors`}
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

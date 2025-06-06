@@ -36,6 +36,7 @@ const ECAManagement: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedBirthMonths, setSelectedBirthMonths] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [generatingApplications, setGeneratingApplications] = useState(false);
   
@@ -79,9 +80,24 @@ const ECAManagement: React.FC = () => {
     { value: 'Disqualified', label: 'Disqualified', color: 'bg-gray-100 text-gray-800' }
   ];
 
+  const monthOptions = [
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' }
+  ];
+
   useEffect(() => {
     fetchECARecords();
-  }, [selectedYear, selectedType, selectedStatus, selectedRegion, selectedProvince, selectedLgu, selectedBarangay]);
+  }, [selectedYear, selectedType, selectedStatus, selectedBirthMonths, selectedRegion, selectedProvince, selectedLgu, selectedBarangay]);
 
   useEffect(() => {
     // Reset dependent filters when parent filter changes
@@ -271,12 +287,32 @@ const ECAManagement: React.FC = () => {
     setSelectAll(newSelected.size === filteredRecords.length);
   };
 
+  const handleBirthMonthChange = (monthValue: string) => {
+    const newSelectedMonths = selectedBirthMonths.includes(monthValue)
+      ? selectedBirthMonths.filter(m => m !== monthValue)
+      : [...selectedBirthMonths, monthValue];
+    setSelectedBirthMonths(newSelectedMonths);
+  };
+
   const filteredRecords = ecaRecords.filter(record => {
-    if (!searchTerm) return true;
-    const fullName = `${record.first_name} ${record.middle_name || ''} ${record.last_name}`.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase()) ||
-           record.osca_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           record.rrn.toLowerCase().includes(searchTerm.toLowerCase());
+    // Search term filter
+    if (searchTerm) {
+      const fullName = `${record.first_name} ${record.middle_name || ''} ${record.last_name}`.toLowerCase();
+      const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
+                           record.osca_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           record.rrn.toLowerCase().includes(searchTerm.toLowerCase());
+      if (!matchesSearch) return false;
+    }
+
+    // Birth month filter
+    if (selectedBirthMonths.length > 0) {
+      const birthMonth = new Date(record.birth_date).getMonth() + 1; // getMonth() returns 0-11, we need 1-12
+      if (!selectedBirthMonths.includes(birthMonth.toString())) {
+        return false;
+      }
+    }
+
+    return true;
   });
 
   // Get unique values for address filters
@@ -404,7 +440,7 @@ const ECAManagement: React.FC = () => {
       {/* Controls */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         {/* Main Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               ECA Year
@@ -454,6 +490,65 @@ const ECAManagement: React.FC = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Birth Month ({selectedBirthMonths.length} selected)
+            </label>
+            <div className="relative">
+              <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white min-h-[40px] max-h-32 overflow-y-auto">
+                {selectedBirthMonths.length === 0 ? (
+                  <span className="text-gray-500">Select months...</span>
+                ) : (
+                  <div className="flex flex-wrap gap-1">
+                    {selectedBirthMonths.map(month => {
+                      const monthLabel = monthOptions.find(m => m.value === month)?.label;
+                      return (
+                        <span
+                          key={month}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        >
+                          {monthLabel}
+                          <button
+                            onClick={() => handleBirthMonthChange(month)}
+                            className="ml-1 text-blue-600 hover:text-blue-800"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
+                {monthOptions.map(month => (
+                  <label
+                    key={month.value}
+                    className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedBirthMonths.includes(month.value)}
+                      onChange={() => handleBirthMonthChange(month.value)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
+                    />
+                    {month.label}
+                  </label>
+                ))}
+                {selectedBirthMonths.length > 0 && (
+                  <div className="border-t border-gray-200 px-3 py-2">
+                    <button
+                      onClick={() => setSelectedBirthMonths([])}
+                      className="text-sm text-red-600 hover:text-red-800"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <div>

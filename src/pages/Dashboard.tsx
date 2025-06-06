@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Users, FileText, Upload, Download, RefreshCw, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Users, FileText, Upload, Download, RefreshCw, Calendar, ChevronDown, ChevronUp, AlertCircle, Loader2 } from 'lucide-react';
 import { format, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
@@ -101,6 +101,9 @@ const AGE_RANGES = [
 function Dashboard() {
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  
   const [stats, setStats] = useState<Stats>({
     totalCitizens: 0,
     provinces: 0,
@@ -156,7 +159,7 @@ function Dashboard() {
     total: number;
   }[]>([]);
 
-  const statusOptions = [
+  const statusOptions = useMemo(() => [
     'Encoded',
     'Validated',
     'Cleanlisted',
@@ -164,7 +167,7 @@ function Dashboard() {
     'Unpaid',
     'Liquidated',
     'Disqualified'
-  ];
+  ], []);
 
   useEffect(() => {
     fetchProvinces();
@@ -187,7 +190,7 @@ function Dashboard() {
     fetchStats();
   }, [filters]);
 
-  const fetchProvinces = async () => {
+  const fetchProvinces = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('provinces')
@@ -198,10 +201,11 @@ function Dashboard() {
       setProvinces(data || []);
     } catch (error) {
       console.error('Error fetching provinces:', error);
+      setError('Failed to load provinces');
     }
-  };
+  }, []);
 
-  const fetchLGUs = async () => {
+  const fetchLGUs = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('lgus')
@@ -214,10 +218,11 @@ function Dashboard() {
       setFilters(prev => ({ ...prev, lgu: '', barangay: '' }));
     } catch (error) {
       console.error('Error fetching LGUs:', error);
+      setError('Failed to load LGUs');
     }
-  };
+  }, [filters.province]);
 
-  const fetchBarangays = async () => {
+  const fetchBarangays = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('barangays')
@@ -230,10 +235,11 @@ function Dashboard() {
       setFilters(prev => ({ ...prev, barangay: '' }));
     } catch (error) {
       console.error('Error fetching barangays:', error);
+      setError('Failed to load barangays');
     }
-  };
+  }, [filters.lgu]);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setFilters({
       startDate: format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd'),
       endDate: format(new Date(), 'yyyy-MM-dd'),
@@ -248,7 +254,18 @@ function Dashboard() {
       ageStart: '',
       ageEnd: ''
     });
-  };
+    setError(null);
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setError(null);
+    try {
+      await fetchStats();
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   // Define a type for the citizen object
   interface Citizen {
@@ -291,11 +308,12 @@ function Dashboard() {
     return allCitizens;
   };
 
-      const fetchStats = async () => {
-        try {
-          setLoading(true);
+  const fetchStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-          let query = supabase.from('citizens').select('*');
+      let query = supabase.from('citizens').select('*');
 
           if (filters.startDate) {
             query = query.gte('created_at', startOfDay(parseISO(filters.startDate)).toISOString());
@@ -508,10 +526,11 @@ function Dashboard() {
           });
     } catch (error) {
       console.error('Error fetching stats:', error);
+      setError('Failed to load dashboard data. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   return (
     <div className="space-y-6">

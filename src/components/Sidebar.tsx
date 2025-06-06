@@ -1,4 +1,4 @@
-import { X, Home, Users, Settings, AlertTriangle, UserPlus, ChevronRight, Info, ClipboardList, BarChart2 } from 'lucide-react';
+import { X, Home, Users, Settings, AlertTriangle, UserPlus, ChevronRight, Info, ClipboardList, BarChart2, Gift, PieChart } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -38,6 +38,12 @@ function Sidebar({ open, onClose }: SidebarProps) {
   
     { to: '/citizens/list', icon: <Users size={18} />, label: 'Senior Citizens Records' },
     { to: '/citizens/encoded-monitor', icon: <ClipboardList size={18} />, label: 'Encoded Status Monitor' },
+    
+    ...( user?.position === 'Administrator' ? [
+    { to: '/eca/dashboard', icon: <PieChart size={18} />, label: 'ECA Dashboard' },
+    { to: '/eca/management', icon: <Gift size={18} />, label: 'ECA Management' },
+  ] : []),
+
     { to: '/stakeholders', icon: <UserPlus size={18} />, label: 'Stakeholders Directory' },
 
     ...( user?.position === 'Administrator' ? [

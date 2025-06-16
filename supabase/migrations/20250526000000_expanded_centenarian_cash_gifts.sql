@@ -90,7 +90,7 @@ BEGIN
     target_year as eca_year
   FROM citizens c
   WHERE (target_year - EXTRACT(YEAR FROM c.birth_date)) IN (80, 85, 90, 95, 100)
-    AND c.status IN ('Encoded', 'Validated', 'Cleanlisted', 'Paid', 'Unpaid', 'Liquidated')
+    AND c.status IN ('Encoded', 'Validated', 'Cleanlisted', 'Paid', 'Unpaid', 'Compliance')
     AND NOT EXISTS (
       SELECT 1 FROM expanded_centenarian_cash_gifts eca 
       WHERE eca.citizen_id = c.id 

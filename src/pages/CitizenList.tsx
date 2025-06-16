@@ -130,7 +130,7 @@ function CitizenList() {
     'Cleanlisted',
     'Paid',
     'Unpaid',
-    'Liquidated',
+    'Compliance',
     'Disqualified'
   ];
 
@@ -1896,7 +1896,7 @@ function CitizenList() {
                     bgColor = isSelected ? 'bg-yellow-200' : 'bg-yellow-50';
                     textColor = isSelected ? 'text-yellow-900' : 'text-yellow-700';
                     break;
-                  case 'Liquidated':
+                  case 'Compliance':
                     bgColor = isSelected ? 'bg-purple-200' : 'bg-purple-50';
                     textColor = isSelected ? 'text-purple-900' : 'text-purple-700';
                     break;
@@ -2122,7 +2122,7 @@ function CitizenList() {
                           citizen.status === 'Cleanlisted' ? 'bg-green-200 text-green-800' :
                           citizen.status === 'Paid' ? 'bg-emerald-200 text-emerald-800' :
                           citizen.status === 'Unpaid' ? 'bg-yellow-200 text-yellow-800' :
-                          citizen.status === 'Liquidated' ? 'bg-purple-200 text-purple-800' :
+                          citizen.status === 'Compliance' ? 'bg-purple-200 text-purple-800' :
                           'bg-red-200 text-red-800'
                         }`}>
                           {citizen.status === 'Validated' && (

@@ -55,7 +55,7 @@ interface Stats {
     encoded: number;
     validated: number;
     cleanlisted: number;
-    liquidated: number;
+    compliance: number;
     disqualified: number;
     total: number;
   };
@@ -66,7 +66,7 @@ interface Stats {
     encoded: number;
     validated: number;
     cleanlisted: number;
-    liquidated: number;
+    compliance: number;
     disqualified: number;
     total: number;
   }[];
@@ -83,7 +83,7 @@ const COLORS = {
   Cleanlisted: '#008080',
   Paid: '#006400',
   Unpaid: '#FFA500',
-  Liquidated: '#DC3545',
+  Compliance: '#DC3545',
   Disqualified: '#808080',
   Male: '#3B82F6',
   Female: '#EC4899'
@@ -120,7 +120,7 @@ function Dashboard() {
       cleanlisted: 0,
       paid: 0,
       unpaid: 0,
-      liquidated: 0,
+      Compliance: 0,
       disqualified: 0,
       total: 0
     },
@@ -154,7 +154,7 @@ function Dashboard() {
     encoded: number;
     validated: number;
     cleanlisted: number;
-    liquidated: number;
+    compliance: number;
     disqualified: number;
     total: number;
   }[]>([]);
@@ -165,7 +165,7 @@ function Dashboard() {
     'Cleanlisted',
     'Paid',
     'Unpaid',
-    'Liquidated',
+    'Compliance',
     'Disqualified'
   ], []);
 
@@ -406,7 +406,7 @@ function Dashboard() {
           const paymentStats = {
             paid: filteredCitizens.filter(c => c.status === 'Paid').length,
             unpaid: filteredCitizens.filter(c => c.status === 'Unpaid').length,
-            liquidated: filteredCitizens.filter(c => c.status === 'Liquidated').length,
+            compliance: filteredCitizens.filter(c => c.status === 'Compliance').length,
             disqualified: filteredCitizens.filter(c => c.status === 'Disqualified').length,
             encoded: filteredCitizens.filter(c => c.status === 'Encoded').length,
             validated: filteredCitizens.filter(c => c.status === 'Validated').length,
@@ -463,7 +463,7 @@ function Dashboard() {
                 encoded: provinceCitizens.filter(c => c.status === 'Encoded').length,
                 validated: provinceCitizens.filter(c => c.status === 'Validated').length,
                 cleanlisted: provinceCitizens.filter(c => c.status === 'Cleanlisted').length,
-                liquidated: provinceCitizens.filter(c => c.status === 'Liquidated').length,
+                compliance: provinceCitizens.filter(c => c.status === 'Compliance').length,
                 disqualified: provinceCitizens.filter(c => c.status === 'Disqualified').length,
                 total: provinceCitizens.length
               };
@@ -488,7 +488,7 @@ function Dashboard() {
                     encoded: lguCitizens.filter(c => c.status === 'Encoded').length,
                     validated: lguCitizens.filter(c => c.status === 'Validated').length,
                     cleanlisted: lguCitizens.filter(c => c.status === 'Cleanlisted').length,
-                    liquidated: lguCitizens.filter(c => c.status === 'Liquidated').length,
+                    compliance: lguCitizens.filter(c => c.status === 'Compliance').length,
                     disqualified: lguCitizens.filter(c => c.status === 'Disqualified').length,
                     total: lguCitizens.length
                   };
@@ -793,9 +793,9 @@ function Dashboard() {
            
            
                     
-           <div className="bg-green-50 rounded-lg p-4">
-            <div className="text-green-600 text-lg font-semibold">Liquidated</div>
-            <div className="text-3xl font-bold text-green-700">{stats.paymentStats.liquidated}</div>
+           <div className="bg-red-50 rounded-lg p-4">
+            <div className="text-red-600 text-lg font-semibold">Compliance</div>
+            <div className="text-3xl font-bold text-red-700">{stats.paymentStats.compliance}</div>
            </div>
         
            <div className="bg-red-50 rounded-lg p-4">
@@ -849,7 +849,7 @@ function Dashboard() {
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Encoded</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Validated</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Cleanlisted</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Liquidated</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Compliance</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Disqualified</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Paid %</th>
@@ -877,7 +877,7 @@ function Dashboard() {
                       {province.cleanlisted}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600 font-medium">
-                      {province.liquidated}
+                      {province.compliance}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600 font-medium">
                       {province.disqualified}
@@ -910,7 +910,7 @@ function Dashboard() {
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Encoded</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Validated</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Cleanlisted</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Liquidated</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Compliance</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Disqualified</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Paid %</th>
@@ -938,7 +938,7 @@ function Dashboard() {
                         {lgu.cleanlisted}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600 font-small">
-                        {lgu.liquidated}
+                        {lgu.compliance}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600 font-small">
                         {lgu.disqualified} 

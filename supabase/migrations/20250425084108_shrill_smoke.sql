@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS citizens (
   barangay_code TEXT NOT NULL,
   remarks TEXT,
   status TEXT NOT NULL DEFAULT 'Encoded' CHECK (
-    status IN ('Encoded', 'Validated', 'Cleanlisted', 'Paid', 'Unpaid', 'Liquidated', 'Disqualified')
+    status IN ('Encoded', 'Validated', 'Cleanlisted', 'Paid', 'Unpaid', 'Compliance', 'Disqualified')
   ),
   payment_date DATE,
   osca_id TEXT NOT NULL DEFAULT 'N/A',

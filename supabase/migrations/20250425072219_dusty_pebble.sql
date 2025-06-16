@@ -15,4 +15,4 @@ ALTER TABLE citizens DROP CONSTRAINT IF EXISTS citizens_status_check;
 
 -- Add new status check constraint with Disqualified option
 ALTER TABLE citizens ADD CONSTRAINT citizens_status_check 
-  CHECK (status IN ('Encoded', 'Validated', 'Cleanlisted', 'Paid', 'Unpaid', 'Liquidated', 'Disqualified'));
+  CHECK (status IN ('Encoded', 'Validated', 'Cleanlisted', 'Paid', 'Unpaid', 'Compliance', 'Disqualified'));

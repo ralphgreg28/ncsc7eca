@@ -157,7 +157,7 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
                   className={inputClass}
                   required
                 >
-                  {['Encoded', 'Validated', 'Cleanlisted', 'Paid', 'Unpaid', 'Liquidated', 'Disqualified'].map(status => (
+                  {['Encoded', 'Validated', 'Cleanlisted', 'Paid', 'Unpaid', 'Compliance', 'Disqualified'].map(status => (
                     <option key={status} value={status}>{status}</option>
                   ))}
                 </select>

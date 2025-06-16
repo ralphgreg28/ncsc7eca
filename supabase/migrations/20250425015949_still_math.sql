@@ -7,9 +7,9 @@
     - Add check constraint for status values
 
   2. Notes
-    - Status options: Encoded, Validated, Cleanlisted, Paid, Unpaid, Liquidated
+    - Status options: Encoded, Validated, Cleanlisted, Paid, Unpaid, Compliance
     - Payment date can be null
 */
 
-ALTER TABLE citizens ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Encoded' CHECK (status IN ('Encoded', 'Validated', 'Cleanlisted', 'Paid', 'Unpaid', 'Liquidated'));
+ALTER TABLE citizens ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Encoded' CHECK (status IN ('Encoded', 'Validated', 'Cleanlisted', 'Paid', 'Unpaid', 'Compliance'));
 ALTER TABLE citizens ADD COLUMN IF NOT EXISTS payment_date DATE;

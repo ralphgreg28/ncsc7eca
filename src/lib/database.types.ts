@@ -64,7 +64,7 @@ export interface Database {
           lgu_code: string
           barangay_code: string
           remarks: string | null
-          status: 'Encoded' | 'Validated' | 'Cleanlisted' | 'Paid' | 'Unpaid' | 'Compliance' | 'Disqualified'
+          status: 'Encoded' | 'Validated' | 'Cleanlisted' |'Waitlisted' |'Paid' | 'Unpaid' | 'Compliance' | 'Disqualified'
           payment_date: string | null
           osca_id: string
           rrn: string
@@ -86,7 +86,7 @@ export interface Database {
           lgu_code: string
           barangay_code: string
           remarks?: string | null
-          status?: 'Encoded' | 'Validated' | 'Cleanlisted' | 'Paid' | 'Unpaid' | 'Compliance' | 'Disqualified'
+          status?: 'Encoded' | 'Validated' | 'Cleanlisted' |'Waitlisted' |'Paid' | 'Unpaid' | 'Compliance' | 'Disqualified'
           payment_date?: string | null
           osca_id?: string
           rrn?: string
@@ -108,7 +108,7 @@ export interface Database {
           lgu_code?: string
           barangay_code?: string
           remarks?: string | null
-          status?: 'Encoded' | 'Validated' | 'Cleanlisted' | 'Paid' | 'Unpaid' | 'Compliance' | 'Disqualified'
+          status?: 'Encoded' | 'Validated' | 'Cleanlisted' |'Waitlisted' | 'Paid' | 'Unpaid' | 'Compliance' | 'Disqualified'
           payment_date?: string | null
           osca_id?: string
           rrn?: string

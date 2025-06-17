@@ -55,9 +55,11 @@ interface Stats {
     encoded: number;
     validated: number;
     cleanlisted: number;
+    waitlisted: number;
     compliance: number;
     disqualified: number;
     total: number;
+
   };
   provinceStats: {
     name: string;
@@ -66,9 +68,12 @@ interface Stats {
     encoded: number;
     validated: number;
     cleanlisted: number;
+    waitlisted: number;
     compliance: number;
     disqualified: number;
     total: number;
+
+
   }[];
   paidBySpecificAge: {
     age: number;
@@ -81,6 +86,7 @@ const COLORS = {
   Encoded: '#87CEEB',
   Validated: '#28A745',
   Cleanlisted: '#008080',
+  Waitlisted: '#FFA500',
   Paid: '#006400',
   Unpaid: '#FFA500',
   Compliance: '#DC3545',
@@ -120,9 +126,11 @@ function Dashboard() {
       cleanlisted: 0,
       paid: 0,
       unpaid: 0,
-      Compliance: 0,
+      compliance: 0,
+      waitlisted: 0,
       disqualified: 0,
       total: 0
+
     },
     provinceStats: [],
     paidBySpecificAge: []
@@ -154,15 +162,19 @@ function Dashboard() {
     encoded: number;
     validated: number;
     cleanlisted: number;
+    waitlisted: number;
     compliance: number;
     disqualified: number;
     total: number;
+    
+
   }[]>([]);
 
   const statusOptions = useMemo(() => [
     'Encoded',
     'Validated',
     'Cleanlisted',
+    'Waitlisted',
     'Paid',
     'Unpaid',
     'Compliance',
@@ -411,6 +423,7 @@ function Dashboard() {
             encoded: filteredCitizens.filter(c => c.status === 'Encoded').length,
             validated: filteredCitizens.filter(c => c.status === 'Validated').length,
             cleanlisted: filteredCitizens.filter(c => c.status === 'Cleanlisted').length,
+            waitlisted: filteredCitizens.filter(c => c.status === 'Waitlisted').length,
             total: filteredCitizens.length
           };
 
@@ -463,6 +476,7 @@ function Dashboard() {
                 encoded: provinceCitizens.filter(c => c.status === 'Encoded').length,
                 validated: provinceCitizens.filter(c => c.status === 'Validated').length,
                 cleanlisted: provinceCitizens.filter(c => c.status === 'Cleanlisted').length,
+                waitlisted: provinceCitizens.filter(c => c.status === 'Waitlisted').length,
                 compliance: provinceCitizens.filter(c => c.status === 'Compliance').length,
                 disqualified: provinceCitizens.filter(c => c.status === 'Disqualified').length,
                 total: provinceCitizens.length
@@ -488,6 +502,7 @@ function Dashboard() {
                     encoded: lguCitizens.filter(c => c.status === 'Encoded').length,
                     validated: lguCitizens.filter(c => c.status === 'Validated').length,
                     cleanlisted: lguCitizens.filter(c => c.status === 'Cleanlisted').length,
+                    waitlisted: lguCitizens.filter(c => c.status === 'Waitlisted').length,
                     compliance: lguCitizens.filter(c => c.status === 'Compliance').length,
                     disqualified: lguCitizens.filter(c => c.status === 'Disqualified').length,
                     total: lguCitizens.length
@@ -803,13 +818,21 @@ function Dashboard() {
             <div className="text-3xl font-bold text-red-700">{stats.paymentStats.disqualified}</div>
           
            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="text-gray-600 text-lg font-semibold">Waitlisted</div>
+            <div className="text-3xl font-bold text-gray-700">{stats.paymentStats.waitlisted}</div>
+            <div className="text-sm text-gray-600">Cleanlisted Already</div>
+          </div>
       
+
+      {/*
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-gray-600 text-lg font-semibold">Total</div>
             <div className="text-3xl font-bold text-gray-700">{stats.paymentStats.total}</div>
             <div className="text-sm text-gray-600">All Records</div>
           </div>
-     
+     */}
           
          </div>
     

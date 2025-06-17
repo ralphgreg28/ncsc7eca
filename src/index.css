@@ -122,6 +122,10 @@
     @apply text-white;
   }
 
+ .status-badge-waitlisted {
+    background-color: #ffdfa4;
+    @apply text-white;
+  }
   .status-badge-Compliance {
     background-color: #DC3545;
     @apply text-white;

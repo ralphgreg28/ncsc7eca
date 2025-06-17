@@ -119,8 +119,9 @@ function DuplicateModal({
     if (statusLower === 'cleanlisted') return { backgroundColor: '#008080', color: 'white' };
     if (statusLower === 'paid') return { backgroundColor: '#006400', color: 'white' };
     if (statusLower === 'unpaid') return { backgroundColor: '#FFA500', color: 'white' };
-    if (statusLower === 'Compliance') return { backgroundColor: '#DC3545', color: 'white' };
+    if (statusLower === 'compliance') return { backgroundColor: '#DC3545', color: 'white' };
     if (statusLower === 'disqualified') return { backgroundColor: '#808080', color: 'white' };
+    if (statusLower === 'waitlisted') return { backgroundColor: '#28A745', color: 'white' };
     
     return {};
   };

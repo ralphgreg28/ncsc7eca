@@ -684,6 +684,7 @@ function EncodedStatusMonitor() {
                   <option value="Encoded">Encoded</option>
                   <option value="Validated">Validated</option>
                   <option value="Cleanlisted">Cleanlisted</option>
+                  <option value="Waitlisted">Waitlisted</option>
                   <option value="Paid">Paid</option>
                   <option value="Unpaid">Unpaid</option>
                   <option value="Compliance">Compliance</option>

@@ -128,6 +128,7 @@ function CitizenList() {
     'Encoded',
     'Validated',
     'Cleanlisted',
+    'Waitlisted',
     'Paid',
     'Unpaid',
     'Compliance',
@@ -1888,6 +1889,10 @@ function CitizenList() {
                     bgColor = isSelected ? 'bg-green-200' : 'bg-green-50';
                     textColor = isSelected ? 'text-green-900' : 'text-green-700';
                     break;
+                  case 'Waitlisted':
+                    bgColor = isSelected ? 'bg-yellow-200' : 'bg-yellow-50';
+                    textColor = isSelected ? 'text-yellow-900' : 'text-yellow-700';
+                    break;
                   case 'Paid':
                     bgColor = isSelected ? 'bg-emerald-200' : 'bg-emerald-50';
                     textColor = isSelected ? 'text-emerald-900' : 'text-emerald-700';
@@ -2120,6 +2125,7 @@ function CitizenList() {
                           citizen.status === 'Encoded' ? 'bg-gray-200 text-gray-800' :
                           citizen.status === 'Validated' ? 'bg-blue-200 text-blue-800' :
                           citizen.status === 'Cleanlisted' ? 'bg-green-200 text-green-800' :
+                          citizen.status === 'Wwaitlisted' ? 'bg-yellow-200 text-yellow-800' : 
                           citizen.status === 'Paid' ? 'bg-emerald-200 text-emerald-800' :
                           citizen.status === 'Unpaid' ? 'bg-yellow-200 text-yellow-800' :
                           citizen.status === 'Compliance' ? 'bg-purple-200 text-purple-800' :

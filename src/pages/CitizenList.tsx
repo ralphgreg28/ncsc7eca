@@ -95,7 +95,9 @@ function CitizenList() {
     lgus: {},
     barangays: {}
   });
+  const [showYearFilter, setShowYearFilter] = useState(false);
   const [showMonthFilter, setShowMonthFilter] = useState(false);
+  const [yearSearchTerm, setYearSearchTerm] = useState('');
   const [monthSearchTerm, setMonthSearchTerm] = useState('');
   const { user } = useAuth();
   const [userAssignments, setUserAssignments] = useState<Assignment[]>([]);
@@ -1695,12 +1697,154 @@ if (filters.searchTerm) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Birth Month Filter
+                Birth Year
+              </label>
+              <div className="relative">
+                <button
+                  onClick={() => setShowYearFilter(!showYearFilter)}
+                  className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md bg-white text-sm shadow-sm hover:bg-gray-50 transition-colors"
+                >
+                  <span>
+                    {filters.birthYears.length > 0 
+                      ? `${filters.birthYears.length} year${filters.birthYears.length > 1 ? 's' : ''} selected` 
+                      : 'Select years...'}
+                  </span>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className={`h-5 w-5 transition-transform duration-200 ${showYearFilter ? 'transform rotate-180' : ''}`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {/* Selected years tags */}
+                {filters.birthYears.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {filters.birthYears.map(year => (
+                      <span 
+                        key={year} 
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                      >
+                        {year}
+                        <button
+                          onClick={() => {
+                            const newYears = filters.birthYears.filter(y => y !== year);
+                            handleFilterChange('birthYears', newYears);
+                          }}
+                          className="ml-1 text-indigo-600 hover:text-indigo-800"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </span>
+                    ))}
+                    <button
+                      onClick={() => handleFilterChange('birthYears', [])}
+                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                )}
+                
+                {/* Year Dropdown */}
+                {showYearFilter && (
+                  <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-96 overflow-y-auto">
+                    {/* Search bar */}
+                    <div className="sticky top-0 bg-white p-2 border-b border-gray-200">
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Search className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={yearSearchTerm}
+                          onChange={(e) => setYearSearchTerm(e.target.value)}
+                          placeholder="Search year..."
+                          className="pl-10 w-full rounded-md border-gray-300 text-sm py-1"
+                        />
+                      </div>
+                      <div className="flex justify-between mt-2">
+                        <button
+                          onClick={() => {
+                            // Select all years
+                            handleFilterChange('birthYears', [...availableBirthYears]);
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          Select All
+                        </button>
+                        <button
+                          onClick={() => handleFilterChange('birthYears', [])}
+                          className="text-xs text-red-600 hover:text-red-800 font-medium"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Year list */}
+                    <div className="p-2">
+                      <div className="grid grid-cols-3 gap-1">
+                        {availableBirthYears
+                          .filter(year => 
+                            yearSearchTerm === '' || 
+                            year.includes(yearSearchTerm)
+                          )
+                          .map(year => {
+                            const isSelected = filters.birthYears.includes(year);
+                            return (
+                              <button
+                                key={year}
+                                onClick={() => {
+                                  const newYears = isSelected
+                                    ? filters.birthYears.filter(y => y !== year)
+                                    : [...filters.birthYears, year];
+                                  handleFilterChange('birthYears', newYears);
+                                }}
+                                className={`px-3 py-2 rounded text-sm font-medium ${
+                                  isSelected 
+                                    ? 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200' 
+                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                } transition-colors duration-150 text-center flex items-center justify-center`}
+                              >
+                                <span className={`w-4 h-4 mr-1.5 rounded-sm border ${
+                                  isSelected 
+                                    ? 'bg-indigo-500 border-indigo-500' 
+                                    : 'border-gray-300'
+                                } flex items-center justify-center`}>
+                                  {isSelected && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  )}
+                                </span>
+                                {year}
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            
+           
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Birth Month
               </label>
               <div className="relative">
                 <button
                   onClick={() => setShowMonthFilter(!showMonthFilter)}
-                  className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
+                  className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md bg-white text-sm shadow-sm hover:bg-gray-50 transition-colors"
                 >
                   <span>
                     {filters.birthMonths.length > 0 
@@ -1727,7 +1871,7 @@ if (filters.searchTerm) {
                       return (
                         <span 
                           key={month} 
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800"
                         >
                           {monthName} {year}
                           <button
@@ -1735,7 +1879,7 @@ if (filters.searchTerm) {
                               const newMonths = filters.birthMonths.filter(m => m !== month);
                               handleFilterChange('birthMonths', newMonths);
                             }}
-                            className="ml-1 text-blue-600 hover:text-blue-800"
+                            className="ml-1 text-teal-600 hover:text-teal-800"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1753,7 +1897,7 @@ if (filters.searchTerm) {
                   </div>
                 )}
                 
-                {/* Dropdown */}
+                {/* Month Dropdown */}
                 {showMonthFilter && (
                   <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-96 overflow-y-auto">
                     {/* Search bar */}
@@ -1766,133 +1910,93 @@ if (filters.searchTerm) {
                           type="text"
                           value={monthSearchTerm}
                           onChange={(e) => setMonthSearchTerm(e.target.value)}
-                          placeholder="Search year or month..."
+                          placeholder="Search month..."
                           className="pl-10 w-full rounded-md border-gray-300 text-sm py-1"
                         />
                       </div>
-                      <div className="flex justify-between mt-2">
-                        <button
-                          onClick={() => {
-                            // Select all months for all years
-                            const allMonths: string[] = [];
-                            availableBirthYears.forEach(year => {
-                              for (let month = 1; month <= 12; month++) {
-                                allMonths.push(`${year}-${month.toString().padStart(2, '0')}`);
-                              }
-                            });
-                            handleFilterChange('birthMonths', allMonths);
-                          }}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          Select All
-                        </button>
-                        <button
-                          onClick={() => handleFilterChange('birthMonths', [])}
-                          className="text-xs text-red-600 hover:text-red-800 font-medium"
-                        >
-                          Clear All
-                        </button>
-                      </div>
                     </div>
                     
-                    {/* Year groups */}
+                    {/* Month selection */}
                     <div className="p-2">
-                      {availableBirthYears
-                        .filter(year => 
-                          monthSearchTerm === '' || 
-                          year.includes(monthSearchTerm)
-                        )
-                        .map(year => {
-                          const monthsForYear = Array.from({ length: 12 }, (_, i) => {
-                            const monthNum = (i + 1).toString().padStart(2, '0');
-                            const monthValue = `${year}-${monthNum}`;
-                            const monthName = new Date(parseInt(year), i).toLocaleString('default', { month: 'long' });
-                            return { value: monthValue, name: monthName };
-                          });
+                      <div className="grid grid-cols-3 gap-1">
+                        {Array.from({ length: 12 }, (_, i) => {
+                          const monthIndex = i;
+                          const monthName = new Date(2000, monthIndex).toLocaleString('default', { month: 'long' });
                           
-                          const filteredMonths = monthsForYear.filter(month => 
-                            monthSearchTerm === '' || 
-                            month.name.toLowerCase().includes(monthSearchTerm.toLowerCase()) ||
-                            year.includes(monthSearchTerm)
+                          // Filter by search term if provided
+                          if (monthSearchTerm && !monthName.toLowerCase().includes(monthSearchTerm.toLowerCase())) {
+                            return null;
+                          }
+                          
+                          // Check if this month is selected for the selected years
+                          const monthNum = (monthIndex + 1).toString().padStart(2, '0');
+                          
+                          // If no years are selected, use all available years
+                          const yearsToUse = filters.birthYears.length > 0 
+                            ? filters.birthYears 
+                            : availableBirthYears;
+                            
+                          const isSelected = yearsToUse.some(year => 
+                            filters.birthMonths.includes(`${year}-${monthNum}`)
                           );
-                          
-                          if (filteredMonths.length === 0) return null;
                           
                           return (
-                            <div key={year} className="mb-3">
-                              <div className="flex items-center justify-between mb-1">
-                                <h3 className="text-sm font-semibold text-gray-700">{year}</h3>
-                                <button
-                                  onClick={() => {
-                                    const yearMonths = monthsForYear.map(m => m.value);
-                                    const allSelected = yearMonths.every(m => filters.birthMonths.includes(m));
-                                    
-                                    if (allSelected) {
-                                      // Remove all months for this year
-                                      const newMonths = filters.birthMonths.filter(m => !m.startsWith(year));
-                                      handleFilterChange('birthMonths', newMonths);
-                                    } else {
-                                      // Add all months for this year
-                                      const newMonths = [
-                                        ...filters.birthMonths.filter(m => !m.startsWith(year)),
-                                        ...yearMonths
-                                      ];
-                                      handleFilterChange('birthMonths', newMonths);
+                            <button
+                              key={monthName}
+                              onClick={() => {
+                                // If no years are selected, show a message
+                                if (filters.birthYears.length === 0) {
+                                  toast.info('Please select at least one birth year first');
+                                  return;
+                                }
+                                
+                                // If selected, remove this month from selected years
+                                if (isSelected) {
+                                  const newMonths = filters.birthMonths.filter(m => {
+                                    const [year, mNum] = m.split('-');
+                                    return mNum !== monthNum || !filters.birthYears.includes(year);
+                                  });
+                                  handleFilterChange('birthMonths', newMonths);
+                                } else {
+                                  // If not selected, add this month for selected years
+                                  const newMonths = [...filters.birthMonths];
+                                  filters.birthYears.forEach(year => {
+                                    const monthValue = `${year}-${monthNum}`;
+                                    if (!newMonths.includes(monthValue)) {
+                                      newMonths.push(monthValue);
                                     }
-                                  }}
-                                  className="text-xs text-blue-600 hover:text-blue-800"
-                                >
-                                  {monthsForYear.every(m => filters.birthMonths.includes(m.value)) 
-                                    ? 'Deselect All' 
-                                    : 'Select All'}
-                                </button>
-                              </div>
-                              <div className="grid grid-cols-3 gap-1">
-                                {filteredMonths.map(month => {
-                                  const isSelected = filters.birthMonths.includes(month.value);
-                                  return (
-                                    <button
-                                      key={month.value}
-                                      onClick={() => {
-                                        const newMonths = isSelected
-                                          ? filters.birthMonths.filter(m => m !== month.value)
-                                          : [...filters.birthMonths, month.value];
-                                        handleFilterChange('birthMonths', newMonths);
-                                      }}
-                                      className={`px-2 py-1 rounded text-xs font-medium ${
-                                        isSelected 
-                                          ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' 
-                                          : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                                      } transition-colors duration-150 text-left flex items-center`}
-                                    >
-                                      <span className={`w-4 h-4 mr-1 rounded-sm border ${
-                                        isSelected 
-                                          ? 'bg-blue-500 border-blue-500' 
-                                          : 'border-gray-300'
-                                      } flex items-center justify-center`}>
-                                        {isSelected && (
-                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                          </svg>
-                                        )}
-                                      </span>
-                                      {month.name}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
+                                  });
+                                  handleFilterChange('birthMonths', newMonths);
+                                }
+                              }}
+                              className={`px-3 py-2 rounded text-sm font-medium ${
+                                isSelected 
+                                  ? 'bg-teal-100 text-teal-800 hover:bg-teal-200' 
+                                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                              } transition-colors duration-150 text-center flex items-center justify-center`}
+                            >
+                              <span className={`w-4 h-4 mr-1.5 rounded-sm border ${
+                                isSelected 
+                                  ? 'bg-teal-500 border-teal-500' 
+                                  : 'border-gray-300'
+                              } flex items-center justify-center`}>
+                                {isSelected && (
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </span>
+                              {monthName}
+                            </button>
                           );
                         })}
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
             </div>
             
-            
-           
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Remarks

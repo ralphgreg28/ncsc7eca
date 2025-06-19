@@ -431,12 +431,16 @@ function CitizenList() {
       
       let query = supabase.from('citizens').select('*', { count: 'exact' });
 
-      if (filters.searchTerm) {
-        query = query.or(
-          `last_name.ilike.%${filters.searchTerm}%,` +
-          `first_name.ilike.%${filters.searchTerm}%,` +
-          `middle_name.ilike.%${filters.searchTerm}%`
-        );
+if (filters.searchTerm) {
+        // Split search term by spaces to allow searching for multiple terms
+        const searchTerms = filters.searchTerm.trim().split(/\s+/);
+        
+        // For each term, create a filter condition
+        searchTerms.forEach(term => {
+          // Create a filter where the term must match at least one name field
+          // Using a raw filter string which is compatible with Supabase
+          query = query.or(`last_name.ilike.%${term}%,first_name.ilike.%${term}%,middle_name.ilike.%${term}%`);
+        });
       }
 
       // For PDO or LGU users, restrict to assigned provinces and LGUs
@@ -556,7 +560,7 @@ function CitizenList() {
           const endDate = `${parseInt(year) + 1}-01-01`;
           
           // Clone the query for this specific year filter
-          const yearQuery = supabase
+          let yearQuery = supabase
             .from('citizens')
             .select('id')
             .gte('birth_date', startDate)
@@ -571,11 +575,21 @@ function CitizenList() {
           if (filters.paymentDateTo) yearQuery.lte('payment_date', filters.paymentDateTo);
           if (filters.remarks) yearQuery.ilike('remarks', `%${filters.remarks}%`);
           if (filters.searchTerm) {
-            yearQuery.or(
-              `last_name.ilike.%${filters.searchTerm}%,` +
-              `first_name.ilike.%${filters.searchTerm}%,` +
-              `middle_name.ilike.%${filters.searchTerm}%`
-            );
+            // Split search term by spaces to allow searching for multiple terms
+            const searchTerms = filters.searchTerm.trim().split(/\s+/);
+            
+            if (searchTerms.length === 1) {
+              // If only one search term, use the original search logic
+              yearQuery.or(
+                `last_name.ilike.%${filters.searchTerm}%,first_name.ilike.%${filters.searchTerm}%,middle_name.ilike.%${filters.searchTerm}%`
+              );
+            } else {
+                // For multiple search terms, build a more complex query
+                // Each term must match at least one name field
+                searchTerms.forEach(term => {
+                  yearQuery = yearQuery.or(`last_name.ilike.%${term}%,first_name.ilike.%${term}%,middle_name.ilike.%${term}%`);
+                });
+            }
           }
           
           // Execute the query for this year
@@ -627,7 +641,7 @@ function CitizenList() {
           const endDate = `${nextMonthYear}-${nextMonth.toString().padStart(2, '0')}-01`;
           
           // Clone the query for this specific month filter
-          const monthQuery = supabase
+          let monthQuery = supabase
             .from('citizens')
             .select('id')
             .gte('birth_date', startDate)
@@ -642,11 +656,21 @@ function CitizenList() {
           if (filters.paymentDateTo) monthQuery.lte('payment_date', filters.paymentDateTo);
           if (filters.remarks) monthQuery.ilike('remarks', `%${filters.remarks}%`);
           if (filters.searchTerm) {
-            monthQuery.or(
-              `last_name.ilike.%${filters.searchTerm}%,` +
-              `first_name.ilike.%${filters.searchTerm}%,` +
-              `middle_name.ilike.%${filters.searchTerm}%`
-            );
+            // Split search term by spaces to allow searching for multiple terms
+            const searchTerms = filters.searchTerm.trim().split(/\s+/);
+            
+            if (searchTerms.length === 1) {
+              // If only one search term, use the original search logic
+              monthQuery.or(
+                `last_name.ilike.%${filters.searchTerm}%,first_name.ilike.%${filters.searchTerm}%,middle_name.ilike.%${filters.searchTerm}%`
+              );
+            } else {
+              // For multiple search terms, build a more complex query
+              // Each term must match at least one of the name fields
+              searchTerms.forEach(term => {
+                monthQuery = monthQuery.or(`last_name.ilike.%${term}%,first_name.ilike.%${term}%,middle_name.ilike.%${term}%`);
+              });
+            }
           }
           
           // Execute the query for this specific month
@@ -779,7 +803,7 @@ function CitizenList() {
             console.warn('RPC function not available, falling back to client-side filtering:', error);
             
             // Clone the query for month filtering
-            const monthQuery = supabase
+            let monthQuery = supabase
               .from('citizens')
               .select('id, birth_date');
             
@@ -792,11 +816,21 @@ function CitizenList() {
             if (filters.paymentDateTo) monthQuery.lte('payment_date', filters.paymentDateTo);
             if (filters.remarks) monthQuery.ilike('remarks', `%${filters.remarks}%`);
             if (filters.searchTerm) {
-              monthQuery.or(
-                `last_name.ilike.%${filters.searchTerm}%,` +
-                `first_name.ilike.%${filters.searchTerm}%,` +
-                `middle_name.ilike.%${filters.searchTerm}%`
-              );
+              // Split search term by spaces to allow searching for multiple terms
+              const searchTerms = filters.searchTerm.trim().split(/\s+/);
+              
+              if (searchTerms.length === 1) {
+                // If only one search term, use the original search logic
+                monthQuery.or(
+                  `last_name.ilike.%${filters.searchTerm}%,first_name.ilike.%${filters.searchTerm}%,middle_name.ilike.%${filters.searchTerm}%`
+                );
+              } else {
+                // For multiple search terms, build a more complex query
+                // Each term must match at least one of the name fields
+                searchTerms.forEach(term => {
+                  monthQuery = monthQuery.or(`last_name.ilike.%${term}%,first_name.ilike.%${term}%,middle_name.ilike.%${term}%`);
+                });
+              }
             }
             
             // Execute the query
@@ -908,13 +942,22 @@ function CitizenList() {
       
       let query = supabase.from('citizens').select('*');
 
-      if (filters.searchTerm) {
-        query = query.or(
-          `last_name.ilike.%${filters.searchTerm}%,` +
-          `first_name.ilike.%${filters.searchTerm}%,` +
-          `middle_name.ilike.%${filters.searchTerm}%`
-        );
-      }
+          if (filters.searchTerm) {
+            // Split search term by spaces to allow searching for multiple terms
+            const searchTerms = filters.searchTerm.trim().split(/\s+/);
+            
+            if (searchTerms.length === 1) {
+              // If only one search term, use the original search logic
+              query = query.or(`last_name.ilike.%${filters.searchTerm}%,first_name.ilike.%${filters.searchTerm}%,middle_name.ilike.%${filters.searchTerm}%`);
+            } else {
+              // For multiple search terms, build a more complex query
+              // Each term must match at least one of the name fields
+              searchTerms.forEach(term => {
+                // For each term, add a filter that checks if any name field contains the term
+                query = query.or(`last_name.ilike.%${term}%,first_name.ilike.%${term}%,middle_name.ilike.%${term}%`);
+              });
+            }
+          }
 
       // For PDO or LGU users, restrict to assigned provinces and LGUs
       if (user && (user.position === 'PDO' || user.position === 'LGU') && userAssignments.length > 0) {

@@ -1225,7 +1225,7 @@ function Dashboard() {
                 }}
                 cursor={{ fill: 'rgba(224, 231, 255, 0.2)' }}
                 formatter={(value: number | string, name) => {
-                  if (name === 'Number of Paid Citizens') return [`${value} citizens`, name];
+                  if (name === 'Number of Paid Senior Citizens') return [`${value} citizens`, name];
                   return [`${typeof value === 'number' ? value.toFixed(2) : value}%`, name];
                 }}
               />
@@ -1236,7 +1236,7 @@ function Dashboard() {
               <Bar 
                 yAxisId="left" 
                 dataKey="count" 
-                name="Number of Paid Citizens" 
+                name="Number of Paid Senior Citizens" 
                 fill="url(#countGradient)"
                 radius={[4, 4, 0, 0]}
               >
@@ -1385,7 +1385,7 @@ function Dashboard() {
                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                     border: 'none'
                   }}
-                  formatter={(value, name) => [`${value} citizens`, name]}
+                  formatter={(value, name) => [`${value} senior citizens`, name]}
                 />
                 <Legend 
                   iconType="circle"
@@ -1440,7 +1440,7 @@ function Dashboard() {
                 />
                 <Bar 
                   dataKey="count" 
-                  name="Number of Citizens" 
+                  name="Number of Senior Citizens" 
                   fill="url(#ageGradient)" 
                   radius={[4, 4, 0, 0]}
                 >
@@ -1455,90 +1455,125 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold mb-4">Quarterly Distribution by Birth Month</h2>
+        <div className="bg-white rounded-lg shadow-sm p-6 transform transition-all duration-300 hover:shadow-lg">
+          <h2 className="text-lg font-semibold mb-2 text-gray-800">Quarterly Distribution by Birth Month</h2>
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="110%">
               <PieChart>
                 <defs>
-                  <linearGradient id="q1Gradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#14B8A6" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#0F766E" stopOpacity={1}/>
-                  </linearGradient>
-                  <linearGradient id="q2Gradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3B82F6" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#1E40AF" stopOpacity={1}/>
-                  </linearGradient>
-                  <linearGradient id="q3Gradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8B5CF6" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#6D28D9" stopOpacity={1}/>
-                  </linearGradient>
-                  <linearGradient id="q4Gradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F97316" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#C2410C" stopOpacity={1}/>
-                  </linearGradient>
+                  <radialGradient id="q1RadialGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                    <stop offset="0%" stopColor="#38bdf8" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#0284c7" stopOpacity={1} />
+                  </radialGradient>
+                  <radialGradient id="q2RadialGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                    <stop offset="0%" stopColor="#4ade80" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#16a34a" stopOpacity={1} />
+                  </radialGradient>
+                  <radialGradient id="q3RadialGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                    <stop offset="0%" stopColor="#a78bfa" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#7c3aed" stopOpacity={1} />
+                  </radialGradient>
+                  <radialGradient id="q4RadialGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                    <stop offset="0%" stopColor="#fb923c" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#ea580c" stopOpacity={1} />
+                  </radialGradient>
                 </defs>
                 <Pie
                   data={stats.byQuarter}
                   cx="50%"
                   cy="50%"
-                  labelLine={true}
-                  label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                  labelLine={{
+                    stroke: '#9ca3af',
+                    strokeWidth: 1,
+                    strokeDasharray: '3 3'
+                  }}
+                  label={({ name, value, percent }) => {
+                    const quarterMap = {
+                      'Q1': 'Q1',
+                      'Q2': 'Q2',
+                      'Q3': 'Q3',
+                      'Q4': 'Q4'
+                    };
+                    const quarterName = quarterMap[name as keyof typeof quarterMap] || name;
+                    return `${quarterName}: ${(percent * 100).toFixed(0)}%`;
+                  }}
                   outerRadius={120}
-                  innerRadius={60}
-                  paddingAngle={4}
+                  innerRadius={70}
+                  paddingAngle={6}
                   dataKey="count"
                   nameKey="quarter"
+                  animationBegin={0}
+                  animationDuration={1500}
+                  animationEasing="ease-out"
                 >
                   {stats.byQuarter.map((entry, index) => {
-                    const gradients = ['url(#q1Gradient)', 'url(#q2Gradient)', 'url(#q3Gradient)', 'url(#q4Gradient)'];
+                    const gradients = [
+                      'url(#q1RadialGradient)', 
+                      'url(#q2RadialGradient)', 
+                      'url(#q3RadialGradient)', 
+                      'url(#q4RadialGradient)'
+                    ];
                     return (
                       <Cell 
                         key={`cell-${index}`} 
                         fill={gradients[index % gradients.length]} 
-                        stroke="#fff"
-                        strokeWidth={2}
+                        stroke="#ffffff"
+                        strokeWidth={3}
                       />
                     );
                   })}
                 </Pie>
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                    border: 'none'
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    border: 'none',
+                    padding: '12px 16px'
                   }}
                   formatter={(value, name) => {
                     const quarterMap = {
-                      'Q1': 'Jan-Mar',
-                      'Q2': 'Apr-Jun',
-                      'Q3': 'Jul-Sep',
-                      'Q4': 'Oct-Dec'
+                      'Q1': 'Q1: January - March',
+                      'Q2': 'Q2: April - June',
+                      'Q3': 'Q3: July - September',
+                      'Q4': 'Q4: October - December'
                     };
                     const quarterName = quarterMap[name as keyof typeof quarterMap] || name;
-                    return [`${value} citizens`, `${quarterName}`];
+                    return [
+                      <span style={{ fontWeight: 'bold', color: '#111827' }}>{value} senior citizens</span>,
+                      <span style={{ color: '#4B5563' }}>{quarterName}</span>
+                    ];
                   }}
+                  wrapperStyle={{ zIndex: 10 }}
+                  animationDuration={300}
+                  animationEasing="ease-in-out"
                 />
                 <Legend 
                   iconType="circle"
+                  iconSize={10}
                   layout="horizontal"
                   verticalAlign="bottom"
                   align="center"
-                  wrapperStyle={{ paddingTop: '20px' }}
+                  wrapperStyle={{ 
+                    paddingTop: '20px',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    color: '#4B5563'
+                  }}
                   formatter={(value) => {
                     const quarterMap = {
-                      'Q1': 'Q1 (Jan-Mar)',
-                      'Q2': 'Q2 (Apr-Jun)',
-                      'Q3': 'Q3 (Jul-Sep)',
-                      'Q4': 'Q4 (Oct-Dec)'
+                      'Q1': 'Q1: Jan-Mar',
+                      'Q2': 'Q2: Apr-Jun',
+                      'Q3': 'Q3: Jul-Sep',
+                      'Q4': 'Q4: Oct-Dec'
                     };
-                    return quarterMap[value as keyof typeof quarterMap] || value;
+                    return <span style={{ color: '#4B5563' }}>{quarterMap[value as keyof typeof quarterMap] || value}</span>;
                   }}
                 />
               </PieChart>
             </ResponsiveContainer>
           </div>
+         
         </div>
       </div>
     </div>

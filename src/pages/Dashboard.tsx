@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Users, FileText, Upload, Download, RefreshCw, Calendar, ChevronDown, ChevronUp, AlertCircle, Loader2 } from 'lucide-react';
+import { Users, FileText, Upload, Download, RefreshCw, Calendar, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckCircle, DollarSign, Clock, CheckSquare, AlertTriangle, XCircle, Pencil } from 'lucide-react';
 import { format, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
@@ -59,7 +59,14 @@ interface Stats {
     compliance: number;
     disqualified: number;
     total: number;
-
+    paidAmount?: number;
+    unpaidAmount?: number;
+    encodedAmount?: number;
+    validatedAmount?: number;
+    cleanlistedAmount?: number;
+    waitlistedAmount?: number;
+    complianceAmount?: number;
+    disqualifiedAmount?: number;
   };
   provinceStats: {
     name: string;
@@ -320,6 +327,19 @@ function Dashboard() {
     return allCitizens;
   };
 
+  // Calculate total amount based on age
+  const calculateTotalAmount = useCallback((citizens: Citizen[]) => {
+    return citizens.reduce((total, citizen) => {
+      const age = new Date().getFullYear() - new Date(citizen.birth_date).getFullYear();
+      if (age === 100) {
+        return total + 100000;
+      } else if (age >= 80 && age <= 95) {
+        return total + 10000;
+      }
+      return total;
+    }, 0);
+  }, []);
+
   const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
@@ -415,16 +435,35 @@ function Dashboard() {
             }).length
           }));
 
+          // Group citizens by status
+          const encodedCitizens = filteredCitizens.filter(c => c.status === 'Encoded');
+          const validatedCitizens = filteredCitizens.filter(c => c.status === 'Validated');
+          const paidStatusCitizens = filteredCitizens.filter(c => c.status === 'Paid');
+          const unpaidCitizens = filteredCitizens.filter(c => c.status === 'Unpaid');
+          const cleanlistedCitizens = filteredCitizens.filter(c => c.status === 'Cleanlisted');
+          const complianceCitizens = filteredCitizens.filter(c => c.status === 'Compliance');
+          const disqualifiedCitizens = filteredCitizens.filter(c => c.status === 'Disqualified');
+          const waitlistedCitizens = filteredCitizens.filter(c => c.status === 'Waitlisted');
+          
+          // Calculate total amounts for each status
           const paymentStats = {
-            paid: filteredCitizens.filter(c => c.status === 'Paid').length,
-            unpaid: filteredCitizens.filter(c => c.status === 'Unpaid').length,
-            compliance: filteredCitizens.filter(c => c.status === 'Compliance').length,
-            disqualified: filteredCitizens.filter(c => c.status === 'Disqualified').length,
-            encoded: filteredCitizens.filter(c => c.status === 'Encoded').length,
-            validated: filteredCitizens.filter(c => c.status === 'Validated').length,
-            cleanlisted: filteredCitizens.filter(c => c.status === 'Cleanlisted').length,
-            waitlisted: filteredCitizens.filter(c => c.status === 'Waitlisted').length,
-            total: filteredCitizens.length
+            paid: paidStatusCitizens.length,
+            unpaid: unpaidCitizens.length,
+            compliance: complianceCitizens.length,
+            disqualified: disqualifiedCitizens.length,
+            encoded: encodedCitizens.length,
+            validated: validatedCitizens.length,
+            cleanlisted: cleanlistedCitizens.length,
+            waitlisted: waitlistedCitizens.length,
+            total: filteredCitizens.length,
+            paidAmount: calculateTotalAmount(paidStatusCitizens),
+            unpaidAmount: calculateTotalAmount(unpaidCitizens),
+            complianceAmount: calculateTotalAmount(complianceCitizens),
+            disqualifiedAmount: calculateTotalAmount(disqualifiedCitizens),
+            encodedAmount: calculateTotalAmount(encodedCitizens),
+            validatedAmount: calculateTotalAmount(validatedCitizens),
+            cleanlistedAmount: calculateTotalAmount(cleanlistedCitizens),
+            waitlistedAmount: calculateTotalAmount(waitlistedCitizens)
           };
 
           // Calculate statistics for paid citizens at specific ages (exactly 80, 85, 90, 95, 100)
@@ -773,57 +812,86 @@ function Dashboard() {
 
 
           <div className="bg-violet-50 rounded-lg p-4">
-            <div className="text-violet-600 text-lg font-semibold">Encoded</div>
+            <div className="flex items-center">
+              <Pencil className="h-5 w-5 text-violet-600 mr-2" />
+              <div className="text-violet-600 text-lg font-semibold">Encoded</div>
+            </div>
             <div className="text-3xl font-bold text-violet-700">{stats.paymentStats.encoded}</div>
-          
-           </div>
+            <div className="text-sm text-violet-600">₱{stats.paymentStats.encodedAmount?.toLocaleString()}</div>
+          </div>
           
             <div className="bg-orange-50 rounded-lg p-4">
-            <div className="text-orange-600 text-lg font-semibold">Validated</div>
-            <div className="text-3xl font-bold text-orange-700">{stats.paymentStats.validated}</div>
-            
-           </div> 
+              <div className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-orange-600 mr-2" />
+                <div className="text-orange-600 text-lg font-semibold">Validated</div>
+              </div>
+              <div className="text-3xl font-bold text-orange-700">{stats.paymentStats.validated}</div>
+              <div className="text-sm text-orange-600">₱{stats.paymentStats.validatedAmount?.toLocaleString()}</div>
+            </div>
           
           <div className="bg-green-50 rounded-lg p-4">
-            <div className="text-green-600 text-lg font-semibold">Paid</div>
+            <div className="flex items-center">
+              <DollarSign className="h-5 w-5 text-green-600 mr-2" />
+              <div className="text-green-600 text-lg font-semibold">Paid</div>
+            </div>
             <div className="text-3xl font-bold text-green-700">{stats.paymentStats.paid}</div>
             <div className="text-sm text-green-600">
               {((stats.paymentStats.paid / (stats.paymentStats.paid + stats.paymentStats.unpaid)) * 100).toFixed(2)}%
             </div>
+            <div className="text-sm text-green-600">₱{stats.paymentStats.paidAmount?.toLocaleString()}</div>
           </div>
           
           <div className="bg-yellow-50 rounded-lg p-4">
-            <div className="text-yellow-600 text-lg font-semibold">Unpaid</div>
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
+              <div className="text-yellow-600 text-lg font-semibold">Unpaid</div>
+            </div>
             <div className="text-3xl font-bold text-yellow-700">{stats.paymentStats.unpaid}</div>
             <div className="text-sm text-yellow-600">
               {((stats.paymentStats.unpaid / (stats.paymentStats.paid + stats.paymentStats.unpaid)) * 100).toFixed(2)}%
             </div>
+            <div className="text-sm text-yellow-600">₱{stats.paymentStats.unpaidAmount?.toLocaleString()}</div>
           </div>
     
                         
            <div className="bg-blue-50 rounded-lg p-4">
-            <div className="text-blue-600 text-lg font-semibold">Cleanlisted</div>
+            <div className="flex items-center">
+              <CheckSquare className="h-5 w-5 text-blue-600 mr-2" />
+              <div className="text-blue-600 text-lg font-semibold">Cleanlisted</div>
+            </div>
             <div className="text-3xl font-bold text-blue-700">{stats.paymentStats.cleanlisted}</div>
+            <div className="text-sm text-blue-600">₱{stats.paymentStats.cleanlistedAmount?.toLocaleString()}</div>
            </div>
            
            
                     
            <div className="bg-red-50 rounded-lg p-4">
-            <div className="text-red-600 text-lg font-semibold">Compliance</div>
+            <div className="flex items-center">
+              <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
+              <div className="text-red-600 text-lg font-semibold">Compliance</div>
+            </div>
             <div className="text-3xl font-bold text-red-700">{stats.paymentStats.compliance}</div>
+            <div className="text-sm text-red-600">₱{stats.paymentStats.complianceAmount?.toLocaleString()}</div>
            </div>
         
            <div className="bg-red-50 rounded-lg p-4">
-            <div className="text-red-600 text-lg font-semibold">Disqualified</div>
+            <div className="flex items-center">
+              <XCircle className="h-5 w-5 text-red-600 mr-2" />
+              <div className="text-red-600 text-lg font-semibold">Disqualified</div>
+            </div>
             <div className="text-3xl font-bold text-red-700">{stats.paymentStats.disqualified}</div>
-          
+            <div className="text-sm text-red-600">₱{stats.paymentStats.disqualifiedAmount?.toLocaleString()}</div>
            </div>
 
             <div className="bg-gray-50 rounded-lg p-4">
-            <div className="text-gray-600 text-lg font-semibold">Waitlisted</div>
-            <div className="text-3xl font-bold text-gray-700">{stats.paymentStats.waitlisted}</div>
-            <div className="text-sm text-gray-600">Cleanlisted and Encoded outside Payout Range</div>
-          </div>
+              <div className="flex items-center">
+                <Clock className="h-5 w-5 text-gray-600 mr-2" />
+                <div className="text-gray-600 text-lg font-semibold">Waitlisted</div>
+              </div>
+              <div className="text-3xl font-bold text-gray-700">{stats.paymentStats.waitlisted}</div>
+              <div className="text-sm text-gray-600">Not yet included for Payout</div>
+              <div className="text-sm text-gray-600">₱{stats.paymentStats.waitlistedAmount?.toLocaleString()}</div>
+            </div>
       
 
       {/*

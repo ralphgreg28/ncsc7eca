@@ -123,8 +123,9 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
                     name={name}
                     value={(formData as any)[name] || ''}
                     onChange={handleChange}
-                    className={inputClass}
+                    className={`${inputClass} ${formData.status !== 'Encoded' ? 'bg-gray-100' : ''}`}
                     required={name === 'last_name' || name === 'first_name' || name === 'birth_date'}
+                    disabled={formData.status !== 'Encoded'}
                   />
                 </div>
               ))}
@@ -134,8 +135,9 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
                   name="sex"
                   value={formData.sex}
                   onChange={handleChange}
-                  className={inputClass}
+                  className={`${inputClass} ${formData.status !== 'Encoded' ? 'bg-gray-100' : ''}`}
                   required
+                  disabled={formData.status !== 'Encoded'}
                 >
                   <option>Male</option>
                   <option>Female</option>

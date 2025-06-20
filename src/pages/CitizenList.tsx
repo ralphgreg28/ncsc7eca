@@ -2136,7 +2136,8 @@ if (filters.searchTerm) {
                     {getSortIcon('status')}
                   </div>
                 </th>
-                <th 
+                
+               {/* <th 
                   onClick={() => handleSort('payment_date')}
                   className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
                 >
@@ -2145,6 +2146,7 @@ if (filters.searchTerm) {
                     {getSortIcon('payment_date')}
                   </div>
                 </th>
+*/}
                 <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Remarks
                 </th>
@@ -2306,9 +2308,12 @@ if (filters.searchTerm) {
                           {citizen.status}
                         </span>
                       </td>
+                     
+                      { /*
                       <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap text-center w-[50px]">
                         {citizen.payment_date ? format(new Date(citizen.payment_date), 'MMM d, yyyy') : '-'}
                       </td>
+                      */}
                       <td className="px-6 py-4">
                       <div 
                         className="text-[9px] text-gray-500 w-[100px] line-clamp-5 text-center" 
@@ -2317,7 +2322,7 @@ if (filters.searchTerm) {
                         {citizen.remarks || '-'}
                       </div>
                     </td>
-
+        
                       <td className="px-6 py-4">
                         <div className="text-[11px] text-gray-500 max-w-xs truncate w-[70px]">
                           {citizen.encoded_date ? format(new Date(citizen.encoded_date), 'MMM dd, yyyy') : '-'}

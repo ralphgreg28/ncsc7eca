@@ -822,7 +822,7 @@ function Dashboard() {
             <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-gray-600 text-lg font-semibold">Waitlisted</div>
             <div className="text-3xl font-bold text-gray-700">{stats.paymentStats.waitlisted}</div>
-            <div className="text-sm text-gray-600">Cleanlisted Already</div>
+            <div className="text-sm text-gray-600">Cleanlisted and Encoded outside Payout Range</div>
           </div>
       
 

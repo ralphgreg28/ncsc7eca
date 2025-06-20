@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Users, FileText, Upload, Download, RefreshCw, Calendar, ChevronDown, ChevronUp, AlertCircle, Loader2, CheckCircle, DollarSign, Clock, CheckSquare, AlertTriangle, XCircle, Pencil } from 'lucide-react';
 import { format, parseISO, startOfDay, endOfDay } from 'date-fns';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer, LabelList, RadialBarChart, RadialBar, AreaChart, Area } from 'recharts';
 import { supabase } from '../lib/supabase';
 
 interface Filters {
@@ -90,24 +90,33 @@ interface Stats {
 }
 
 const COLORS = {
-  Encoded: '#87CEEB',
-  Validated: '#28A745',
-  Cleanlisted: '#008080',
-  Waitlisted: '#FFA500',
-  Paid: '#006400',
-  Unpaid: '#FFA500',
-  Compliance: '#DC3545',
-  Disqualified: '#808080',
-  Male: '#3B82F6',
-  Female: '#EC4899'
+  Encoded: '#6366F1', // Indigo
+  Validated: '#10B981', // Emerald
+  Cleanlisted: '#0EA5E9', // Sky
+  Waitlisted: '#F59E0B', // Amber
+  Paid: '#22C55E', // Green
+  Unpaid: '#F97316', // Orange
+  Compliance: '#EF4444', // Red
+  Disqualified: '#6B7280', // Gray
+  Male: '#3B82F6', // Blue
+  Female: '#EC4899' // Pink
+};
+
+// Modern gradients for charts
+const GRADIENTS = {
+  blue: ['#3B82F6', '#1E40AF'],
+  green: ['#10B981', '#047857'],
+  purple: ['#8B5CF6', '#6D28D9'],
+  orange: ['#F97316', '#C2410C'],
+  teal: ['#14B8A6', '#0F766E']
 };
 
 const AGE_RANGES = [
-  { min: 60, max: 79, label: '60-79' },
-  { min: 80, max: 84, label: '80-84' },
-  { min: 85, max: 89, label: '85-89' },
-  { min: 90, max: 94, label: '90-94' },
-  { min: 95, max: 99, label: '95-99' },
+  //{ min: 60, max: 79, label: '60-79' },
+  { min: 80, max: 84, label: '80' },
+  { min: 85, max: 89, label: '85' },
+  { min: 90, max: 94, label: '90' },
+  { min: 95, max: 99, label: '95' },
   { min: 100, max: Infinity, label: '100+' }
 ];
 
@@ -913,17 +922,55 @@ function Dashboard() {
           </p>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
+              <AreaChart
                 data={stats.byMonth}
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" name="Number of Records" fill="#1d3694" />
-              </BarChart>
+                <defs>
+                  <linearGradient id="monthlyGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={GRADIENTS.blue[0]} stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor={GRADIENTS.blue[1]} stopOpacity={0.2}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="month" 
+                  tick={{ fill: '#6B7280', fontSize: 12 }}
+                  axisLine={{ stroke: '#E5E7EB' }}
+                />
+                <YAxis 
+                  tick={{ fill: '#6B7280', fontSize: 12 }}
+                  axisLine={{ stroke: '#E5E7EB' }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    border: 'none'
+                  }}
+                  labelStyle={{ fontWeight: 'bold', color: '#111827' }}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '10px' }}
+                  iconType="circle"
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="count" 
+                  name="Number of Records" 
+                  stroke={GRADIENTS.blue[0]} 
+                  fillOpacity={1} 
+                  fill="url(#monthlyGradient)"
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                >
+                  <LabelList 
+                    dataKey="count" 
+                    position="top" 
+                    style={{ fill: '#4B5563', fontSize: 11, fontWeight: 'bold' }}
+                  />
+                </Area>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -1136,15 +1183,83 @@ function Dashboard() {
             <BarChart
               data={stats.paidBySpecificAge}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              barSize={30}
+              barGap={8}
             >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="age" label={{ value: 'Exact Age (years)', position: 'insideBottom', offset: -5 }} />
-              <YAxis yAxisId="left" label={{ value: 'Count', angle: -90, position: 'insideLeft' }} />
-              <YAxis yAxisId="right" orientation="right" label={{ value: 'Percentage', angle: 90, position: 'insideRight' }} />
-              <Tooltip />
-              <Legend />
-              <Bar yAxisId="left" dataKey="count" name="Number of Paid Citizens" fill="#006400" />
-              <Bar yAxisId="right" dataKey="percentage" name="Percentage of Paid Citizens" fill="#FFA500" />
+              <defs>
+                <linearGradient id="countGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={GRADIENTS.green[0]} stopOpacity={0.9}/>
+                  <stop offset="95%" stopColor={GRADIENTS.green[1]} stopOpacity={0.6}/>
+                </linearGradient>
+                <linearGradient id="percentGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={GRADIENTS.orange[0]} stopOpacity={0.9}/>
+                  <stop offset="95%" stopColor={GRADIENTS.orange[1]} stopOpacity={0.6}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+              <XAxis 
+                dataKey="age" 
+                label={{ value: 'Exact Age (years)', position: 'insideBottom', offset: -5 }}
+                tick={{ fill: '#6B7280', fontSize: 12 }}
+                axisLine={{ stroke: '#E5E7EB' }}
+              />
+              <YAxis 
+                yAxisId="left" 
+                label={{ value: 'Count', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6B7280' } }}
+                tick={{ fill: '#6B7280', fontSize: 12 }}
+                axisLine={{ stroke: '#E5E7EB' }}
+              />
+              <YAxis 
+                yAxisId="right" 
+                orientation="right" 
+                label={{ value: 'Percentage', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: '#6B7280' } }}
+                tick={{ fill: '#6B7280', fontSize: 12 }}
+                axisLine={{ stroke: '#E5E7EB' }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  border: 'none'
+                }}
+                cursor={{ fill: 'rgba(224, 231, 255, 0.2)' }}
+                formatter={(value: number | string, name) => {
+                  if (name === 'Number of Paid Citizens') return [`${value} citizens`, name];
+                  return [`${typeof value === 'number' ? value.toFixed(2) : value}%`, name];
+                }}
+              />
+              <Legend 
+                wrapperStyle={{ paddingTop: '10px' }}
+                iconType="circle"
+              />
+              <Bar 
+                yAxisId="left" 
+                dataKey="count" 
+                name="Number of Paid Citizens" 
+                fill="url(#countGradient)"
+                radius={[4, 4, 0, 0]}
+              >
+                <LabelList 
+                  dataKey="count" 
+                  position="top" 
+                  style={{ fill: '#4B5563', fontSize: 11, fontWeight: 'bold' }}
+                />
+              </Bar>
+              <Bar 
+                yAxisId="right" 
+                dataKey="percentage" 
+                name="Percentage of Paid Citizens" 
+                fill="url(#percentGradient)"
+                radius={[4, 4, 0, 0]}
+              >
+                <LabelList 
+                  dataKey="percentage" 
+                  position="top" 
+                  formatter={(value: number | string) => `${typeof value === 'number' ? value.toFixed(1) : value}%`}
+                  style={{ fill: '#4B5563', fontSize: 11, fontWeight: 'bold' }}
+                />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -1158,16 +1273,69 @@ function Dashboard() {
               <BarChart
                 data={stats.byStatus}
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                barSize={40}
+                barGap={4}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="status" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" name="Count">
+                <defs>
                   {stats.byStatus.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[entry.status as keyof typeof COLORS]} />
+                    <linearGradient 
+                      key={`gradient-${index}`} 
+                      id={`colorStatus${index}`} 
+                      x1="0" y1="0" 
+                      x2="0" y2="1"
+                    >
+                      <stop 
+                        offset="5%" 
+                        stopColor={COLORS[entry.status as keyof typeof COLORS]} 
+                        stopOpacity={0.9}
+                      />
+                      <stop 
+                        offset="95%" 
+                        stopColor={COLORS[entry.status as keyof typeof COLORS]} 
+                        stopOpacity={0.6}
+                      />
+                    </linearGradient>
                   ))}
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                <XAxis 
+                  dataKey="status" 
+                  tick={{ fill: '#6B7280', fontSize: 12 }}
+                  axisLine={{ stroke: '#E5E7EB' }}
+                />
+                <YAxis 
+                  tick={{ fill: '#6B7280', fontSize: 12 }}
+                  axisLine={{ stroke: '#E5E7EB' }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    border: 'none'
+                  }}
+                  cursor={{ fill: 'rgba(224, 231, 255, 0.2)' }}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '10px' }}
+                  iconType="circle"
+                />
+                <Bar 
+                  dataKey="count" 
+                  name="Count" 
+                  radius={[4, 4, 0, 0]}
+                >
+                  {stats.byStatus.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={`url(#colorStatus${index})`} 
+                    />
+                  ))}
+                  <LabelList 
+                    dataKey="count" 
+                    position="top" 
+                    style={{ fill: '#4B5563', fontSize: 11, fontWeight: 'bold' }}
+                  />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -1179,23 +1347,53 @@ function Dashboard() {
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
+                <defs>
+                  <linearGradient id="maleGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3B82F6" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#1E40AF" stopOpacity={1}/>
+                  </linearGradient>
+                  <linearGradient id="femaleGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#EC4899" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#BE185D" stopOpacity={1}/>
+                  </linearGradient>
+                </defs>
                 <Pie
                   data={stats.bySex}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  labelLine={true}
+                  label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
                   outerRadius={100}
-                  fill="#8884d8"
+                  innerRadius={60}
+                  paddingAngle={2}
                   dataKey="count"
                   nameKey="sex"
                 >
                   {stats.bySex.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[entry.sex as keyof typeof COLORS]} />
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.sex === 'Male' ? 'url(#maleGradient)' : 'url(#femaleGradient)'} 
+                      stroke="#fff"
+                      strokeWidth={2}
+                    />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    border: 'none'
+                  }}
+                  formatter={(value, name) => [`${value} citizens`, name]}
+                />
+                <Legend 
+                  iconType="circle"
+                  layout="horizontal"
+                  verticalAlign="bottom"
+                  align="center"
+                  wrapperStyle={{ paddingTop: '20px' }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -1208,33 +1406,137 @@ function Dashboard() {
               <BarChart
                 data={stats.byAge}
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                barSize={40}
+                barGap={4}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="range" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" name="Count" fill="#1d3694" />
+                <defs>
+                  <linearGradient id="ageGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={GRADIENTS.purple[0]} stopOpacity={0.9}/>
+                    <stop offset="95%" stopColor={GRADIENTS.purple[1]} stopOpacity={0.6}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                <XAxis 
+                  dataKey="range" 
+                  tick={{ fill: '#6B7280', fontSize: 12 }}
+                  axisLine={{ stroke: '#E5E7EB' }}
+                />
+                <YAxis 
+                  tick={{ fill: '#6B7280', fontSize: 12 }}
+                  axisLine={{ stroke: '#E5E7EB' }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    border: 'none'
+                  }}
+                  cursor={{ fill: 'rgba(224, 231, 255, 0.2)' }}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '10px' }}
+                  iconType="circle"
+                />
+                <Bar 
+                  dataKey="count" 
+                  name="Number of Citizens" 
+                  fill="url(#ageGradient)" 
+                  radius={[4, 4, 0, 0]}
+                >
+                  <LabelList 
+                    dataKey="count" 
+                    position="top" 
+                    style={{ fill: '#4B5563', fontSize: 11, fontWeight: 'bold' }}
+                  />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold mb-4">Quarterly Registration Trend</h2>
+          <h2 className="text-lg font-semibold mb-4">Quarterly Distribution by Birth Month</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={stats.byQuarter}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="quarter" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" name="Registrations" fill="#1d3694" />
-              </BarChart>
+              <PieChart>
+                <defs>
+                  <linearGradient id="q1Gradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#14B8A6" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#0F766E" stopOpacity={1}/>
+                  </linearGradient>
+                  <linearGradient id="q2Gradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3B82F6" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#1E40AF" stopOpacity={1}/>
+                  </linearGradient>
+                  <linearGradient id="q3Gradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#8B5CF6" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#6D28D9" stopOpacity={1}/>
+                  </linearGradient>
+                  <linearGradient id="q4Gradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#F97316" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#C2410C" stopOpacity={1}/>
+                  </linearGradient>
+                </defs>
+                <Pie
+                  data={stats.byQuarter}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={true}
+                  label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                  outerRadius={120}
+                  innerRadius={60}
+                  paddingAngle={4}
+                  dataKey="count"
+                  nameKey="quarter"
+                >
+                  {stats.byQuarter.map((entry, index) => {
+                    const gradients = ['url(#q1Gradient)', 'url(#q2Gradient)', 'url(#q3Gradient)', 'url(#q4Gradient)'];
+                    return (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={gradients[index % gradients.length]} 
+                        stroke="#fff"
+                        strokeWidth={2}
+                      />
+                    );
+                  })}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    border: 'none'
+                  }}
+                  formatter={(value, name) => {
+                    const quarterMap = {
+                      'Q1': 'Jan-Mar',
+                      'Q2': 'Apr-Jun',
+                      'Q3': 'Jul-Sep',
+                      'Q4': 'Oct-Dec'
+                    };
+                    const quarterName = quarterMap[name as keyof typeof quarterMap] || name;
+                    return [`${value} citizens`, `${quarterName}`];
+                  }}
+                />
+                <Legend 
+                  iconType="circle"
+                  layout="horizontal"
+                  verticalAlign="bottom"
+                  align="center"
+                  wrapperStyle={{ paddingTop: '20px' }}
+                  formatter={(value) => {
+                    const quarterMap = {
+                      'Q1': 'Q1 (Jan-Mar)',
+                      'Q2': 'Q2 (Apr-Jun)',
+                      'Q3': 'Q3 (Jul-Sep)',
+                      'Q4': 'Q4 (Oct-Dec)'
+                    };
+                    return quarterMap[value as keyof typeof quarterMap] || value;
+                  }}
+                />
+              </PieChart>
             </ResponsiveContainer>
           </div>
         </div>

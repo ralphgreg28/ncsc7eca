@@ -344,11 +344,32 @@ function CitizenForm() {
     isSubmitting.current = true;
     setLoading(true);
 
-    // Get the next ID using the function
-    const { data: nextId, error: idError } = await supabase
-      .rpc('get_next_citizen_id');
+    let citizenId = 1; // Default to 1 if database is empty
 
-    if (idError) throw idError;
+    try {
+      // Try to get the next ID using the function
+      const { data: nextId, error: idError } = await supabase
+        .rpc('get_next_citizen_id');
+
+      if (!idError && nextId) {
+        citizenId = nextId;
+      } else {
+        // If function fails, try to get the max ID and add 1
+        const { data: maxIdResult, error: maxIdError } = await supabase
+          .from('citizens')
+          .select('id')
+          .order('id', { ascending: false })
+          .limit(1);
+
+        if (!maxIdError && maxIdResult && maxIdResult.length > 0) {
+          citizenId = maxIdResult[0].id + 1;
+        }
+        // Otherwise, use the default value of 1
+      }
+    } catch (error) {
+      console.error('Error getting next citizen ID:', error);
+      // Continue with default ID of 1
+    }
 
     // Format the encoder's name
     const encodedBy = user ? 
@@ -357,7 +378,7 @@ function CitizenForm() {
 
     // Insert the new record
     const { error } = await supabase.from('citizens').insert({
-      id: nextId,
+      id: citizenId,
       last_name: data.lastName,
       first_name: data.firstName,
       middle_name: data.middleName || null,

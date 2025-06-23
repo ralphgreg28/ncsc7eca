@@ -50,7 +50,7 @@ function Login() {
             />
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-1">
-            NCSC_7 Expanded Centenarian
+            NCSC_6 Expanded Centenarian
           </h1>
           <h1 className="text-2xl font-bold text-gray-800 mb-1">
             Information Management System

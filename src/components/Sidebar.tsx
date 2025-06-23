@@ -39,10 +39,7 @@ function Sidebar({ open, onClose }: SidebarProps) {
     { to: '/citizens/list', icon: <Users size={18} />, label: 'Senior Citizens Records' },
     { to: '/citizens/encoded-monitor', icon: <ClipboardList size={18} />, label: 'Encoded Status Monitor' },
     
-    ...( user?.position === 'Administrator' ? [
-    { to: '/eca/dashboard', icon: <PieChart size={18} />, label: 'ECA Dashboard' },
-    { to: '/eca/management', icon: <Gift size={18} />, label: 'ECA Management' },
-  ] : []),
+
 
     { to: '/stakeholders', icon: <UserPlus size={18} />, label: 'Stakeholders Directory' },
 

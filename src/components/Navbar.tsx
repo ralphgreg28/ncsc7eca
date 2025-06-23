@@ -49,7 +49,7 @@ function Navbar({ onMenuClick, className = '' }: NavbarProps) {
               <div className="ml-2.5 flex flex-col">
                 <div className="flex items-center">
                   <h1 className="font-bold text-sm text-blue-800 leading-tight">
-                    NCSC 7 <span className="hidden sm:inline">- Central Visayas</span>
+                    NCSC 6 <span className="hidden sm:inline">- Western Visayas</span>
                   </h1>
                 
                 </div>

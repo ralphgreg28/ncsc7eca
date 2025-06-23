@@ -872,11 +872,17 @@ function AddressManagement() {
           for (let i = 0; i < newBarangayCodes.length; i += batchSize) {
             const batch = newBarangayCodes.slice(i, i + batchSize);
             
-            const barangaysToInsert = batch.map(code => ({
-              code,
-              name: barangayMap.get(code) || '',
-              lgu_code: barangayToLgu.get(code) || ''
-            }));
+            const barangaysToInsert = batch.map(code => {
+              const lguCode = barangayToLgu.get(code) || '';
+              const provinceCode = lguToProvince.get(lguCode) || '';
+              
+              return {
+                code,
+                name: barangayMap.get(code) || '',
+                lgu_code: lguCode,
+                province_code: provinceCode
+              };
+            });
             
             const { error } = await supabase.from('barangays').insert(barangaysToInsert);
             

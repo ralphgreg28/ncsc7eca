@@ -145,22 +145,7 @@ function Login() {
           </div>
 
           <div className="mt-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Remember me for 7 days
-                </label>
-              </div>
-            </div>
-            
+                   
             <div className="mt-4 text-center">
               <div className="flex items-center justify-center text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
                 <AlertCircle className="h-4 w-4 text-amber-500 mr-2 flex-shrink-0" />

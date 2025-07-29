@@ -19,8 +19,6 @@ import NotFound from './pages/NotFound';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import About from './pages/About';
-import ECAManagement from './pages/ECAManagement';
-import ECADashboard from './pages/ECADashboard';
 
 function App() {
   return (
@@ -38,8 +36,6 @@ function App() {
           <Route path="citizens/duplicates" element={<DuplicateCheck />} />
           <Route path="citizens/encoded-monitor" element={<EncodedStatusMonitor />} />
           <Route path="stakeholders" element={<StakeholdersDirectory />} />
-          <Route path="eca/dashboard" element={<ECADashboard />} />
-          <Route path="eca/management" element={<ECAManagement />} />
           <Route path="about" element={<About />} />
          
           <Route path="settings" element={<Settings />}>

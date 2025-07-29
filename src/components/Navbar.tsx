@@ -53,7 +53,7 @@ function Navbar({ onMenuClick, className = '' }: NavbarProps) {
                   </h1>
                 
                 </div>
-                <span className="text-xs text-blue-600 hidden sm:block">ECA Information Management System v2</span>
+                <span className="text-xs text-blue-600 hidden sm:block">ECA Information Management System v2.1</span>
               </div>
             </Link>
           </div>

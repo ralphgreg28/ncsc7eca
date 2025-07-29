@@ -66,6 +66,7 @@ interface Citizen {
   encoded_date: string;
   encoded_by: string | null;
   created_at: string;
+  calendar_year: string;
 }
 
 interface AddressDetails {
@@ -2106,6 +2107,7 @@ if (filters.searchTerm) {
                     </div>
                   </div>
                 </th>
+
                 <th 
                   onClick={() => handleSort('birth_date')}
                   className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
@@ -2127,6 +2129,7 @@ if (filters.searchTerm) {
                 <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Address
                 </th>
+                
                 <th 
                   onClick={() => handleSort('status')}
                   className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
@@ -2195,20 +2198,22 @@ if (filters.searchTerm) {
                       className="hover:bg-gray-50 transition-colors duration-150 group"
                     >
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900 whitespace-nowrap group-hover:text-blue-700 transition-colors duration-150">
+                        <div className="text-xs font-medium text-gray-900 whitespace-nowrap group-hover:text-blue-700 transition-colors duration-150">
                           {citizen.last_name},
                         </div>
-                        <div className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                        <div className="text-xs font-medium text-gray-900 whitespace-nowrap">
                           {citizen.first_name}
                         </div>
                         
-                        <div className="text-sm text-gray-500 whitespace-nowrap">
+                        <div className="text-xs text-gray-500 whitespace-nowrap">
                           {citizen.middle_name && `${citizen.middle_name} `}
                           {citizen.extension_name && `(${citizen.extension_name})`}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap font-medium">
-                        {format(new Date(citizen.birth_date), 'MMM d, yyyy')}
+                      <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap font-medium text-center">
+                        {format(new Date(citizen.birth_date), 'MMMM d, yyyy')}
+                          <br/> 
+                        CY {citizen.calendar_year}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium  ${
@@ -2242,11 +2247,11 @@ if (filters.searchTerm) {
                         >
                           {addressDetail ? (
                             <div className="flex flex-col text-left">
-                              <div className="font-medium">
+                              <div className="font-small">
                                 {addressDetail.barangay_name}
                               </div>
                               <div className="text-gray-500 text-xs mt-1 flex flex-col text-left">
-                                <div className="whitespace-nowrap flex items-center font-medium">
+                                <div className="whitespace-nowrap flex items-center font-small">
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -2314,6 +2319,7 @@ if (filters.searchTerm) {
                         {citizen.payment_date ? format(new Date(citizen.payment_date), 'MMM d, yyyy') : '-'}
                       </td>
                       */}
+
                       <td className="px-6 py-4">
                       <div 
                         className="text-[9px] text-gray-500 w-[100px] line-clamp-5 text-center" 

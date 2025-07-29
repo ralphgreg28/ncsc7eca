@@ -17,6 +17,7 @@ interface Filters {
   paymentDateEnd: string;
   ageStart: string;
   ageEnd: string;
+  calendarYear: string[];
 }
 
 interface AddressOption {
@@ -168,7 +169,8 @@ function Dashboard() {
     paymentDateStart: '',
     paymentDateEnd: '',
     ageStart: '',
-    ageEnd: ''
+    ageEnd: '',
+    calendarYear: []
   });
 
   const [lguStats, setLguStats] = useState<{
@@ -280,7 +282,8 @@ function Dashboard() {
       paymentDateStart: '',
       paymentDateEnd: '',
       ageStart: '',
-      ageEnd: ''
+      ageEnd: '',
+      calendarYear: []
     });
     setError(null);
   }, []);
@@ -389,6 +392,10 @@ function Dashboard() {
 
           if (filters.status.length > 0) {
             query = query.in('status', filters.status);
+          }
+
+          if (filters.calendarYear.length > 0) {
+            query = query.in('calendar_year', filters.calendarYear.map(year => parseInt(year)));
           }
 
           const citizens = await fetchAllCitizens(query);
@@ -629,84 +636,9 @@ function Dashboard() {
       {showFilters && (
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="text-lg font-semibold mb-4">Filters</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Registration Date Range</label>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="date"
-                  value={filters.startDate}
-                  onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <input
-                  type="date"
-                  value={filters.endDate}
-                  onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Birth Date Range</label>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="date"
-                  value={filters.birthDateStart}
-                  onChange={(e) => setFilters(prev => ({ ...prev, birthDateStart: e.target.value }))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <input
-                  type="date"
-                  value={filters.birthDateEnd}
-                  onChange={(e) => setFilters(prev => ({ ...prev, birthDateEnd: e.target.value }))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Age Range</label>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="number"
-                  min="60"
-                  max="150"
-                  value={filters.ageStart}
-                  onChange={(e) => setFilters(prev => ({ ...prev, ageStart: e.target.value }))}
-                  placeholder="Min Age"
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <input
-                  type="number"
-                  min="60"
-                  max="150"
-                  value={filters.ageEnd}
-                  onChange={(e) => setFilters(prev => ({ ...prev, ageEnd: e.target.value }))}
-                  placeholder="Max Age"
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Payment Date Range</label>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="date"
-                  value={filters.paymentDateStart}
-                  onChange={(e) => setFilters(prev => ({ ...prev, paymentDateStart: e.target.value }))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <input
-                  type="date"
-                  value={filters.paymentDateEnd}
-                  onChange={(e) => setFilters(prev => ({ ...prev, paymentDateEnd: e.target.value }))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+          
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Province</label>
@@ -758,6 +690,51 @@ function Dashboard() {
               </select>
             </div>
           </div>
+<br />
+  <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Birth Date Range</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="date"
+                  value={filters.birthDateStart}
+                  onChange={(e) => setFilters(prev => ({ ...prev, birthDateStart: e.target.value }))}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                <input
+                  type="date"
+                  value={filters.birthDateEnd}
+                  onChange={(e) => setFilters(prev => ({ ...prev, birthDateEnd: e.target.value }))}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+<br />
+                      
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Calendar Year</label>
+              <div className="flex flex-wrap gap-2">
+                {['2024', '2025','2026','2027','2028'].map(year => (
+                  <button
+                    key={year}
+                    onClick={() => {
+                      setFilters(prev => ({
+                        ...prev,
+                        calendarYear: prev.calendarYear.includes(year)
+                          ? prev.calendarYear.filter(y => y !== year)
+                          : [...prev.calendarYear, year]
+                      }));
+                    }}
+                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-150 ${
+                      filters.calendarYear.includes(year)
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {year}
+                  </button>
+                ))}
+              </div>
+            </div>
 
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -901,16 +878,7 @@ function Dashboard() {
               <div className="text-sm text-gray-600">Not yet included for Payout</div>
               <div className="text-sm text-gray-600">₱{stats.paymentStats.waitlistedAmount?.toLocaleString()}</div>
             </div>
-      
-
-      {/*
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="text-gray-600 text-lg font-semibold">Total</div>
-            <div className="text-3xl font-bold text-gray-700">{stats.paymentStats.total}</div>
-            <div className="text-sm text-gray-600">All Records</div>
-          </div>
-     */}
-          
+     
          </div>
     
         

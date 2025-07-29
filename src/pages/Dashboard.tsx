@@ -283,7 +283,7 @@ function Dashboard() {
       paymentDateEnd: '',
       ageStart: '',
       ageEnd: '',
-      calendarYear: [new Date().getFullYear().toString()]
+      calendarYear: []
     });
     setError(null);
   }, []);

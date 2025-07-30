@@ -170,7 +170,7 @@ function Dashboard() {
     paymentDateEnd: '',
     ageStart: '',
     ageEnd: '',
-    calendarYear: []
+    calendarYear: ['2024', '2025', '2026', '2027', '2028']
   });
 
   const [lguStats, setLguStats] = useState<{
@@ -283,7 +283,7 @@ function Dashboard() {
       paymentDateEnd: '',
       ageStart: '',
       ageEnd: '',
-      calendarYear: []
+      calendarYear: ['2024', '2025', '2026', '2027', '2028']
     });
     setError(null);
   }, []);
@@ -401,13 +401,25 @@ function Dashboard() {
 
           const citizens = await fetchAllCitizens(query);
 
-          const referenceYear = filters.calendarYear.length > 0 ? parseInt(filters.calendarYear[0]) : new Date().getFullYear();
-          
+          // For age calculations, we need to consider all selected calendar years
           const filteredCitizens = citizens.filter(citizen => {
-            const age = referenceYear - new Date(citizen.birth_date).getFullYear();
-            const meetsAgeStart = !filters.ageStart || age >= parseInt(filters.ageStart);
-            const meetsAgeEnd = !filters.ageEnd || age <= parseInt(filters.ageEnd);
-            return meetsAgeStart && meetsAgeEnd;
+            // If calendar years are selected, check if citizen meets age criteria for any of the selected years
+            if (filters.calendarYear.length > 0) {
+              return filters.calendarYear.some(yearStr => {
+                const year = parseInt(yearStr);
+                const age = year - new Date(citizen.birth_date).getFullYear();
+                const meetsAgeStart = !filters.ageStart || age >= parseInt(filters.ageStart);
+                const meetsAgeEnd = !filters.ageEnd || age <= parseInt(filters.ageEnd);
+                return meetsAgeStart && meetsAgeEnd;
+              });
+            } else {
+              // Fallback to current year if no calendar years selected
+              const currentYear = new Date().getFullYear();
+              const age = currentYear - new Date(citizen.birth_date).getFullYear();
+              const meetsAgeStart = !filters.ageStart || age >= parseInt(filters.ageStart);
+              const meetsAgeEnd = !filters.ageEnd || age <= parseInt(filters.ageEnd);
+              return meetsAgeStart && meetsAgeEnd;
+            }
           });
 
           const byStatus = Object.entries(
@@ -424,11 +436,23 @@ function Dashboard() {
             }, {} as Record<string, number>)
           ).map(([sex, count]) => ({ sex, count }));
 
+          // Use the first selected calendar year for age range calculations, or current year as fallback
+          const referenceYear = filters.calendarYear.length > 0 ? parseInt(filters.calendarYear[0]) : new Date().getFullYear();
+          
           const byAge = AGE_RANGES.map(range => ({
             range: range.label,
             count: filteredCitizens.filter(citizen => {
-              const age = referenceYear - new Date(citizen.birth_date).getFullYear();
-              return age >= range.min && age <= range.max;
+              // Check if citizen meets age criteria for any of the selected calendar years
+              if (filters.calendarYear.length > 0) {
+                return filters.calendarYear.some(yearStr => {
+                  const year = parseInt(yearStr);
+                  const age = year - new Date(citizen.birth_date).getFullYear();
+                  return age >= range.min && age <= range.max;
+                });
+              } else {
+                const age = referenceYear - new Date(citizen.birth_date).getFullYear();
+                return age >= range.min && age <= range.max;
+              }
             }).length
           }));
 
@@ -490,10 +514,21 @@ function Dashboard() {
           const paidCitizens = filteredCitizens.filter(c => c.status === 'Paid');
           const totalPaid = paidCitizens.length;
           
+          //wew
+
           const paidBySpecificAge = specificAges.map(targetAge => {
+            // Count citizens who are exactly the target age in ANY of the selected calendar years
             const exactAgeCitizens = paidCitizens.filter(citizen => {
-              const age = referenceYear - new Date(citizen.birth_date).getFullYear();
-              return age === targetAge; // Exact age match, not >= 
+              if (filters.calendarYear.length > 0) {
+                return filters.calendarYear.some(yearStr => {
+                  const year = parseInt(yearStr);
+                  const age = year - new Date(citizen.birth_date).getFullYear();
+                  return age === targetAge; // Exact age match for any selected year
+                });
+              } else {
+                const age = referenceYear - new Date(citizen.birth_date).getFullYear();
+                return age === targetAge;
+              }
             });
             
             const count = exactAgeCitizens.length;
@@ -696,7 +731,7 @@ function Dashboard() {
 <br />
   <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Birth Date Range</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 <input
                   type="date"
                   value={filters.birthDateStart}
@@ -1070,8 +1105,14 @@ function Dashboard() {
       {/* Paid by Specific Age Statistics */}
       <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
         <h2 className="text-lg font-semibold mb-4">Paid Citizens by Specific Ages</h2>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 mb-2">
           Analysis of citizens with "Paid" status at specific ages: 80, 85, 90, 95, and 100 years old
+        </p>
+        <p className="text-sm text-blue-600 font-medium mb-4">
+          {filters.calendarYear.length > 0 
+            ? `Using Calendar Years: ${filters.calendarYear.join(', ')} for age calculations`
+            : `Using Calendar Year: ${new Date().getFullYear()} for age calculations`
+          }
         </p>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">

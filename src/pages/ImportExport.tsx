@@ -549,7 +549,8 @@ function ImportExport() {
         'LGU Code': citizen.lgu_code,
         'Barangay Code': citizen.barangay_code,
         'Encoded By': citizen.encoded_by || '',
-        'Encoded Date': format(new Date(citizen.encoded_date), 'MM/dd/yyyy HH:mm:ss')
+        'Encoded Date': format(new Date(citizen.encoded_date), 'MM/dd/yyyy HH:mm:ss'),
+        'Calendar Year': citizen.calendar_year
       }));
       
       // Function to get barangay name with fallback strategies

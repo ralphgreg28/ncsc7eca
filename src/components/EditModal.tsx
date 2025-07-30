@@ -20,6 +20,9 @@ interface Citizen {
   rrn: string;
   validator?: string | null;
   validation_date?: string | null;
+  specimen?: 'signature' | 'thumbmark' | null;
+  disability?: 'yes' | 'no' | null;
+  indigenous_people?: 'yes' | 'no' | null;
   encoded_date: string;
   encoded_by: string | null;
   created_at: string;
@@ -142,6 +145,48 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
                 >
                   <option>Male</option>
                   <option>Female</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600">Specimen</label>
+                <select
+                  name="specimen"
+                  value={formData.specimen || ''}
+                  onChange={handleChange}
+                  className={`${inputClass} ${formData.status !== 'Encoded' ? 'bg-gray-100' : ''}`}
+                  disabled={formData.status !== 'Encoded'}
+                >
+                  <option value="">Select...</option>
+                  <option value="signature">Signature</option>
+                  <option value="thumbmark">Thumbmark</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600">Disability</label>
+                <select
+                  name="disability"
+                  value={formData.disability || ''}
+                  onChange={handleChange}
+                  className={`${inputClass} ${formData.status !== 'Encoded' ? 'bg-gray-100' : ''}`}
+                  disabled={formData.status !== 'Encoded'}
+                >
+                  <option value="">Select...</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600">Indigenous People</label>
+                <select
+                  name="indigenous_people"
+                  value={formData.indigenous_people || ''}
+                  onChange={handleChange}
+                  className={`${inputClass} ${formData.status !== 'Encoded' ? 'bg-gray-100' : ''}`}
+                  disabled={formData.status !== 'Encoded'}
+                >
+                  <option value="">Select...</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
                 </select>
               </div>
             </div>

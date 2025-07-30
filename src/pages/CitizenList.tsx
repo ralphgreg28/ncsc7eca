@@ -1422,6 +1422,9 @@ if (filters.searchTerm) {
     'Encoded By': citizen.encoded_by || '',
     'Encoded Date': format(new Date(citizen.encoded_date), 'MM/dd/yyyy HH:mm:ss'),
     'Calendar Year': citizen.calendar_year || '',
+    'Specimen':  citizen.specimen || '',
+    'Disability': citizen.disability || '',
+    'Indigenous': citizen.indigenous || ''
   }));
 
       const csv = Papa.unparse(exportData);

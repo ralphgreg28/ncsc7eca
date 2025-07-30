@@ -346,7 +346,7 @@ function Dashboard() {
       const age = referenceYear - new Date(citizen.birth_date).getFullYear();
       if (age === 100) {
         return total + 100000;
-      } else if (age >= 80 && age <= 95) {
+      } else if (age >= 80 && age <= 99) {
         return total + 10000;
       }
       return total;

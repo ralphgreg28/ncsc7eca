@@ -1524,10 +1524,13 @@ if (filters.searchTerm) {
       
       if (fetchError) throw fetchError;
       
+      // Remove calendar_year from the update payload since it's a generated column
+      const { calendar_year, ...updateData } = updatedCitizen;
+      
       // Update the record
       const { error } = await supabase
         .from('citizens')
-        .update(updatedCitizen)
+        .update(updateData)
         .eq('id', updatedCitizen.id);
 
       if (error) throw error;

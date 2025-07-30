@@ -23,6 +23,7 @@ interface Citizen {
   encoded_date: string;
   encoded_by: string | null;
   created_at: string;
+  calendar_year: string;
 }
 
 interface AddressDetails {

@@ -340,18 +340,31 @@ function Dashboard() {
   };
 
   // Calculate total amount based on age using calendar year
-  const calculateTotalAmount = useCallback((citizens: Citizen[], calendarYear?: number) => {
-    const referenceYear = calendarYear || (filters.calendarYear.length > 0 ? parseInt(filters.calendarYear[0]) : new Date().getFullYear());
+  const calculateTotalAmount = useCallback((citizens: Citizen[], selectedYears: string[]) => {
     return citizens.reduce((total, citizen) => {
-      const age = referenceYear - new Date(citizen.birth_date).getFullYear();
-      if (age === 100) {
-        return total + 100000;
-      } else if (age >= 80 && age <= 99) {
-        return total + 10000;
+      // Check if citizen qualifies for payment in ANY of the selected calendar years
+      const qualifiesForPayment = selectedYears.some(yearStr => {
+        const year = parseInt(yearStr);
+        const age = year - new Date(citizen.birth_date).getFullYear();
+        return age >= 80; // Qualifies if 80 or older in any selected year
+      });
+      
+      if (qualifiesForPayment) {
+        // Find the highest age across all selected years to determine payment amount
+        const maxAge = Math.max(...selectedYears.map(yearStr => {
+          const year = parseInt(yearStr);
+          return year - new Date(citizen.birth_date).getFullYear();
+        }));
+        
+        if (maxAge >= 100) {
+          return total + 100000;
+        } else if (maxAge >= 80) {
+          return total + 10000;
+        }
       }
       return total;
     }, 0);
-  }, [filters.calendarYear]);
+  }, []);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -395,31 +408,25 @@ function Dashboard() {
             query = query.in('status', filters.status);
           }
 
-          if (filters.calendarYear.length > 0) {
-            query = query.in('calendar_year', filters.calendarYear.map(year => parseInt(year)));
-          }
+          // If no calendar years are selected, default to all available years
+          const selectedYears = filters.calendarYear.length > 0 
+            ? filters.calendarYear 
+            : ['2024', '2025', '2026', '2027', '2028'];
+          
+          query = query.in('calendar_year', selectedYears.map(year => parseInt(year)));
 
           const citizens = await fetchAllCitizens(query);
 
           // For age calculations, we need to consider all selected calendar years
           const filteredCitizens = citizens.filter(citizen => {
-            // If calendar years are selected, check if citizen meets age criteria for any of the selected years
-            if (filters.calendarYear.length > 0) {
-              return filters.calendarYear.some(yearStr => {
-                const year = parseInt(yearStr);
-                const age = year - new Date(citizen.birth_date).getFullYear();
-                const meetsAgeStart = !filters.ageStart || age >= parseInt(filters.ageStart);
-                const meetsAgeEnd = !filters.ageEnd || age <= parseInt(filters.ageEnd);
-                return meetsAgeStart && meetsAgeEnd;
-              });
-            } else {
-              // Fallback to current year if no calendar years selected
-              const currentYear = new Date().getFullYear();
-              const age = currentYear - new Date(citizen.birth_date).getFullYear();
+            // Use selectedYears (which defaults to all years if none selected)
+            return selectedYears.some(yearStr => {
+              const year = parseInt(yearStr);
+              const age = year - new Date(citizen.birth_date).getFullYear();
               const meetsAgeStart = !filters.ageStart || age >= parseInt(filters.ageStart);
               const meetsAgeEnd = !filters.ageEnd || age <= parseInt(filters.ageEnd);
               return meetsAgeStart && meetsAgeEnd;
-            }
+            });
           });
 
           const byStatus = Object.entries(
@@ -499,14 +506,14 @@ function Dashboard() {
             cleanlisted: cleanlistedCitizens.length,
             waitlisted: waitlistedCitizens.length,
             total: filteredCitizens.length,
-            paidAmount: calculateTotalAmount(paidStatusCitizens, referenceYear),
-            unpaidAmount: calculateTotalAmount(unpaidCitizens, referenceYear),
-            complianceAmount: calculateTotalAmount(complianceCitizens, referenceYear),
-            disqualifiedAmount: calculateTotalAmount(disqualifiedCitizens, referenceYear),
-            encodedAmount: calculateTotalAmount(encodedCitizens, referenceYear),
-            validatedAmount: calculateTotalAmount(validatedCitizens, referenceYear),
-            cleanlistedAmount: calculateTotalAmount(cleanlistedCitizens, referenceYear),
-            waitlistedAmount: calculateTotalAmount(waitlistedCitizens, referenceYear)
+            paidAmount: calculateTotalAmount(paidStatusCitizens, selectedYears),
+            unpaidAmount: calculateTotalAmount(unpaidCitizens, selectedYears),
+            complianceAmount: calculateTotalAmount(complianceCitizens, selectedYears),
+            disqualifiedAmount: calculateTotalAmount(disqualifiedCitizens, selectedYears),
+            encodedAmount: calculateTotalAmount(encodedCitizens, selectedYears),
+            validatedAmount: calculateTotalAmount(validatedCitizens, selectedYears),
+            cleanlistedAmount: calculateTotalAmount(cleanlistedCitizens, selectedYears),
+            waitlistedAmount: calculateTotalAmount(waitlistedCitizens, selectedYears)
           };
 
           // Calculate statistics for paid citizens at specific ages (exactly 80, 85, 90, 95, 100)
@@ -755,12 +762,26 @@ function Dashboard() {
                   <button
                     key={year}
                     onClick={() => {
-                      setFilters(prev => ({
-                        ...prev,
-                        calendarYear: prev.calendarYear.includes(year)
-                          ? prev.calendarYear.filter(y => y !== year)
-                          : [...prev.calendarYear, year]
-                      }));
+                      setFilters(prev => {
+                        const allYears = ['2024', '2025', '2026', '2027', '2028'];
+                        const currentYears = prev.calendarYear;
+                        
+                        if (currentYears.includes(year)) {
+                          // If clicking on a selected year
+                          const newYears = currentYears.filter(y => y !== year);
+                          // If this would result in no years selected, select all years instead
+                          return {
+                            ...prev,
+                            calendarYear: newYears.length === 0 ? allYears : newYears
+                          };
+                        } else {
+                          // If clicking on an unselected year, add it
+                          return {
+                            ...prev,
+                            calendarYear: [...currentYears, year]
+                          };
+                        }
+                      });
                     }}
                     className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-150 ${
                       filters.calendarYear.includes(year)

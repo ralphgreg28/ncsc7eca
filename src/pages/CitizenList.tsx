@@ -81,6 +81,55 @@ type SortOrder = 'asc' | 'desc';
 const PAGE_SIZE = 50;
 const EXPORT_BATCH_SIZE = 1000;
 
+// Helper function to get quarter from birth date
+const getBirthQuarter = (birthDate: string): number => {
+  const month = new Date(birthDate).getMonth() + 1; // getMonth() returns 0-11, so add 1
+  if (month >= 1 && month <= 3) return 1; // Q1: Jan-Mar
+  if (month >= 4 && month <= 6) return 2; // Q2: Apr-Jun
+  if (month >= 7 && month <= 9) return 3; // Q3: Jul-Sep
+  return 4; // Q4: Oct-Dec
+};
+
+// Helper function to get quarter colors
+const getQuarterColors = (quarter: number): { bg: string; text: string; border: string } => {
+  switch (quarter) {
+    case 1: // 1st Quarter (Jan-Mar) - Winter/Spring - Blue theme
+      return { bg: 'bg-blue-50', text: 'text-blue-800', border: 'border-blue-200' };
+    case 2: // 2nd Quarter (Apr-Jun) - Spring/Summer - Green theme
+      return { bg: 'bg-green-50', text: 'text-green-800', border: 'border-green-200' };
+    case 3: // 3rd Quarter (Jul-Sep) - Summer/Fall - Orange theme
+      return { bg: 'bg-orange-50', text: 'text-orange-800', border: 'border-orange-200' };
+    case 4: // 4th Quarter (Oct-Dec) - Fall/Winter - Purple theme
+      return { bg: 'bg-purple-50', text: 'text-purple-800', border: 'border-purple-200' };
+    default:
+      return { bg: 'bg-gray-50', text: 'text-gray-800', border: 'border-gray-200' };
+  }
+};
+
+// Helper function to get cycle year colors
+const getCycleYearColors = (cycleYear: string): { bg: string; text: string; border: string } => {
+  // Create a color scheme based on the cycle year
+  const year = parseInt(cycleYear);
+  const colorIndex = year % 6; // Cycle through 6 different color schemes
+  
+  switch (colorIndex) {
+    case 0:
+      return { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' };
+    case 1:
+      return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' };
+    case 2:
+      return { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' };
+    case 3:
+      return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' };
+    case 4:
+      return { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' };
+    case 5:
+      return { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' };
+    default:
+      return { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
+  }
+};
+
 function CitizenList() {
   const [showFilters, setShowFilters] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
@@ -2210,10 +2259,36 @@ if (filters.searchTerm) {
                           {citizen.extension_name && `(${citizen.extension_name})`}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap font-medium text-center">
-                        {format(new Date(citizen.birth_date), 'MMMM d, yyyy')}
-                          <br/> 
-                        CY {citizen.calendar_year}
+                      <td className="px-6 py-4 text-xs whitespace-nowrap font-medium text-center">
+                        <div className="space-y-1">
+                          {/* Birth Date with Quarter Color Coding */}
+                          <div className={`px-2 py-1 rounded-md border ${(() => {
+                            const quarter = getBirthQuarter(citizen.birth_date);
+                            const colors = getQuarterColors(quarter);
+                            return `${colors.bg} ${colors.text} ${colors.border}`;
+                          })()}`}>
+                            <div className="font-medium">
+                              {format(new Date(citizen.birth_date), 'MMMM d, yyyy')}
+                            </div>
+                            <div className="text-xs opacity-75">
+                              Q{getBirthQuarter(citizen.birth_date)} - {
+                                getBirthQuarter(citizen.birth_date) === 1 ? 'Jan-Mar' :
+                                getBirthQuarter(citizen.birth_date) === 2 ? 'Apr-Jun' :
+                                getBirthQuarter(citizen.birth_date) === 3 ? 'Jul-Sep' : 'Oct-Dec'
+                              }
+                            </div>
+                          </div>
+                          
+                          {/* Cycle Year with Color Coding */}
+                          <div className={`px-2 py-1 rounded-md border ${(() => {
+                            const colors = getCycleYearColors(citizen.calendar_year);
+                            return `${colors.bg} ${colors.text} ${colors.border}`;
+                          })()}`}>
+                            <div className="text-xs font-medium">
+                              CY {citizen.calendar_year}
+                            </div>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium  ${

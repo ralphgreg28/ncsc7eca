@@ -1469,7 +1469,11 @@ if (filters.searchTerm) {
     'LGU Code': citizen.lgu_code,
     'Barangay Code': citizen.barangay_code,
     'Encoded By': citizen.encoded_by || '',
-    'Encoded Date': format(new Date(citizen.encoded_date), 'MM/dd/yyyy HH:mm:ss')
+    'Encoded Date': format(new Date(citizen.encoded_date), 'MM/dd/yyyy HH:mm:ss'),
+    'Calendar Year': citizen.calendar_year || '',
+    'Specimen':  citizen.specimen || '',
+    'Disability': citizen.disability || '',
+    'Indigenous': citizen.indigenous || ''
   }));
 
       const csv = Papa.unparse(exportData);
@@ -1573,10 +1577,13 @@ if (filters.searchTerm) {
       
       if (fetchError) throw fetchError;
       
+      // Remove calendar_year from the update payload since it's a generated column
+      const { calendar_year, ...updateData } = updatedCitizen;
+      
       // Update the record
       const { error } = await supabase
         .from('citizens')
-        .update(updatedCitizen)
+        .update(updateData)
         .eq('id', updatedCitizen.id);
 
       if (error) throw error;

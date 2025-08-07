@@ -16,6 +16,9 @@ interface Citizen {
   rrn: string;
   validator?: string | null;
   validation_date?: string | null;
+  specimen?: 'signature' | 'thumbmark' | null;
+  disability?: 'yes' | 'no' | null;
+  indigenous_people?: 'yes' | 'no' | null;
   encoded_by: string | null;
   encoded_date: string;
 }
@@ -84,6 +87,42 @@ function ViewModal({ citizen, addressDetails, onClose }: ViewModalProps) {
                 }
               />
               <LabelValue label="Address" value={address} />
+              <LabelValue
+                label="Specimen"
+                value={
+                  citizen.specimen ? (
+                    <span className={`inline-block px-3 py-1 rounded-full text-white text-sm ${citizen.specimen === 'signature' ? 'bg-purple-500' : 'bg-orange-500'}`}>
+                      {citizen.specimen === 'signature' ? 'Signature' : 'Thumbmark'}
+                    </span>
+                  ) : (
+                    'Not specified'
+                  )
+                }
+              />
+              <LabelValue
+                label="Disability"
+                value={
+                  citizen.disability ? (
+                    <span className={`inline-block px-3 py-1 rounded-full text-white text-sm ${citizen.disability === 'yes' ? 'bg-red-500' : 'bg-green-500'}`}>
+                      {citizen.disability === 'yes' ? 'Yes' : 'No'}
+                    </span>
+                  ) : (
+                    'Not specified'
+                  )
+                }
+              />
+              <LabelValue
+                label="Indigenous People"
+                value={
+                  citizen.indigenous_people ? (
+                    <span className={`inline-block px-3 py-1 rounded-full text-white text-sm ${citizen.indigenous_people === 'yes' ? 'bg-amber-600' : 'bg-gray-500'}`}>
+                      {citizen.indigenous_people === 'yes' ? 'Yes' : 'No'}
+                    </span>
+                  ) : (
+                    'Not specified'
+                  )
+                }
+              />
             </div>
           </Section>
 

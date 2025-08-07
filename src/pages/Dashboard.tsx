@@ -170,7 +170,7 @@ function Dashboard() {
     paymentDateEnd: '',
     ageStart: '',
     ageEnd: '',
-    calendarYear: [new Date().getFullYear().toString()]
+    calendarYear: ['2024', '2025', '2026', '2027', '2028']
   });
 
   const [lguStats, setLguStats] = useState<{
@@ -283,7 +283,7 @@ function Dashboard() {
       paymentDateEnd: '',
       ageStart: '',
       ageEnd: '',
-      calendarYear: []
+      calendarYear: ['2024', '2025', '2026', '2027', '2028']
     });
     setError(null);
   }, []);
@@ -340,18 +340,31 @@ function Dashboard() {
   };
 
   // Calculate total amount based on age using calendar year
-  const calculateTotalAmount = useCallback((citizens: Citizen[], calendarYear?: number) => {
-    const referenceYear = calendarYear || (filters.calendarYear.length > 0 ? parseInt(filters.calendarYear[0]) : new Date().getFullYear());
+  const calculateTotalAmount = useCallback((citizens: Citizen[], selectedYears: string[]) => {
     return citizens.reduce((total, citizen) => {
-      const age = referenceYear - new Date(citizen.birth_date).getFullYear();
-      if (age === 100) {
-        return total + 100000;
-      } else if (age >= 80 && age <= 95) {
-        return total + 10000;
+      // Check if citizen qualifies for payment in ANY of the selected calendar years
+      const qualifiesForPayment = selectedYears.some(yearStr => {
+        const year = parseInt(yearStr);
+        const age = year - new Date(citizen.birth_date).getFullYear();
+        return age >= 80; // Qualifies if 80 or older in any selected year
+      });
+      
+      if (qualifiesForPayment) {
+        // Find the highest age across all selected years to determine payment amount
+        const maxAge = Math.max(...selectedYears.map(yearStr => {
+          const year = parseInt(yearStr);
+          return year - new Date(citizen.birth_date).getFullYear();
+        }));
+        
+        if (maxAge >= 100) {
+          return total + 100000;
+        } else if (maxAge >= 80) {
+          return total + 10000;
+        }
       }
       return total;
     }, 0);
-  }, [filters.calendarYear]);
+  }, []);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -395,19 +408,25 @@ function Dashboard() {
             query = query.in('status', filters.status);
           }
 
-          if (filters.calendarYear.length > 0) {
-            query = query.in('calendar_year', filters.calendarYear.map(year => parseInt(year)));
-          }
+          // If no calendar years are selected, default to all available years
+          const selectedYears = filters.calendarYear.length > 0 
+            ? filters.calendarYear 
+            : ['2024', '2025', '2026', '2027', '2028'];
+          
+          query = query.in('calendar_year', selectedYears.map(year => parseInt(year)));
 
           const citizens = await fetchAllCitizens(query);
 
-          const referenceYear = filters.calendarYear.length > 0 ? parseInt(filters.calendarYear[0]) : new Date().getFullYear();
-          
+          // For age calculations, we need to consider all selected calendar years
           const filteredCitizens = citizens.filter(citizen => {
-            const age = referenceYear - new Date(citizen.birth_date).getFullYear();
-            const meetsAgeStart = !filters.ageStart || age >= parseInt(filters.ageStart);
-            const meetsAgeEnd = !filters.ageEnd || age <= parseInt(filters.ageEnd);
-            return meetsAgeStart && meetsAgeEnd;
+            // Use selectedYears (which defaults to all years if none selected)
+            return selectedYears.some(yearStr => {
+              const year = parseInt(yearStr);
+              const age = year - new Date(citizen.birth_date).getFullYear();
+              const meetsAgeStart = !filters.ageStart || age >= parseInt(filters.ageStart);
+              const meetsAgeEnd = !filters.ageEnd || age <= parseInt(filters.ageEnd);
+              return meetsAgeStart && meetsAgeEnd;
+            });
           });
 
           const byStatus = Object.entries(
@@ -424,11 +443,23 @@ function Dashboard() {
             }, {} as Record<string, number>)
           ).map(([sex, count]) => ({ sex, count }));
 
+          // Use the first selected calendar year for age range calculations, or current year as fallback
+          const referenceYear = filters.calendarYear.length > 0 ? parseInt(filters.calendarYear[0]) : new Date().getFullYear();
+          
           const byAge = AGE_RANGES.map(range => ({
             range: range.label,
             count: filteredCitizens.filter(citizen => {
-              const age = referenceYear - new Date(citizen.birth_date).getFullYear();
-              return age >= range.min && age <= range.max;
+              // Check if citizen meets age criteria for any of the selected calendar years
+              if (filters.calendarYear.length > 0) {
+                return filters.calendarYear.some(yearStr => {
+                  const year = parseInt(yearStr);
+                  const age = year - new Date(citizen.birth_date).getFullYear();
+                  return age >= range.min && age <= range.max;
+                });
+              } else {
+                const age = referenceYear - new Date(citizen.birth_date).getFullYear();
+                return age >= range.min && age <= range.max;
+              }
             }).length
           }));
 
@@ -475,14 +506,14 @@ function Dashboard() {
             cleanlisted: cleanlistedCitizens.length,
             waitlisted: waitlistedCitizens.length,
             total: filteredCitizens.length,
-            paidAmount: calculateTotalAmount(paidStatusCitizens, referenceYear),
-            unpaidAmount: calculateTotalAmount(unpaidCitizens, referenceYear),
-            complianceAmount: calculateTotalAmount(complianceCitizens, referenceYear),
-            disqualifiedAmount: calculateTotalAmount(disqualifiedCitizens, referenceYear),
-            encodedAmount: calculateTotalAmount(encodedCitizens, referenceYear),
-            validatedAmount: calculateTotalAmount(validatedCitizens, referenceYear),
-            cleanlistedAmount: calculateTotalAmount(cleanlistedCitizens, referenceYear),
-            waitlistedAmount: calculateTotalAmount(waitlistedCitizens, referenceYear)
+            paidAmount: calculateTotalAmount(paidStatusCitizens, selectedYears),
+            unpaidAmount: calculateTotalAmount(unpaidCitizens, selectedYears),
+            complianceAmount: calculateTotalAmount(complianceCitizens, selectedYears),
+            disqualifiedAmount: calculateTotalAmount(disqualifiedCitizens, selectedYears),
+            encodedAmount: calculateTotalAmount(encodedCitizens, selectedYears),
+            validatedAmount: calculateTotalAmount(validatedCitizens, selectedYears),
+            cleanlistedAmount: calculateTotalAmount(cleanlistedCitizens, selectedYears),
+            waitlistedAmount: calculateTotalAmount(waitlistedCitizens, selectedYears)
           };
 
           // Calculate statistics for paid citizens at specific ages (exactly 80, 85, 90, 95, 100)
@@ -490,10 +521,21 @@ function Dashboard() {
           const paidCitizens = filteredCitizens.filter(c => c.status === 'Paid');
           const totalPaid = paidCitizens.length;
           
+          //wew
+
           const paidBySpecificAge = specificAges.map(targetAge => {
+            // Count citizens who are exactly the target age in ANY of the selected calendar years
             const exactAgeCitizens = paidCitizens.filter(citizen => {
-              const age = referenceYear - new Date(citizen.birth_date).getFullYear();
-              return age === targetAge; // Exact age match, not >= 
+              if (filters.calendarYear.length > 0) {
+                return filters.calendarYear.some(yearStr => {
+                  const year = parseInt(yearStr);
+                  const age = year - new Date(citizen.birth_date).getFullYear();
+                  return age === targetAge; // Exact age match for any selected year
+                });
+              } else {
+                const age = referenceYear - new Date(citizen.birth_date).getFullYear();
+                return age === targetAge;
+              }
             });
             
             const count = exactAgeCitizens.length;
@@ -696,7 +738,7 @@ function Dashboard() {
 <br />
   <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Birth Date Range</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 <input
                   type="date"
                   value={filters.birthDateStart}
@@ -720,12 +762,26 @@ function Dashboard() {
                   <button
                     key={year}
                     onClick={() => {
-                      setFilters(prev => ({
-                        ...prev,
-                        calendarYear: prev.calendarYear.includes(year)
-                          ? prev.calendarYear.filter(y => y !== year)
-                          : [...prev.calendarYear, year]
-                      }));
+                      setFilters(prev => {
+                        const allYears = ['2024', '2025', '2026', '2027', '2028'];
+                        const currentYears = prev.calendarYear;
+                        
+                        if (currentYears.includes(year)) {
+                          // If clicking on a selected year
+                          const newYears = currentYears.filter(y => y !== year);
+                          // If this would result in no years selected, select all years instead
+                          return {
+                            ...prev,
+                            calendarYear: newYears.length === 0 ? allYears : newYears
+                          };
+                        } else {
+                          // If clicking on an unselected year, add it
+                          return {
+                            ...prev,
+                            calendarYear: [...currentYears, year]
+                          };
+                        }
+                      });
                     }}
                     className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-150 ${
                       filters.calendarYear.includes(year)
@@ -1070,8 +1126,14 @@ function Dashboard() {
       {/* Paid by Specific Age Statistics */}
       <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
         <h2 className="text-lg font-semibold mb-4">Paid Citizens by Specific Ages</h2>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 mb-2">
           Analysis of citizens with "Paid" status at specific ages: 80, 85, 90, 95, and 100 years old
+        </p>
+        <p className="text-sm text-blue-600 font-medium mb-4">
+          {filters.calendarYear.length > 0 
+            ? `Using Calendar Years: ${filters.calendarYear.join(', ')} for age calculations`
+            : `Using Calendar Year: ${new Date().getFullYear()} for age calculations`
+          }
         </p>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">

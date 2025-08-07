@@ -23,6 +23,9 @@ interface CitizenFormInput {
   rrn?: string;
   validator?: string;
   validationDate?: string;
+  specimen?: 'signature' | 'thumbmark';
+  disability?: 'yes' | 'no';
+  indigenous_people?: 'yes' | 'no';
 }
 
 interface AddressOption {
@@ -101,7 +104,7 @@ function CitizenForm() {
       const fieldsToCompare = [
         'lastName', 'firstName', 'middleName', 'extensionName', 
         'birthDate', 'sex', 'provinceCode', 'lguCode', 'barangayCode',
-        'oscaId', 'rrn', 'validator', 'validationDate'
+        'oscaId', 'rrn', 'validator', 'validationDate', 'specimen', 'disability', 'indigenous_people'
       ];
       
       const currentMatches: Record<string, boolean> = {};
@@ -309,7 +312,7 @@ function CitizenForm() {
     const fieldsToCompare = [
       'lastName', 'firstName', 'middleName', 'extensionName', 
       'birthDate', 'sex', 'provinceCode', 'lguCode', 'barangayCode',
-      'oscaId', 'rrn', 'validator', 'validationDate'
+      'oscaId', 'rrn', 'validator', 'validationDate', 'specimen', 'disability', 'indigenous_people'
     ];
     
     const mismatches = fieldsToCompare.filter(field => {
@@ -372,6 +375,9 @@ function CitizenForm() {
       rrn: data.rrn || 'N/A',
       validator: data.validator || null,
       validation_date: data.validationDate || null,
+      specimen: data.specimen || null,
+      disability: data.disability || null,
+      indigenous_people: data.indigenous_people || null,
       encoded_by: encodedBy
     });
 
@@ -450,7 +456,10 @@ const updateRecord = async (data: CitizenFormInput, citizenId: number) => {
       osca_id: data.oscaId || 'N/A',
       rrn: data.rrn || 'N/A',
       validator: data.validator || null,
-      validation_date: data.validationDate || null
+      validation_date: data.validationDate || null,
+      specimen: data.specimen || null,
+      disability: data.disability || null,
+      indigenous_people: data.indigenous_people || null
     }).eq('id', citizenId);
 
     if (error) throw error;
@@ -570,7 +579,10 @@ const deleteRecord = async (citizenId: number) => {
           osca_id: firstEntry.oscaId || 'N/A',
           rrn: firstEntry.rrn || 'N/A',
           validator: firstEntry.validator || null,
-          validation_date: firstEntry.validationDate || null
+          validation_date: firstEntry.validationDate || null,
+          specimen: firstEntry.specimen || null,
+          disability: firstEntry.disability || null,
+          indigenous_people: firstEntry.indigenous_people || null
         })
         .eq('id', duplicateRecord.id);
 
@@ -980,7 +992,92 @@ const deleteRecord = async (citizenId: number) => {
               )}
             </div>
 
-           
+            <div className="form-group">
+              <label htmlFor="specimen" className="flex items-center text-gray-700 font-medium mb-1">
+                Specimen <span className="text-red-500 ml-1">*</span>
+              </label>
+              <select
+                id="specimen"
+                {...register('specimen', { required: 'Specimen is required' })}
+                className={`border ${
+                  errors.specimen 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.specimen
+                      ? fieldMatches.specimen
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                } rounded-md p-2 w-full transition-colors`}
+              >
+                <option value="">Select...</option>
+                <option value="signature">Signature</option>
+                <option value="thumbmark">Thumbmark</option>
+              </select>
+              {errors.specimen && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.specimen.message}
+                </p>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="disability" className="flex items-center text-gray-700 font-medium mb-1">
+                Disability <span className="text-red-500 ml-1">*</span>
+              </label>
+              <select
+                id="disability"
+                {...register('disability', { required: 'Disability status is required' })}
+                className={`border ${
+                  errors.disability 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.disability
+                      ? fieldMatches.disability
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                } rounded-md p-2 w-full transition-colors`}
+              >
+                <option value="">Select...</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+              {errors.disability && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.disability.message}
+                </p>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="indigenous_people" className="flex items-center text-gray-700 font-medium mb-1">
+                Indigenous People <span className="text-red-500 ml-1">*</span>
+              </label>
+              <select
+                id="indigenous_people"
+                {...register('indigenous_people', { required: 'Indigenous people status is required' })}
+                className={`border ${
+                  errors.indigenous_people 
+                    ? 'border-red-500 bg-red-50' 
+                    : step === 2 && watchAllFields.indigenous_people
+                      ? fieldMatches.indigenous_people
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                } rounded-md p-2 w-full transition-colors`}
+              >
+                <option value="">Select...</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+              {errors.indigenous_people && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.indigenous_people.message}
+                </p>
+              )}
+            </div>
           </div>
         </div>
         

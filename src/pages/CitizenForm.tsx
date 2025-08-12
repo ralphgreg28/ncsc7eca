@@ -53,7 +53,8 @@ const VALIDATORS = [
   'JUVELYN C. GUMISAD',
   'REMARK M. SERDAN',
   'JOVEN J. CALMA',
-  'KYRIACOS G. LOUCA JR.'
+  'KYRIACOS G. LOUCA JR.',
+  'IRENE A. MARTINEZ'
 ];
 
 function CitizenForm() {

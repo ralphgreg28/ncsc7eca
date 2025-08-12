@@ -27,20 +27,12 @@ function Sidebar({ open, onClose }: SidebarProps) {
     { to: '/dashboard', icon: <BarChart2 size={18} />, label: 'Dashboard' },
     
     ...((user?.position === 'PDO' || user?.position === 'Administrator') ? [
-    { 
-      to: '/citizens/new', 
-      icon: <Users size={18} />, 
-      label: 'SC Registration',
-      badge: 'Hot!'
-    }
-  ] : []),
-
-  
+    { to: '/citizens/new', icon: <Users size={18} />, label: 'SC Registration', badge: 'Hot!' },
     { to: '/citizens/list', icon: <Users size={18} />, label: 'Senior Citizens Records' },
     { to: '/citizens/encoded-monitor', icon: <ClipboardList size={18} />, label: 'Encoded Status Monitor' },
-    
-       { to: '/stakeholders', icon: <UserPlus size={18} />, label: 'Stakeholders Directory' },
+    { to: '/stakeholders', icon: <UserPlus size={18} />, label: 'Stakeholders Directory' },
 
+ ] : []),
     ...( user?.position === 'Administrator' ? [
     { to: '/citizens/duplicates', icon: <AlertTriangle size={18} />, label: 'Duplicate Check' },
   ] : []),

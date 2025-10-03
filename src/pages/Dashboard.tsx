@@ -775,16 +775,14 @@ function Dashboard() {
                     key={year}
                     onClick={() => {
                       setFilters(prev => {
-                        const allYears = ['2024', '2025', '2026', '2027', '2028'];
                         const currentYears = prev.calendarYear;
                         
                         if (currentYears.includes(year)) {
-                          // If clicking on a selected year
+                          // If clicking on a selected year, deselect it
                           const newYears = currentYears.filter(y => y !== year);
-                          // If this would result in no years selected, select all years instead
                           return {
                             ...prev,
-                            calendarYear: newYears.length === 0 ? allYears : newYears
+                            calendarYear: newYears
                           };
                         } else {
                           // If clicking on an unselected year, add it

@@ -21,6 +21,7 @@ interface Citizen {
   indigenous_people?: 'yes' | 'no' | null;
   encoded_by: string | null;
   encoded_date: string;
+  cleanlist_code: string | null;
 }
 
 interface AddressDetails {
@@ -157,6 +158,14 @@ function ViewModal({ citizen, addressDetails, onClose }: ViewModalProps) {
               <p className="text-base text-gray-800 whitespace-pre-wrap">{citizen.remarks}</p>
             </Section>
           )}
+
+          {/* Cleanlist Code */}
+          {citizen.cleanlist_code && (
+            <Section title="Cleanlist Code">
+              <p className="text-base text-gray-800 whitespace-pre-wrap">{citizen.cleanlist_code}</p>
+            </Section>
+          )}
+
         </div>
 
         <div className="mt-8 flex justify-end">

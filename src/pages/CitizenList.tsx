@@ -67,6 +67,7 @@ interface Citizen {
   encoded_by: string | null;
   created_at: string;
   calendar_year: string;
+  cleanlist_code: string | null;
 }
 
 interface AddressDetails {

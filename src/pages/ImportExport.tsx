@@ -32,6 +32,7 @@ interface CitizenRecord extends CitizenImport {
   created_at: string;
   encoded_by?: string;
   encoded_date: string;
+    cleanlist_code?: string | null;
   [key: string]: any; // Allow for any additional fields from the database
 }
 
@@ -296,6 +297,7 @@ function ImportExport() {
       'Province Code': 'province_code',
       'LGU Code': 'lgu_code',
       'Barangay Code': 'barangay_code',
+      'Cleanlist Code': 'cleanlist_code',
       // Support snake_case variants
       'id': 'id',
       'last_name': 'last_name',
@@ -313,7 +315,8 @@ function ImportExport() {
       'remarks': 'remarks',
       'province_code': 'province_code',
       'lgu_code': 'lgu_code',
-      'barangay_code': 'barangay_code'
+      'barangay_code': 'barangay_code',
+      'cleanlist_code': 'cleanlistcode'
     };
     
     const requiredFields = ['last_name', 'first_name', 'birth_date', 'sex', 'province_code', 'lgu_code', 'barangay_code'];
@@ -588,10 +591,11 @@ function ImportExport() {
         'Specimen': citizen.specimen || '',
         'Disability': citizen.disability || 'no',
         'Indigenous People': citizen.indigenous_people || 'no',
+        'Cleanlist Code' : citizen.cleanlist_code || ''
       }));
       
-      const timestamp = format(new Date(), 'yyyyMMdd_HHmmss');
-      const fileName = `senior_citizens_${timestamp}`;
+      const timestamp = format(new Date(), 'yyyy_MMM_dd_HHmmss');
+      const fileName = `ECA_R7_${timestamp}`;
       
       const csv = Papa.unparse(exportData);
       const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });

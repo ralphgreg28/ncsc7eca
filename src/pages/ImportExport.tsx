@@ -587,7 +587,7 @@ function ImportExport() {
         'Calendar Year': citizen.calendar_year,
         'Specimen': citizen.specimen || '',
         'Disability': citizen.disability || 'no',
-        'Indigenous Peoples': citizen.indigenous_peoples || '',
+        'Indigenous People': citizen.indigenous_people || 'no',
       }));
       
       const timestamp = format(new Date(), 'yyyyMMdd_HHmmss');

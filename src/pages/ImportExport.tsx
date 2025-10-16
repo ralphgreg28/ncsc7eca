@@ -99,26 +99,49 @@ function ImportExport() {
 
   const fetchAddressDetails = async (): Promise<AddressDetails> => {
     try {
-      // Fetch all address data with explicit size limits to ensure we get ALL records
+      // Fetch provinces and LGUs (these are small enough)
       const [{ data: provinces, error: provinceError }, 
-             { data: lgus, error: lguError }, 
-             { data: barangays, error: barangayError }] = await Promise.all([
-        supabase.from('provinces').select('code, name').order('name').limit(1000),
-        supabase.from('lgus').select('code, name').order('name').limit(5000),
-        supabase.from('barangays').select('code, name').order('name').limit(50000)
+             { data: lgus, error: lguError }] = await Promise.all([
+        supabase.from('provinces').select('code, name').order('name'),
+        supabase.from('lgus').select('code, name').order('name')
       ]);
 
       if (provinceError) console.error('Error fetching provinces:', provinceError);
       if (lguError) console.error('Error fetching LGUs:', lguError);
-      if (barangayError) console.error('Error fetching barangays:', barangayError);
+
+      // Fetch ALL barangays in batches (there are more than 1000)
+      let allBarangays: Array<{ code: string; name: string; }> = [];
+      let hasMore = true;
+      let start = 0;
+      const BATCH_SIZE = 1000;
+      
+      while (hasMore) {
+        const { data: barangayBatch, error: barangayError } = await supabase
+          .from('barangays')
+          .select('code, name')
+          .range(start, start + BATCH_SIZE - 1)
+          .order('code');
+        
+        if (barangayError) {
+          console.error('Error fetching barangays:', barangayError);
+          break;
+        }
+        
+        if (barangayBatch && barangayBatch.length > 0) {
+          allBarangays = [...allBarangays, ...barangayBatch];
+          start += BATCH_SIZE;
+        }
+        
+        hasMore = barangayBatch && barangayBatch.length === BATCH_SIZE;
+      }
 
       // Log counts to help diagnose issues
-      console.log(`Fetched ${provinces?.length || 0} provinces, ${lgus?.length || 0} LGUs, ${barangays?.length || 0} barangays`);
+      console.log(`Fetched ${provinces?.length || 0} provinces, ${lgus?.length || 0} LGUs, ${allBarangays.length} barangays`);
 
       return {
         provinces: provinces || [],
         lgus: lgus || [],
-        barangays: barangays || []
+        barangays: allBarangays
       };
     } catch (error) {
       console.error('Error fetching address details:', error);
@@ -499,32 +522,43 @@ function ImportExport() {
       // Fetch address details
       const addressDetails = await fetchAddressDetails();
       
-      // Create normalized lookup maps with better error handling
-      const provinceMap = new Map();
-      const lguMap = new Map();
-      const barangayMap = new Map();
-      const normalizedBarangayMap = new Map(); // For case-insensitive lookups
+      // Create lookup maps
+      const provinceMap = new Map<string, string>();
+      const lguMap = new Map<string, string>();
+      const barangayMap = new Map<string, string>();
       
-      // Populate maps with normalized keys (trimmed and lowercase)
       addressDetails.provinces.forEach(p => {
-        const normalizedCode = p.code.trim();
-        provinceMap.set(normalizedCode, p.name);
+        provinceMap.set(p.code, p.name);
       });
       
       addressDetails.lgus.forEach(l => {
-        const normalizedCode = l.code.trim();
-        lguMap.set(normalizedCode, l.name);
+        lguMap.set(l.code, l.name);
       });
       
       addressDetails.barangays.forEach(b => {
-        const normalizedCode = b.code.trim();
-        barangayMap.set(normalizedCode, b.name);
-        // Also add to normalized map for case-insensitive lookup
-        normalizedBarangayMap.set(normalizedCode.toLowerCase(), b.name);
+        barangayMap.set(b.code, b.name);
       });
       
-      // Log map sizes to help diagnose issues
-      console.log(`Map sizes - Provinces: ${provinceMap.size}, LGUs: ${lguMap.size}, Barangays: ${barangayMap.size}`);
+      console.log(`Loaded ${provinceMap.size} provinces, ${lguMap.size} LGUs, ${barangayMap.size} barangays`);
+      
+      // Debug: Show sample data
+      console.log('Sample barangay codes from database:', Array.from(barangayMap.keys()).slice(0, 5));
+      console.log('Sample citizen barangay codes:', citizens.slice(0, 5).map(c => c.barangay_code));
+      
+      // Check for matches
+      let matchCount = 0;
+      let noMatchCount = 0;
+      citizens.forEach(c => {
+        if (barangayMap.has(c.barangay_code)) {
+          matchCount++;
+        } else {
+          noMatchCount++;
+          if (noMatchCount <= 5) {
+            console.log(`No match for: "${c.barangay_code}" (type: ${typeof c.barangay_code})`);
+          }
+        }
+      });
+      console.log(`Barangay matches: ${matchCount}, No matches: ${noMatchCount}`);
       
       const exportData = citizens.map(citizen => ({
         'ID': citizen.id,
@@ -534,9 +568,9 @@ function ImportExport() {
         'Extension Name': citizen.extension_name || '',
         'Birth Date': format(new Date(citizen.birth_date), 'MM/dd/yyyy'),
         'Sex': citizen.sex,
-        'Province': provinceMap.get(citizen.province_code?.trim()) || citizen.province_code,
-        'City/Municipality': lguMap.get(citizen.lgu_code?.trim()) || citizen.lgu_code,
-        'Barangay': getBarangayName(citizen.barangay_code, barangayMap, normalizedBarangayMap),
+        'Province': provinceMap.get(citizen.province_code) || citizen.province_code || 'N/A',
+        'City/Municipality': lguMap.get(citizen.lgu_code) || citizen.lgu_code || 'N/A',
+        'Barangay': barangayMap.get(citizen.barangay_code) || citizen.barangay_code || 'N/A',
         'Status': citizen.status,
         'Payment Date': citizen.payment_date ? format(new Date(citizen.payment_date), 'MM/dd/yyyy') : '',
         'OSCA ID': citizen.osca_id || 'N/A',
@@ -552,31 +586,9 @@ function ImportExport() {
         'Encoded Date': format(new Date(citizen.encoded_date), 'MM/dd/yyyy HH:mm:ss'),
         'Calendar Year': citizen.calendar_year,
         'Specimen': citizen.specimen || '',
-        'Disability': citizen.disability || '',
+        'Disability': citizen.disability || 'no',
         'Indigenous Peoples': citizen.indigenous_peoples || '',
       }));
-      
-      // Function to get barangay name with fallback strategies
-      function getBarangayName(code: string | null | undefined, map: Map<string, string>, normalizedMap: Map<string, string>): string {
-        if (!code) return 'N/A';
-        
-        const trimmedCode = code.trim();
-        
-        // Try exact match first
-        const exactMatch = map.get(trimmedCode);
-        if (exactMatch) return exactMatch;
-        
-        // Try case-insensitive match
-        const lowerCode = trimmedCode.toLowerCase();
-        const caseInsensitiveMatch = normalizedMap.get(lowerCode);
-        if (caseInsensitiveMatch) return caseInsensitiveMatch;
-        
-        // Log missing codes to help diagnose the issue
-        console.log(`Barangay code not found: "${code}"`);
-        
-        // Return the original code as fallback
-        return code;
-      }
       
       const timestamp = format(new Date(), 'yyyyMMdd_HHmmss');
       const fileName = `senior_citizens_${timestamp}`;

@@ -171,7 +171,7 @@ function Dashboard() {
     paymentDateEnd: '',
     ageStart: '',
     ageEnd: '',
-    calendarYear: ['2024', '2025', '2026', '2027', '2028']
+    calendarYear: ['2023','2024', '2025', '2026', '2027', '2028']
   });
 
   const [lguStats, setLguStats] = useState<{
@@ -284,7 +284,7 @@ function Dashboard() {
       paymentDateEnd: '',
       ageStart: '',
       ageEnd: '',
-      calendarYear: ['2024', '2025', '2026', '2027', '2028']
+      calendarYear: ['2023','2024', '2025', '2026', '2027', '2028']
     });
     setError(null);
   }, []);
@@ -412,7 +412,7 @@ function Dashboard() {
           // If no calendar years are selected, default to all available years
           const selectedYears = filters.calendarYear.length > 0 
             ? filters.calendarYear 
-            : ['2024', '2025', '2026', '2027', '2028'];
+            : ['2023','2024', '2025', '2026', '2027', '2028'];
           
           query = query.in('calendar_year', selectedYears.map(year => parseInt(year)));
 

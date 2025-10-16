@@ -648,18 +648,68 @@ function Dashboard() {
     }
   }, [filters]);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-1 text-gray-600">Analytics and Overview</p>
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center z-50 overflow-hidden">
+        <div className="relative">
+          {/* Outer rotating ring - MAXIMIZED */}
+          <div className="absolute inset-0 rounded-full border-8 border-transparent border-t-blue-500 border-r-purple-500 animate-spin w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96"></div>
+          
+          {/* Middle rotating ring - MAXIMIZED */}
+          <div className="absolute inset-8 rounded-full border-8 border-transparent border-t-indigo-400 border-l-pink-400 animate-spin w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80" style={{ animationDirection: 'reverse', animationDuration: '1.2s' }}></div>
+          
+          {/* Inner pulsing circle - MAXIMIZED */}
+          <div className="absolute inset-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-pulse w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64 flex items-center justify-center shadow-2xl">
+            <Loader2 className="h-16 w-16 md:h-24 md:w-24 lg:h-32 lg:w-32 text-white animate-spin" />
+          </div>
+          
+          {/* Loading text - MAXIMIZED */}
+          <div className="absolute -bottom-24 md:-bottom-32 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="flex items-center space-x-3">
+                <span className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent animate-pulse">
+                  Loading Dashboard
+                </span>
+              </div>
+              <div className="flex space-x-2">
+                <div className="w-4 h-4 md:w-5 md:h-5 bg-blue-500 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-4 h-4 md:w-5 md:h-5 bg-indigo-500 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-4 h-4 md:w-5 md:h-5 bg-purple-500 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '300ms' }}></div>
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div className="flex items-center space-x-4">
+        {/* Floating particles effect - MAXIMIZED */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-6 h-6 md:w-8 md:h-8 bg-blue-400 rounded-full animate-ping opacity-75" style={{ animationDuration: '2s' }}></div>
+          <div className="absolute top-1/3 right-1/4 w-5 h-5 md:w-6 md:h-6 bg-purple-400 rounded-full animate-ping opacity-75" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}></div>
+          <div className="absolute bottom-1/3 left-1/3 w-5 h-5 md:w-6 md:h-6 bg-indigo-400 rounded-full animate-ping opacity-75" style={{ animationDuration: '3s', animationDelay: '1s' }}></div>
+          <div className="absolute bottom-1/4 right-1/3 w-6 h-6 md:w-8 md:h-8 bg-pink-400 rounded-full animate-ping opacity-75" style={{ animationDuration: '2.2s', animationDelay: '0.7s' }}></div>
+          <div className="absolute top-1/2 left-1/6 w-4 h-4 md:w-5 md:h-5 bg-teal-400 rounded-full animate-ping opacity-75" style={{ animationDuration: '2.8s', animationDelay: '0.3s' }}></div>
+          <div className="absolute top-3/4 right-1/6 w-4 h-4 md:w-5 md:h-5 bg-cyan-400 rounded-full animate-ping opacity-75" style={{ animationDuration: '2.3s', animationDelay: '0.8s' }}></div>
+          <div className="absolute bottom-1/2 right-1/2 w-5 h-5 md:w-7 md:h-7 bg-violet-400 rounded-full animate-ping opacity-75" style={{ animationDuration: '2.7s', animationDelay: '0.2s' }}></div>
+          <div className="absolute top-1/6 right-1/3 w-4 h-4 md:w-6 md:h-6 bg-fuchsia-400 rounded-full animate-ping opacity-75" style={{ animationDuration: '2.6s', animationDelay: '0.6s' }}></div>
+        </div>
+        
+        {/* Additional glow effect */}
+        <div className="absolute inset-0 bg-gradient-radial from-blue-200/20 via-purple-200/10 to-transparent pointer-events-none"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-0.5 text-sm text-gray-600">Analytics and Overview</p>
+        </div>
+        
+        <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowCharts(!showCharts)}
-            className="btn-primary flex items-center space-x-2"
+            className="btn-primary flex items-center space-x-1.5 text-sm px-3 py-1.5"
           >
             <span>{showCharts ? 'Hide Charts' : 'Show Charts'}</span>
             {showCharts ? (
@@ -670,7 +720,7 @@ function Dashboard() {
           </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="btn-outline flex items-center space-x-2"
+            className="btn-outline flex items-center space-x-1.5 text-sm px-3 py-1.5"
           >
             <span>{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
             {showFilters ? (
@@ -681,10 +731,10 @@ function Dashboard() {
           </button>
           <button
             onClick={resetFilters}
-            className="btn-outline flex items-center"
+            className="btn-outline flex items-center text-sm px-3 py-1.5"
             title="Reset Filters"
           >
-            <RefreshCw className="h-5 w-5 mr-2" />
+            <RefreshCw className="h-4 w-4 mr-1.5" />
             Reset Filters
           </button>
         </div>

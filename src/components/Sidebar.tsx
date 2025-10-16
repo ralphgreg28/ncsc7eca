@@ -59,23 +59,23 @@ function Sidebar({ open, onClose }: SidebarProps) {
         ${open ? 'translate-x-0 shadow-xl' : '-translate-x-full'}
       `}>
         <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between h-14 px-4 border-b border-gray-100">
-            <span className="font-bold text-base text-blue-800">Navigation</span>
+          <div className="flex items-center justify-between h-12 px-3 border-b border-gray-100">
+            <span className="font-bold text-sm text-blue-800">Navigation</span>
             <button
-              className="p-1.5 rounded-full text-gray-500 hover:text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-200"
+              className="p-1 rounded-full text-gray-500 hover:text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-200"
               onClick={onClose}
             >
               <span className="sr-only">Close sidebar</span>
-              <X className="h-5 w-5" aria-hidden="true" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
           
-          <div className="flex-1 overflow-y-auto py-4">
+          <div className="flex-1 overflow-y-auto py-3">
             <NavItems onItemClick={onClose} items={items} />
           </div>
           
-          <div className="p-4 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">
-            <p>NCSC 7 ECA_IMS v1.0</p>
+          <div className="p-2 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">
+            <p>NCSC 7 ECA_IMS v3.0</p>
           </div>
         </div>
       </aside>
@@ -83,16 +83,16 @@ function Sidebar({ open, onClose }: SidebarProps) {
       {/* Desktop sidebar */}
       <aside 
         className={`hidden md:block fixed top-14 left-0 h-[calc(100vh-3.5rem)] transition-all duration-300 ease-in-out ${
-          open ? 'translate-x-0 w-64' : '-translate-x-64 w-0'
+          open ? 'translate-x-0 w-56' : '-translate-x-56 w-0'
         }`}
       >
-        <div className="w-64 h-full bg-white border-r border-gray-100 shadow-sm flex flex-col">
-          <div className="flex-1 overflow-y-auto py-4">
+        <div className="w-56 h-full bg-white border-r border-gray-100 shadow-sm flex flex-col">
+          <div className="flex-1 overflow-y-auto py-2">
             <NavItems items={items} />
           </div>
           
-          <div className="p-4 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">
-            <p>NCSC 7 ECA_IMS v1.0</p>
+          <div className="p-2 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">
+            <p>NCSC 7 ECA_IMS v3.0</p>
           </div>
         </div>
       </aside>

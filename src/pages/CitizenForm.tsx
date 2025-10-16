@@ -641,8 +641,8 @@ const deleteRecord = async (citizenId: number) => {
 
  
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6" ref={formTopRef}>
-      <div className="flex justify-between items-center mb-6">
+    <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md p-4" ref={formTopRef}>
+      <div className="flex justify-between items-center mb-4">
         <button 
           type="button" 
           onClick={goBack}
@@ -664,17 +664,17 @@ const deleteRecord = async (citizenId: number) => {
         </div>
       </div>
       
-      <h1 className="text-2xl font-bold text-blue-800 mb-4 text-center">
+      <h1 className="text-xl font-bold text-blue-800 mb-3 text-center">
         {step === 1 ? 'Register New Senior Citizen' : 'Verify Senior Citizen Data'}
       </h1>
       
-      <p className="text-gray-600 mb-6 text-center">
+      <p className="text-sm text-gray-600 mb-4 text-center">
         {step === 1 ? 'Complete the application form with citizen information' : 'Verify data using primary or secondary ID'}
       </p>
       
       {step === 2 && (
-        <div className="mb-6">
-          <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-md flex items-start mb-4">
+        <div className="mb-4">
+          <div className="p-3 bg-blue-50 border-l-4 border-blue-500 rounded-md flex items-start mb-3">
             <AlertCircle size={20} className="text-blue-600 mr-2 mt-1 flex-shrink-0" />
             <div>
               <p className="text-blue-700 font-medium">
@@ -689,7 +689,7 @@ const deleteRecord = async (citizenId: number) => {
           
           {/* Validation Status */}
           {Object.keys(fieldMatches).length > 0 && (
-            <div className={`p-4 rounded-md mb-4 ${mismatchCount > 0 ? 'bg-yellow-50 border border-yellow-300' : 'bg-green-50 border border-green-300'}`}>
+            <div className={`p-3 rounded-md mb-3 ${mismatchCount > 0 ? 'bg-yellow-50 border border-yellow-300' : 'bg-green-50 border border-green-300'}`}>
               <div className="flex items-center mb-2">
                 {mismatchCount > 0 ? (
                   <>
@@ -713,8 +713,8 @@ const deleteRecord = async (citizenId: number) => {
           )}
           
           {/* First Entry Summary */}
-          <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
-            <h3 className="text-gray-700 font-medium mb-3 flex items-center">
+          <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
+            <h3 className="text-sm text-gray-700 font-medium mb-2 flex items-center">
               <CheckCircle size={16} className="text-green-600 mr-2" />
               First Entry Summary
             </h3>
@@ -759,16 +759,18 @@ const deleteRecord = async (citizenId: number) => {
       )}
       
       <form onSubmit={handleSubmit(step === 1 ? onFirstSubmit : onSecondSubmit)} className="space-y-6">
-        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm">
+        {/* 1. Identification Details */}
+        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-xl border border-indigo-200 shadow-md">
           <div className="flex items-center mb-4">
-            <User size={20} className="text-blue-600 mr-2" />
-            <h2 className="text-lg font-semibold text-gray-800">Personal Information</h2>
+            <div className="bg-indigo-600 p-2 rounded-lg mr-3">
+              <CheckCircle size={20} className="text-white" />
+            </div>
+            <h2 className="text-lg font-bold text-indigo-900">1. Identification Details</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-             <div className="form-group">
-              <label htmlFor="oscaId" className="text-gray-700 font-medium mb-1">
+            <div className="form-group">
+              <label htmlFor="oscaId" className="block text-gray-700 font-semibold mb-2">
                 OSCA ID <span className="text-gray-400 text-sm font-normal">(optional)</span>
               </label>
               <input
@@ -780,11 +782,11 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.oscaId
                       ? fieldMatches.oscaId
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                } rounded-md p-2 w-full transition-colors`}
-                placeholder="Enter OSCA ID"
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                      : 'border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200'
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
+                placeholder="Enter OSCA ID or leave blank for N/A"
                 onChange={handleUppercase}
               />
               {errors.oscaId && (
@@ -793,11 +795,11 @@ const deleteRecord = async (citizenId: number) => {
                   {errors.oscaId.message}
                 </p>
               )}
-              <p className="text-gray-500 text-sm mt-1">Leave blank to set as N/A</p>
+              <p className="text-gray-500 text-xs mt-1 italic">Will be set as "N/A" if left blank</p>
             </div>
 
             <div className="form-group">
-              <label htmlFor="rrn" className="text-gray-700 font-medium mb-1">
+              <label htmlFor="rrn" className="block text-gray-700 font-semibold mb-2">
                 RRN <span className="text-gray-400 text-sm font-normal">(Regional Reference Number, optional)</span>
               </label>
               <input
@@ -809,11 +811,11 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.rrn
                       ? fieldMatches.rrn
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                } rounded-md p-2 w-full transition-colors`}
-                placeholder="Enter RRN"
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                      : 'border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200'
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
+                placeholder="Enter RRN or leave blank for N/A"
                 onChange={handleUppercase}
               />
               {errors.rrn && (
@@ -822,11 +824,24 @@ const deleteRecord = async (citizenId: number) => {
                   {errors.rrn.message}
                 </p>
               )}
-              <p className="text-gray-500 text-sm mt-1">Leave blank to set as N/A</p>
+              <p className="text-gray-500 text-xs mt-1 italic">Will be set as "N/A" if left blank</p>
             </div>
+          </div>
+        </div>
+
+        {/* 2. Personal Information */}
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-xl border border-purple-200 shadow-md">
+          <div className="flex items-center mb-4">
+            <div className="bg-purple-600 p-2 rounded-lg mr-3">
+              <User size={20} className="text-white" />
+            </div>
+            <h2 className="text-lg font-bold text-purple-900">2. Personal Information</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             
             <div className="form-group">
-              <label htmlFor="lastName" className="flex items-center text-gray-700 font-medium mb-1">
+              <label htmlFor="lastName" className="block text-gray-700 font-semibold mb-2">
                 Last Name <span className="text-red-500 ml-1">*</span>
               </label>
               <input
@@ -841,7 +856,7 @@ const deleteRecord = async (citizenId: number) => {
                         ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
                         : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
                       : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                } rounded-md p-2 w-full transition-colors`}
+                } rounded-lg p-3 w-full transition-colors`}
                 onChange={handleUppercase}
               />
               {errors.lastName && (
@@ -851,9 +866,8 @@ const deleteRecord = async (citizenId: number) => {
                 </p>
               )}
             </div>
-            
             <div className="form-group">
-              <label htmlFor="firstName" className="flex items-center text-gray-700 font-medium mb-1">
+              <label htmlFor="firstName" className="block text-gray-700 font-semibold mb-2">
                 First Name <span className="text-red-500 ml-1">*</span>
               </label>
               <input
@@ -865,10 +879,10 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.firstName
                       ? fieldMatches.firstName
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                } rounded-md p-2 w-full transition-colors`}
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                      : 'border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200'
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
                 onChange={handleUppercase}
               />
               {errors.firstName && (
@@ -880,7 +894,7 @@ const deleteRecord = async (citizenId: number) => {
             </div>
             
             <div className="form-group">
-              <label htmlFor="middleName" className="text-gray-700 font-medium mb-1">
+              <label htmlFor="middleName" className="block text-gray-700 font-semibold mb-2">
                 Middle Name <span className="text-gray-400 text-sm font-normal">(optional)</span>
               </label>
               <input
@@ -892,17 +906,17 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.middleName
                       ? fieldMatches.middleName
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                } rounded-md p-2 w-full transition-colors`}
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                      : 'border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200'
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
                 placeholder="Enter middle name"
                 onChange={handleUppercase}
               />
             </div>
             
             <div className="form-group">
-              <label htmlFor="extensionName" className="text-gray-700 font-medium mb-1">
+              <label htmlFor="extensionName" className="block text-gray-700 font-semibold mb-2">
                 Extension Name <span className="text-gray-400 text-sm font-normal">(optional)</span>
               </label>
               <select
@@ -913,26 +927,24 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.extensionName
                       ? fieldMatches.extensionName
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                } rounded-md p-2 w-full transition-colors`}
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                      : 'border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200'
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
               >
                 {EXTENSION_NAMES.map(ext => (
                   <option key={ext} value={ext}>{ext || 'None'}</option>
                 ))}
               </select>
             </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+
             <div className="form-group">
-              <label htmlFor="birthDate" className="flex items-center text-gray-700 font-medium mb-1">
+              <label htmlFor="birthDate" className="block text-gray-700 font-semibold mb-2">
                 Birth Date <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Calendar size={16} className="text-gray-500" />
+                  <Calendar size={18} className="text-gray-400" />
                 </div>
                 <input
                   id="birthDate"
@@ -944,10 +956,10 @@ const deleteRecord = async (citizenId: number) => {
                       ? 'border-red-500 bg-red-50' 
                       : step === 2 && watchAllFields.birthDate
                         ? fieldMatches.birthDate
-                          ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                          : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                        : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                  } rounded-md p-2 pl-10 w-full transition-colors`}
+                          ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                          : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                        : 'border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200'
+                  } rounded-lg p-3 pl-11 w-full transition-all duration-200 shadow-sm`}
                 />
               </div>
               {errors.birthDate && (
@@ -957,14 +969,14 @@ const deleteRecord = async (citizenId: number) => {
                 </p>
               )}
               {age !== null && (
-                <p className="text-gray-600 text-sm mt-1">
-                  Age: <span className="font-medium">{age} years old</span>
+                <p className="text-purple-700 text-sm mt-1 font-medium">
+                  Age: {age} years old
                 </p>
               )}
             </div>
             
             <div className="form-group">
-              <label htmlFor="sex" className="flex items-center text-gray-700 font-medium mb-1">
+              <label htmlFor="sex" className="block text-gray-700 font-semibold mb-2">
                 Sex <span className="text-red-500 ml-1">*</span>
               </label>
               <select
@@ -975,10 +987,10 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.sex
                       ? fieldMatches.sex
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                } rounded-md p-2 w-full transition-colors`}
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                      : 'border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200'
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
               >
                 <option value="">Select...</option>
                 <option value="Male">Male</option>
@@ -991,9 +1003,21 @@ const deleteRecord = async (citizenId: number) => {
                 </p>
               )}
             </div>
+          </div>
+        </div>
 
+        {/* 3. Demographic Information */}
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 rounded-xl border border-emerald-200 shadow-md">
+          <div className="flex items-center mb-4">
+            <div className="bg-emerald-600 p-2 rounded-lg mr-3">
+              <User size={20} className="text-white" />
+            </div>
+            <h2 className="text-lg font-bold text-emerald-900">3. Demographic Information</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="form-group">
-              <label htmlFor="specimen" className="flex items-center text-gray-700 font-medium mb-1">
+              <label htmlFor="specimen" className="block text-gray-700 font-semibold mb-2">
                 Specimen <span className="text-red-500 ml-1">*</span>
               </label>
               <select
@@ -1004,10 +1028,10 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.specimen
                       ? fieldMatches.specimen
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                } rounded-md p-2 w-full transition-colors`}
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                      : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200'
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
               >
                 <option value="">Select...</option>
                 <option value="signature">Signature</option>
@@ -1022,7 +1046,7 @@ const deleteRecord = async (citizenId: number) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="disability" className="flex items-center text-gray-700 font-medium mb-1">
+              <label htmlFor="disability" className="block text-gray-700 font-semibold mb-2">
                 Disability <span className="text-red-500 ml-1">*</span>
               </label>
               <select
@@ -1033,10 +1057,10 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.disability
                       ? fieldMatches.disability
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                } rounded-md p-2 w-full transition-colors`}
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                      : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200'
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
               >
                 <option value="">Select...</option>
                 <option value="yes">Yes</option>
@@ -1051,8 +1075,8 @@ const deleteRecord = async (citizenId: number) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="indigenous_people" className="flex items-center text-gray-700 font-medium mb-1">
-                Indigenous People <span className="text-red-500 ml-1">*</span>
+              <label htmlFor="indigenous_people" className="block text-gray-700 font-semibold mb-2">
+                Indigenous People (IP) <span className="text-red-500 ml-1">*</span>
               </label>
               <select
                 id="indigenous_people"
@@ -1062,10 +1086,10 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.indigenous_people
                       ? fieldMatches.indigenous_people
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                } rounded-md p-2 w-full transition-colors`}
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                      : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200'
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
               >
                 <option value="">Select...</option>
                 <option value="yes">Yes</option>
@@ -1080,16 +1104,19 @@ const deleteRecord = async (citizenId: number) => {
             </div>
           </div>
         </div>
-        
-        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm">
+
+        {/* Address Information */}
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-xl border border-blue-200 shadow-md">
           <div className="flex items-center mb-4">
-            <MapPin size={20} className="text-blue-600 mr-2" />
-            <h2 className="text-lg font-semibold text-gray-800">Address Information</h2>
+            <div className="bg-blue-600 p-2 rounded-lg mr-3">
+              <MapPin size={20} className="text-white" />
+            </div>
+            <h2 className="text-lg font-bold text-blue-900">Address Information</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="form-group">
-              <label htmlFor="provinceCode" className="flex items-center text-gray-700 font-medium mb-1">
+              <label htmlFor="provinceCode" className="block text-gray-700 font-semibold mb-2">
                 Province <span className="text-red-500 ml-1">*</span>
               </label>
               <select
@@ -1100,10 +1127,10 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.provinceCode
                       ? fieldMatches.provinceCode
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                } rounded-md p-2 w-full transition-colors`}
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
               >
                 <option value="">Select Province</option>
                 {provinces.map(province => (
@@ -1121,7 +1148,7 @@ const deleteRecord = async (citizenId: number) => {
             </div>
             
             <div className="form-group">
-              <label htmlFor="lguCode" className="flex items-center text-gray-700 font-medium mb-1">
+              <label htmlFor="lguCode" className="block text-gray-700 font-semibold mb-2">
                 City/Municipality <span className="text-red-500 ml-1">*</span>
               </label>
               <select
@@ -1132,12 +1159,12 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.lguCode && selectedProvinceCode
                       ? fieldMatches.lguCode
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
                       : selectedProvinceCode
-                        ? 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
                         : 'border-gray-200 bg-gray-100'
-                } rounded-md p-2 w-full transition-colors`}
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
                 disabled={!selectedProvinceCode}
               >
                 <option value="">
@@ -1158,7 +1185,7 @@ const deleteRecord = async (citizenId: number) => {
             </div>
             
             <div className="form-group">
-              <label htmlFor="barangayCode" className="flex items-center text-gray-700 font-medium mb-1">
+              <label htmlFor="barangayCode" className="block text-gray-700 font-semibold mb-2">
                 Barangay <span className="text-red-500 ml-1">*</span>
               </label>
               <select
@@ -1169,12 +1196,12 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.barangayCode && selectedLguCode
                       ? fieldMatches.barangayCode
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
                       : selectedLguCode
-                        ? 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
                         : 'border-gray-200 bg-gray-100'
-                } rounded-md p-2 w-full transition-colors`}
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
                 disabled={!selectedLguCode}
               >
                 <option value="">
@@ -1196,15 +1223,18 @@ const deleteRecord = async (citizenId: number) => {
           </div>
         </div>
 
-        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm">
+        {/* Validation Information */}
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-xl border border-amber-200 shadow-md">
           <div className="flex items-center mb-4">
-            <CheckCircle size={20} className="text-blue-600 mr-2" />
-            <h2 className="text-lg font-semibold text-gray-800">Validation Information</h2>
+            <div className="bg-amber-600 p-2 rounded-lg mr-3">
+              <CheckCircle size={20} className="text-white" />
+            </div>
+            <h2 className="text-lg font-bold text-amber-900">Validation Information</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-group">
-              <label htmlFor="validator" className="flex items-center text-gray-700 font-medium mb-1">
+              <label htmlFor="validator" className="block text-gray-700 font-semibold mb-2">
                 Validator <span className="text-red-500 ml-1">*</span>
               </label>
               <select
@@ -1215,10 +1245,10 @@ const deleteRecord = async (citizenId: number) => {
                     ? 'border-red-500 bg-red-50' 
                     : step === 2 && watchAllFields.validator
                       ? fieldMatches.validator
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                } rounded-md p-2 w-full transition-colors`}
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                      : 'border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200'
+                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
               >
                 <option value="">Select Validator...</option>
                 {VALIDATORS.map(validator => (
@@ -1234,12 +1264,12 @@ const deleteRecord = async (citizenId: number) => {
             </div>
             
             <div className="form-group">
-              <label htmlFor="validationDate" className="flex items-center text-gray-700 font-medium mb-1">
+              <label htmlFor="validationDate" className="block text-gray-700 font-semibold mb-2">
                 Date of Validation <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Calendar size={16} className="text-gray-500" />
+                  <Calendar size={18} className="text-gray-400" />
                 </div>
                 <input
                   id="validationDate"
@@ -1250,10 +1280,10 @@ const deleteRecord = async (citizenId: number) => {
                       ? 'border-red-500 bg-red-50' 
                       : step === 2 && watchAllFields.validationDate
                         ? fieldMatches.validationDate
-                          ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-1 focus:ring-green-500'
-                          : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
-                        : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                  } rounded-md p-2 pl-10 w-full transition-colors`}
+                          ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                          : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
+                        : 'border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200'
+                  } rounded-lg p-3 pl-11 w-full transition-all duration-200 shadow-sm`}
                   max={format(new Date(), 'yyyy-MM-dd')}
                 />
               </div>
@@ -1267,10 +1297,10 @@ const deleteRecord = async (citizenId: number) => {
           </div>
         </div>
         
-        <div className="flex justify-end mt-8">
+        <div className="flex justify-end mt-6">
           <button
             type="submit"
-            className={`flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`flex items-center justify-center px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             disabled={loading}
           >
             {loading ? (

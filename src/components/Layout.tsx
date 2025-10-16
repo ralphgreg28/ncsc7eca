@@ -96,20 +96,19 @@ function Layout() {
 
         <main 
           className={`flex-1 transition-all duration-300 ${
-            sidebarOpen ? 'md:ml-64' : ''
+            sidebarOpen ? 'md:ml-56' : ''
           }`}
         >
-          <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+          <div className="p-3 md:p-4 lg:p-5">
             <Outlet />
           </div>
         </main>
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-gray-300 py-4 text-center text-sm shadow-inner">
-        <div className="max-w-7xl mx-auto px-4">
-          <p>Developed by: Ralph Jiene D. Gregorio, Project Development Officer III</p>
-          <p className="text-xs mt-1 text-gray-400">© {new Date().getFullYear()} NCSC Regional Office VII - Central Visayas</p>
+      <footer className="bg-gray-800 text-gray-300 py-2 text-center text-xs shadow-inner">
+        <div className="px-4">
+          <p>Developed by: Ralph Jiene D. Gregorio, PDO III | © {new Date().getFullYear()} NCSC RO VII - Central Visayas</p>
         </div>
       </footer>
 

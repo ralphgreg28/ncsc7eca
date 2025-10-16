@@ -1612,99 +1612,125 @@ if (filters.searchTerm) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Senior Citizens Records</h1>
-          <p className="mt-1 text-gray-600">{totalRecords} records found</p>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center px-4 py-2 rounded-md font-medium transition-colors duration-150 ${
-              showFilters 
-                ? 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100' 
-                : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
-            }`}
-          >
-            <Filter className="h-5 w-5 mr-2" />
-            {showFilters ? 'Hide Filters' : 'Show Filters'}
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className={`h-5 w-5 ml-2 transition-transform duration-200 ${showFilters ? 'transform rotate-180' : ''}`} 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
+    <div className="space-y-4 p-2 bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 min-h-screen">
+      {/* Header Section with Gradient */}
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200/60 p-8 backdrop-blur-sm bg-white/90">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
+          <div className="space-y-3">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Expanded Centenarian Act Records
+            </h1>
+            <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-full border border-blue-200/50">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span className="font-semibold text-gray-800">{totalRecords.toLocaleString()}</span>
+                <span className="text-gray-600">records found</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`group relative overflow-hidden px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+                showFilters 
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md' 
+                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-400'
+              }`}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <button 
-            onClick={handleExport}
-            className="btn-primary flex items-center"
-            disabled={exportLoading}
-          >
-            {exportLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                <span>Exporting...</span>
-              </>
-            ) : (
-              <>
-                <Download className="h-5 w-5 mr-2" />
-                <span>Export to CSV</span>
-              </>
-            )}
-          </button>
+              <div className="flex items-center justify-center gap-2">
+                <Filter className="h-5 w-5" />
+                <span>{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className={`h-5 w-5 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </button>
+            
+            <button 
+              onClick={handleExport}
+              className="group relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              disabled={exportLoading}
+            >
+              <div className="flex items-center justify-center gap-2">
+                {exportLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    <span>Exporting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-5 w-5" />
+                    <span>Export CSV</span>
+                  </>
+                )}
+              </div>
+            </button>
+          </div>
         </div>
       </div>
 
       {showFilters && (
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-              <Filter className="h-5 w-5 mr-2 text-blue-500" />
-              Filters
+        <div className="bg-white/95 backdrop-blur-lg rounded-xl shadow-l p-4 border border-gray-200/60 transform transition-all duration-300 animate-in slide-in-from-top">
+          <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-gradient-to-r from-blue-200 to-purple-200">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-1">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl">
+                <Filter className="h-6 w-6 text-white" />
+              </div>
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Advanced Filters
+              </span>
             </h2>
             <button
               onClick={resetFilters}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+              className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 text-red-600 rounded-xl font-medium transition-all duration-300 border border-red-200 hover:border-red-300 hover:shadow-md"
             >
-              <span className="mr-1">Reset All</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:rotate-180 duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
+              <span>Reset All</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="group">
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                <Search className="h-4 w-4 text-blue-500" />
                 Search
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
                 </div>
                 <input
                   type="text"
                   value={filters.searchTerm}
                   onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-                  placeholder="Search name..."
-                  className="pl-10 w-full rounded-md border-gray-300"
+                  placeholder="Search by name..."
+                  className="pl-12 w-full rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 py-3 shadow-sm hover:shadow-md"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                </svg>
                 Province
               </label>
               <select
                 value={filters.provinceCode}
                 onChange={(e) => handleFilterChange('provinceCode', e.target.value)}
-                className="w-full rounded-md border-gray-300"
+                className="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 py-3 px-4 shadow-sm hover:shadow-md font-medium"
               >
                 <option value="">All Provinces</option>
                 {provinces.map(province => (
@@ -1716,13 +1742,16 @@ if (filters.searchTerm) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
                 City/Municipality
               </label>
               <select
                 value={filters.lguCode}
                 onChange={(e) => handleFilterChange('lguCode', e.target.value)}
-                className="w-full rounded-md border-gray-300"
+                className="w-full rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-300 py-3 px-4 shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!filters.provinceCode}
               >
                 <option value="">All Cities/Municipalities</option>
@@ -1735,13 +1764,16 @@ if (filters.searchTerm) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                </svg>
                 Barangay
               </label>
               <select
                 value={filters.barangayCode}
                 onChange={(e) => handleFilterChange('barangayCode', e.target.value)}
-                className="w-full rounded-md border-gray-300"
+                className="w-full rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-300 py-3 px-4 shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!filters.lguCode}
               >
                 <option value="">All Barangays</option>
@@ -2055,8 +2087,11 @@ if (filters.searchTerm) {
               </div>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="group">
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
                 Remarks
               </label>
               <input
@@ -2064,19 +2099,23 @@ if (filters.searchTerm) {
                 value={filters.remarks}
                 onChange={(e) => handleFilterChange('remarks', e.target.value)}
                 placeholder="Search remarks..."
-                className="w-full rounded-md border-gray-300"
+                className="w-full rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all duration-300 py-3 px-4 shadow-sm hover:shadow-md font-medium"
               />
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              Status Filter
+          <div className="mt-8 pt-6 border-t-2 border-gradient-to-r from-gray-200 to-gray-300">
+            <label className="block text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Status Filter
+              </span>
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {statusOptions.map(status => {
                 const isSelected = filters.status.includes(status);
                 let bgColor, textColor;
@@ -2123,13 +2162,21 @@ if (filters.searchTerm) {
                   <button
                     key={status}
                     onClick={() => toggleStatus(status)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium ${bgColor} ${textColor} transition-colors duration-150 hover:shadow-sm flex items-center`}
+                    className={`group px-4 py-2.5 rounded-xl text-sm font-semibold ${bgColor} ${textColor} transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center gap-2 border-2 ${
+                      isSelected ? 'border-current' : 'border-transparent'
+                    }`}
                   >
-                    {isSelected && (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
+                    <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      isSelected 
+                        ? 'bg-current border-white' 
+                        : 'border-current'
+                    }`}>
+                      {isSelected && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </span>
                     {status}
                   </button>
                 );
@@ -2140,26 +2187,34 @@ if (filters.searchTerm) {
       )}
 
       {loadingAssignments && (user?.position === 'PDO' || user?.position === 'LGU') && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-3"></div>
-          <p className="text-blue-700">
-            Loading your assigned areas... Please wait while we filter the records based on your assignments.
-          </p>
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-2xl p-6 shadow-lg backdrop-blur-sm">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-6 w-6 bg-blue-600 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+            <div>
+              <p className="text-blue-900 font-semibold text-lg">Loading your assigned areas...</p>
+              <p className="text-blue-700 text-sm mt-1">Please wait while we filter the records based on your assignments.</p>
+            </div>
+          </div>
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+      <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
-              <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <tr className="bg-gradient-to-r from-gray-50 to-gray-100 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                 <th 
                   onClick={() => handleSort('last_name')}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                  className="px-6 py-5 text-left text-s font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-blue-50 transition-all duration-200 group"
                 >
-                  <div className="flex items-center space-x-1">
-                    <span>Name</span>
-                    <div className="w-4 h-4 flex items-center justify-center">
+                  <div className="flex items-center gap-2">
+                    <span className="group-hover:text-blue-600 transition-colors">Name</span>
+                    <div className="w-5 h-5 flex items-center justify-center text-blue-600">
                       {getSortIcon('last_name')}
                     </div>
                   </div>
@@ -2167,33 +2222,33 @@ if (filters.searchTerm) {
 
                 <th 
                   onClick={() => handleSort('birth_date')}
-                  className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                  className="px-6 py-5 text-center text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-purple-50 transition-all duration-200 group"
                 >
-                  <div className="flex items-center space-x-1">
-                    <span>Birth Date</span>
-                    {getSortIcon('birth_date')}
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="group-hover:text-purple-600 transition-colors">Birth Date</span>
+                    <div className="text-purple-600">{getSortIcon('birth_date')}</div>
                   </div>
                 </th>
                 <th 
                   onClick={() => handleSort('sex')}
-                  className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                  className="px-6 py-5 text-center text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-pink-50 transition-all duration-200 group"
                 >
-                  <div className="flex items-center space-x-1">
-                    <span>Sex</span>
-                    {getSortIcon('sex')}
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="group-hover:text-pink-600 transition-colors">Sex</span>
+                    <div className="text-pink-600">{getSortIcon('sex')}</div>
                   </div>
                 </th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-5 text-center text-xs font-bold text-gray-700 uppercase tracking-wider bg-gradient-to-r from-transparent to-teal-50/50">
                   Address
                 </th>
                 
                 <th 
                   onClick={() => handleSort('status')}
-                  className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                  className="px-6 py-5 text-center text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-green-50 transition-all duration-200 group"
                 >
-                  <div className="flex items-center space-x-1">
-                    <span>Status</span>
-                    {getSortIcon('status')}
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="group-hover:text-green-600 transition-colors">Status</span>
+                    <div className="text-green-600">{getSortIcon('status')}</div>
                   </div>
                 </th>
                 
@@ -2207,20 +2262,20 @@ if (filters.searchTerm) {
                   </div>
                 </th>
 */}
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-5 text-center text-xs font-bold text-gray-700 uppercase tracking-wider bg-gradient-to-r from-transparent to-amber-50/50">
                   Remarks
                 </th>
                 <th 
                   onClick={() => handleSort('created_at')}
-                  className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                  className="px-6 py-5 text-center text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-indigo-50 transition-all duration-200 group"
                 >
-                  <div className="flex items-center space-x-1">
-                    <span>Encoded Date</span>
-                    {getSortIcon('created_at')}
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="group-hover:text-indigo-600 transition-colors">Encoded Date</span>
+                    <div className="text-indigo-600">{getSortIcon('created_at')}</div>
                   </div>
                 </th>
                
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-5 text-center text-xs font-bold text-gray-700 uppercase tracking-wider bg-gradient-to-l from-gray-100 to-transparent">
                   Actions
                 </th>
               </tr>
@@ -2255,19 +2310,19 @@ if (filters.searchTerm) {
                       className="hover:bg-gray-50 transition-colors duration-150 group"
                     >
                       <td className="px-6 py-4">
-                        <div className="text-xs font-medium text-gray-900 whitespace-nowrap group-hover:text-blue-700 transition-colors duration-150">
+                        <div className="text-s font-medium text-gray-900 whitespace-nowrap group-hover:text-blue-700 transition-colors duration-150">
                           {citizen.last_name},
                         </div>
-                        <div className="text-xs font-medium text-gray-900 whitespace-nowrap">
+                        <div className="text-s font-medium text-gray-900 whitespace-nowrap">
                           {citizen.first_name}
                         </div>
                         
-                        <div className="text-xs text-gray-500 whitespace-nowrap">
+                        <div className="text-s text-gray-500 whitespace-nowrap">
                           {citizen.middle_name && `${citizen.middle_name} `}
                           {citizen.extension_name && `(${citizen.extension_name})`}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-xs whitespace-nowrap font-medium text-center">
+                      <td className="px-6 py-4 text-s whitespace-nowrap font-medium text-center">
                         <div className="space-y-1">
                           {/* Birth Date with Quarter Color Coding */}
                           <div className={`px-2 py-1 rounded-md border ${(() => {
@@ -2299,7 +2354,7 @@ if (filters.searchTerm) {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium  ${
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-m font-medium  ${
                           citizen.sex === 'Male' ? 'bg-blue-200 text-blue-800' : 'bg-pink-200 text-pink-800'
                         }`}>
                           {citizen.sex === 'Male' ? (
@@ -2358,11 +2413,11 @@ if (filters.searchTerm) {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        <span className={`inline-flex items-center px-4 py-2 rounded-full text-s font-medium ${
                           citizen.status === 'Encoded' ? 'bg-gray-200 text-gray-800' :
                           citizen.status === 'Validated' ? 'bg-blue-200 text-blue-800' :
                           citizen.status === 'Cleanlisted' ? 'bg-green-200 text-green-800' :
-                          citizen.status === 'Wwaitlisted' ? 'bg-yellow-200 text-yellow-800' : 
+                          citizen.status === 'Waitlisted' ? 'bg-yellow-200 text-yellow-800' : 
                           citizen.status === 'Paid' ? 'bg-emerald-200 text-emerald-800' :
                           citizen.status === 'Unpaid' ? 'bg-yellow-200 text-yellow-800' :
                           citizen.status === 'Compliance' ? 'bg-purple-200 text-purple-800' :
@@ -2405,7 +2460,7 @@ if (filters.searchTerm) {
 
                       <td className="px-6 py-4">
                       <div 
-                        className="text-[9px] text-gray-500 w-[100px] line-clamp-5 text-center" 
+                        className="text-[10px] text-gray-500 w-[100px] line-clamp-5 text-center" 
                         title={citizen.remarks || '-'}
                       >
                         {citizen.remarks || '-'}

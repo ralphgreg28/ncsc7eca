@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import { format, differenceInYears } from 'date-fns';
 import { toast } from 'react-toastify';
 import { ArrowLeft, Calendar, User, MapPin, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Select from 'react-select';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import DuplicateModal from '../components/DuplicateModal';
@@ -81,7 +82,7 @@ function CitizenForm() {
   // Add a ref for scrolling to top
   const formTopRef = useRef<HTMLDivElement>(null);
   
-  const { register, handleSubmit, watch, formState: { errors }, reset, setValue, getValues } = useForm<CitizenFormInput>();
+  const { register, handleSubmit, watch, formState: { errors }, reset, setValue, getValues, control } = useForm<CitizenFormInput>();
   
   const birthDate = watch('birthDate');
   const selectedProvinceCode = watch('provinceCode');
@@ -1119,26 +1120,59 @@ const deleteRecord = async (citizenId: number) => {
               <label htmlFor="provinceCode" className="block text-gray-700 font-semibold mb-2">
                 Province <span className="text-red-500 ml-1">*</span>
               </label>
-              <select
-                id="provinceCode"
-                {...register('provinceCode', { required: 'Province is required' })}
-                className={`border ${
-                  errors.provinceCode 
-                    ? 'border-red-500 bg-red-50' 
-                    : step === 2 && watchAllFields.provinceCode
-                      ? fieldMatches.provinceCode
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
-              >
-                <option value="">Select Province</option>
-                {provinces.map(province => (
-                  <option key={province.code} value={province.code}>
-                    {province.name}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                name="provinceCode"
+                control={control}
+                rules={{ required: 'Province is required' }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    id="provinceCode"
+                    options={provinces.map(p => ({ value: p.code, label: p.name }))}
+                    value={provinces.find(p => p.code === field.value) ? { value: field.value, label: provinces.find(p => p.code === field.value)!.name } : null}
+                    onChange={(option) => field.onChange(option?.value || '')}
+                    placeholder="Search and select province..."
+                    isClearable
+                    styles={{
+                      control: (base, state) => ({
+                        ...base,
+                        borderColor: errors.provinceCode 
+                          ? '#ef4444'
+                          : step === 2 && watchAllFields.provinceCode
+                            ? fieldMatches.provinceCode
+                              ? '#22c55e'
+                              : '#eab308'
+                            : state.isFocused ? '#3b82f6' : '#d1d5db',
+                        backgroundColor: errors.provinceCode
+                          ? '#fef2f2'
+                          : step === 2 && watchAllFields.provinceCode
+                            ? fieldMatches.provinceCode
+                              ? '#f0fdf4'
+                              : '#fefce8'
+                            : 'white',
+                        boxShadow: state.isFocused 
+                          ? errors.provinceCode
+                            ? '0 0 0 1px #ef4444'
+                            : step === 2 && watchAllFields.provinceCode
+                              ? fieldMatches.provinceCode
+                                ? '0 0 0 2px #bbf7d0'
+                                : '0 0 0 2px #fef08a'
+                              : '0 0 0 2px #bfdbfe'
+                          : 'none',
+                        '&:hover': {
+                          borderColor: errors.provinceCode ? '#ef4444' : '#9ca3af'
+                        },
+                        minHeight: '48px',
+                        borderRadius: '0.5rem'
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        zIndex: 9999
+                      })
+                    }}
+                  />
+                )}
+              />
               {errors.provinceCode && (
                 <p className="text-red-500 text-sm mt-1 flex items-center">
                   <AlertCircle size={14} className="mr-1" />
@@ -1151,31 +1185,60 @@ const deleteRecord = async (citizenId: number) => {
               <label htmlFor="lguCode" className="block text-gray-700 font-semibold mb-2">
                 City/Municipality <span className="text-red-500 ml-1">*</span>
               </label>
-              <select
-                id="lguCode"
-                {...register('lguCode', { required: 'City/Municipality is required' })}
-                className={`border ${
-                  errors.lguCode 
-                    ? 'border-red-500 bg-red-50' 
-                    : step === 2 && watchAllFields.lguCode && selectedProvinceCode
-                      ? fieldMatches.lguCode
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
-                      : selectedProvinceCode
-                        ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                        : 'border-gray-200 bg-gray-100'
-                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
-                disabled={!selectedProvinceCode}
-              >
-                <option value="">
-                  {selectedProvinceCode ? 'Select City/Municipality' : 'Select Province first'}
-                </option>
-                {lgus.map(lgu => (
-                  <option key={lgu.code} value={lgu.code}>
-                    {lgu.name}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                name="lguCode"
+                control={control}
+                rules={{ required: 'City/Municipality is required' }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    id="lguCode"
+                    options={lgus.map(l => ({ value: l.code, label: l.name }))}
+                    value={lgus.find(l => l.code === field.value) ? { value: field.value, label: lgus.find(l => l.code === field.value)!.name } : null}
+                    onChange={(option) => field.onChange(option?.value || '')}
+                    placeholder={selectedProvinceCode ? "Search and select city/municipality..." : "Select Province first"}
+                    isClearable
+                    isDisabled={!selectedProvinceCode}
+                    styles={{
+                      control: (base, state) => ({
+                        ...base,
+                        borderColor: errors.lguCode 
+                          ? '#ef4444'
+                          : step === 2 && watchAllFields.lguCode && selectedProvinceCode
+                            ? fieldMatches.lguCode
+                              ? '#22c55e'
+                              : '#eab308'
+                            : state.isFocused ? '#3b82f6' : selectedProvinceCode ? '#d1d5db' : '#e5e7eb',
+                        backgroundColor: errors.lguCode
+                          ? '#fef2f2'
+                          : step === 2 && watchAllFields.lguCode && selectedProvinceCode
+                            ? fieldMatches.lguCode
+                              ? '#f0fdf4'
+                              : '#fefce8'
+                            : selectedProvinceCode ? 'white' : '#f3f4f6',
+                        boxShadow: state.isFocused 
+                          ? errors.lguCode
+                            ? '0 0 0 1px #ef4444'
+                            : step === 2 && watchAllFields.lguCode && selectedProvinceCode
+                              ? fieldMatches.lguCode
+                                ? '0 0 0 2px #bbf7d0'
+                                : '0 0 0 2px #fef08a'
+                              : '0 0 0 2px #bfdbfe'
+                          : 'none',
+                        '&:hover': {
+                          borderColor: errors.lguCode ? '#ef4444' : '#9ca3af'
+                        },
+                        minHeight: '48px',
+                        borderRadius: '0.5rem'
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        zIndex: 9999
+                      })
+                    }}
+                  />
+                )}
+              />
               {errors.lguCode && (
                 <p className="text-red-500 text-sm mt-1 flex items-center">
                   <AlertCircle size={14} className="mr-1" />
@@ -1188,31 +1251,60 @@ const deleteRecord = async (citizenId: number) => {
               <label htmlFor="barangayCode" className="block text-gray-700 font-semibold mb-2">
                 Barangay <span className="text-red-500 ml-1">*</span>
               </label>
-              <select
-                id="barangayCode"
-                {...register('barangayCode', { required: 'Barangay is required' })}
-                className={`border ${
-                  errors.barangayCode 
-                    ? 'border-red-500 bg-red-50' 
-                    : step === 2 && watchAllFields.barangayCode && selectedLguCode
-                      ? fieldMatches.barangayCode
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
-                      : selectedLguCode
-                        ? 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                        : 'border-gray-200 bg-gray-100'
-                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
-                disabled={!selectedLguCode}
-              >
-                <option value="">
-                  {selectedLguCode ? 'Select Barangay' : 'Select City/Municipality first'}
-                </option>
-                {barangays.map(barangay => (
-                  <option key={barangay.code} value={barangay.code}>
-                    {barangay.name}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                name="barangayCode"
+                control={control}
+                rules={{ required: 'Barangay is required' }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    id="barangayCode"
+                    options={barangays.map(b => ({ value: b.code, label: b.name }))}
+                    value={barangays.find(b => b.code === field.value) ? { value: field.value, label: barangays.find(b => b.code === field.value)!.name } : null}
+                    onChange={(option) => field.onChange(option?.value || '')}
+                    placeholder={selectedLguCode ? "Search and select barangay..." : "Select City/Municipality first"}
+                    isClearable
+                    isDisabled={!selectedLguCode}
+                    styles={{
+                      control: (base, state) => ({
+                        ...base,
+                        borderColor: errors.barangayCode 
+                          ? '#ef4444'
+                          : step === 2 && watchAllFields.barangayCode && selectedLguCode
+                            ? fieldMatches.barangayCode
+                              ? '#22c55e'
+                              : '#eab308'
+                            : state.isFocused ? '#3b82f6' : selectedLguCode ? '#d1d5db' : '#e5e7eb',
+                        backgroundColor: errors.barangayCode
+                          ? '#fef2f2'
+                          : step === 2 && watchAllFields.barangayCode && selectedLguCode
+                            ? fieldMatches.barangayCode
+                              ? '#f0fdf4'
+                              : '#fefce8'
+                            : selectedLguCode ? 'white' : '#f3f4f6',
+                        boxShadow: state.isFocused 
+                          ? errors.barangayCode
+                            ? '0 0 0 1px #ef4444'
+                            : step === 2 && watchAllFields.barangayCode && selectedLguCode
+                              ? fieldMatches.barangayCode
+                                ? '0 0 0 2px #bbf7d0'
+                                : '0 0 0 2px #fef08a'
+                              : '0 0 0 2px #bfdbfe'
+                          : 'none',
+                        '&:hover': {
+                          borderColor: errors.barangayCode ? '#ef4444' : '#9ca3af'
+                        },
+                        minHeight: '48px',
+                        borderRadius: '0.5rem'
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        zIndex: 9999
+                      })
+                    }}
+                  />
+                )}
+              />
               {errors.barangayCode && (
                 <p className="text-red-500 text-sm mt-1 flex items-center">
                   <AlertCircle size={14} className="mr-1" />
@@ -1237,24 +1329,59 @@ const deleteRecord = async (citizenId: number) => {
               <label htmlFor="validator" className="block text-gray-700 font-semibold mb-2">
                 Validator <span className="text-red-500 ml-1">*</span>
               </label>
-              <select
-                id="validator"
-                {...register('validator', { required: 'Validator is required' })}
-                className={`border ${
-                  errors.validator 
-                    ? 'border-red-500 bg-red-50' 
-                    : step === 2 && watchAllFields.validator
-                      ? fieldMatches.validator
-                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
-                        : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
-                      : 'border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200'
-                } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
-              >
-                <option value="">Select Validator...</option>
-                {VALIDATORS.map(validator => (
-                  <option key={validator} value={validator}>{validator}</option>
-                ))}
-              </select>
+              <Controller
+                name="validator"
+                control={control}
+                rules={{ required: 'Validator is required' }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    id="validator"
+                    options={VALIDATORS.map(v => ({ value: v, label: v }))}
+                    value={VALIDATORS.find(v => v === field.value) ? { value: field.value, label: field.value } : null}
+                    onChange={(option) => field.onChange(option?.value || '')}
+                    placeholder="Search and select validator..."
+                    isClearable
+                    styles={{
+                      control: (base, state) => ({
+                        ...base,
+                        borderColor: errors.validator 
+                          ? '#ef4444'
+                          : step === 2 && watchAllFields.validator
+                            ? fieldMatches.validator
+                              ? '#22c55e'
+                              : '#eab308'
+                            : state.isFocused ? '#f59e0b' : '#d1d5db',
+                        backgroundColor: errors.validator
+                          ? '#fef2f2'
+                          : step === 2 && watchAllFields.validator
+                            ? fieldMatches.validator
+                              ? '#f0fdf4'
+                              : '#fefce8'
+                            : 'white',
+                        boxShadow: state.isFocused 
+                          ? errors.validator
+                            ? '0 0 0 1px #ef4444'
+                            : step === 2 && watchAllFields.validator
+                              ? fieldMatches.validator
+                                ? '0 0 0 2px #bbf7d0'
+                                : '0 0 0 2px #fef08a'
+                              : '0 0 0 2px #fde68a'
+                          : 'none',
+                        '&:hover': {
+                          borderColor: errors.validator ? '#ef4444' : '#9ca3af'
+                        },
+                        minHeight: '48px',
+                        borderRadius: '0.5rem'
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        zIndex: 9999
+                      })
+                    }}
+                  />
+                )}
+              />
               {errors.validator && (
                 <p className="text-red-500 text-sm mt-1 flex items-center">
                   <AlertCircle size={14} className="mr-1" />

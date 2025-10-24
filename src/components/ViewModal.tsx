@@ -1,5 +1,7 @@
 import { format } from 'date-fns';
 import { X, User, Calendar, MapPin, CreditCard, FileText, Shield, Info } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { getLatestAuditLog, AuditLog } from '../lib/audit';
 
 interface Citizen {
   id: number;
@@ -44,6 +46,20 @@ const LabelValue = ({ label, value }: { label: string; value: React.ReactNode })
 );
 
 function ViewModal({ citizen, addressDetails, onClose }: ViewModalProps) {
+  const [auditLog, setAuditLog] = useState<AuditLog | null>(null);
+  const [loadingAudit, setLoadingAudit] = useState(true);
+
+  useEffect(() => {
+    const fetchAuditLog = async () => {
+      setLoadingAudit(true);
+      const log = await getLatestAuditLog('citizens', citizen.id.toString());
+      setAuditLog(log);
+      setLoadingAudit(false);
+    };
+
+    fetchAuditLog();
+  }, [citizen.id]);
+
   const formatDate = (date: string | null, withTime = false) => {
     if (!date) return 'Not set';
     return format(new Date(date), withTime ? 'MMMM d, yyyy HH:mm:ss' : 'MMMM d, yyyy');
@@ -51,6 +67,14 @@ function ViewModal({ citizen, addressDetails, onClose }: ViewModalProps) {
 
   const fullName = `${citizen.last_name}, ${citizen.first_name}${citizen.middle_name ? ` ${citizen.middle_name}` : ''}${citizen.extension_name ? ` (${citizen.extension_name})` : ''}`;
   const address = `${addressDetails.barangay_name}, ${addressDetails.lgu_name}, ${addressDetails.province_name}`;
+
+  const getEditorName = () => {
+    if (loadingAudit) return 'Loading...';
+    if (!auditLog || !auditLog.staff) return 'Unknown';
+    
+    const { first_name, last_name, middle_name } = auditLog.staff;
+    return `${first_name}${middle_name ? ` ${middle_name.charAt(0)}.` : ''} ${last_name}`;
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4 bg-gradient-to-br from-black/40 via-black/30 to-black/40 backdrop-blur-md z-50 animate-fadeIn">
@@ -242,8 +266,82 @@ function ViewModal({ citizen, addressDetails, onClose }: ViewModalProps) {
                   </div>
                 } 
               />
+              <LabelValue 
+                label="Last Modified By" 
+                value={
+                  <span className="text-gray-800">{getEditorName()}</span>
+                } 
+              />
+              <LabelValue 
+                label="Last Modified Date" 
+                value={
+                  loadingAudit ? (
+                    <span className="text-gray-400 italic">Loading...</span>
+                  ) : auditLog ? (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm">{formatDate(auditLog.created_at, true)}</span>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400 italic">No modifications recorded</span>
+                  )
+                } 
+              />
             </div>
           </Section>
+
+          {/* Modification Details */}
+          {!loadingAudit && auditLog && auditLog.details && auditLog.details.old && auditLog.details.new && (
+            <Section title="Last Modification Details" icon={<Info className="h-5 w-5" />}>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm font-semibold text-blue-800">Action:</span>
+                    <span className="text-sm text-gray-700 capitalize">{auditLog.action}</span>
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold text-blue-800 block mb-2">Modified Fields:</span>
+                    <div className="space-y-2">
+                      {Object.keys(auditLog.details.new).map((field) => {
+                        const oldValue = auditLog.details.old[field];
+                        const newValue = auditLog.details.new[field];
+                        
+                        // Skip if values are the same
+                        if (oldValue === newValue) return null;
+                        
+                        // Skip certain fields
+                        if (['id', 'created_at', 'calendar_year'].includes(field)) return null;
+                        
+                        return (
+                          <div key={field} className="bg-white rounded-md p-3 border border-blue-100">
+                            <div className="flex items-start gap-2">
+                              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[120px]">
+                                {field.replace(/_/g, ' ')}:
+                              </span>
+                              <div className="flex-1 space-y-1">
+                                <div className="text-sm">
+                                  <span className="text-red-600 font-medium">Old: </span>
+                                  <span className="text-gray-700">
+                                    {oldValue === null || oldValue === '' ? '(empty)' : String(oldValue)}
+                                  </span>
+                                </div>
+                                <div className="text-sm">
+                                  <span className="text-green-600 font-medium">New: </span>
+                                  <span className="text-gray-700">
+                                    {newValue === null || newValue === '' ? '(empty)' : String(newValue)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }).filter(Boolean)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Section>
+          )}
 
           {/* Remarks */}
           {citizen.remarks && (

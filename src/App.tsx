@@ -15,7 +15,7 @@ import BroadcastMessages from './pages/BroadcastMessages';
 import StakeholdersDirectory from './pages/StakeholdersDirectory';
 import AuditTrail from './pages/AuditTrail';
 import EncodedStatusMonitor from './pages/EncodedStatusMonitor';
-import NotFound from './pages/NotFound';
+import NotFoundRedirect from './components/NotFoundRedirect';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import About from './pages/About';
@@ -46,8 +46,7 @@ function App() {
             <Route path="users" element={<UserManagement />} />
             <Route path="audit" element={<AuditTrail />} />
           </Route>
-          <Route path="404" element={<NotFound />} />
-          <Route path="*" element={<Navigate to="/404" replace />} />
+          <Route path="*" element={<NotFoundRedirect />} />
         </Route>
       </Routes>
     </AuthProvider>

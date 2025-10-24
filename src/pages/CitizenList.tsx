@@ -486,7 +486,7 @@ function CitizenList() {
 
 if (filters.searchTerm) {
         // Split search term by spaces to allow searching for multiple terms
-        const searchTerms = filters.searchTerm.trim().split(/\s+/);
+        const searchTerms = filters.searchTerm.trim().split(/[\s,-]+/);
         
         // For each term, create a filter condition
         searchTerms.forEach(term => {

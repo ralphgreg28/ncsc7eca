@@ -11,6 +11,19 @@ function Layout() {
   const navigate = useNavigate();
   const { user, loading, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isAtTop, setIsAtTop] = useState(true);
+
+  // Track scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      setIsAtTop(scrollPosition < 10);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Handle logout with message
   const handleLogout = useCallback(async (message = 'You have been logged out', type: 'info' | 'error' = 'info') => {
@@ -85,18 +98,16 @@ function Layout() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <header className="sticky top-0 z-30 shadow-sm bg-white">
-        <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-      </header>
+      {/* Navbar - Fixed at top */}
+      <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} isAtTop={isAtTop} />
 
-      {/* Main layout: sidebar + content */}
-      <div className="flex flex-1 relative">
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      {/* Main layout: sidebar + content with top padding for fixed navbar */}
+      <div className="flex flex-1 relative pt-16">
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} isAtTop={isAtTop} />
 
         <main 
           className={`flex-1 transition-all duration-300 ${
-            sidebarOpen ? 'md:ml-56' : ''
+            sidebarOpen ? 'md:ml-64' : ''
           }`}
         >
           <div className="p-3 md:p-4 lg:p-5">

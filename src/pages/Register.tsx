@@ -160,17 +160,17 @@ function Register() {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-4 animate-fadeIn">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Account Information</h3>
+          <div className="space-y-5 animate-fadeIn">
+            <h3 className="text-xl font-semibold text-white/90 mb-6">Account Information</h3>
             
             {/* Username */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username <span className="text-red-500">*</span>
+            <div className="group">
+              <label htmlFor="username" className="block text-sm font-medium text-white/90 mb-2 ml-1">
+                Username <span className="text-red-400">*</span>
               </label>
-              <div className="relative mt-1">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200">
+                  <User className="h-5 w-5 text-blue-300 group-focus-within:text-blue-200" />
                 </div>
                 <input
                   {...register('username', {
@@ -186,30 +186,30 @@ function Register() {
                   id="username"
                   type="text"
                   autoComplete="username"
-                  className={`appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border ${errors.username ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
+                  className={`appearance-none rounded-xl block w-full pl-12 pr-4 py-3.5 border ${errors.username ? 'border-red-400/50 focus:ring-red-400/50 focus:border-red-400/50' : 'border-white/20 focus:ring-blue-400/50 focus:border-blue-400/50'} bg-white/10 backdrop-blur-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:bg-white/20 transition-all duration-200`}
                   placeholder="Enter username (letters and numbers only)"
                 />
                 {touchedFields.username && !errors.username && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                    <CheckCircle2 className="h-5 w-5 text-green-400" />
                   </div>
                 )}
               </div>
               {errors.username && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.username.message}
+                <p className="mt-2 text-sm text-red-300 flex items-center animate-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 mr-1.5" /> {errors.username.message}
                 </p>
               )}
             </div>
 
             {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email <span className="text-red-500">*</span>
+            <div className="group">
+              <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2 ml-1">
+                Email <span className="text-red-400">*</span>
               </label>
-              <div className="relative mt-1">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200">
+                  <Mail className="h-5 w-5 text-blue-300 group-focus-within:text-blue-200" />
                 </div>
                 <input
                   {...register('email', {
@@ -225,100 +225,100 @@ function Register() {
                   id="email"
                   type="email"
                   autoComplete="email"
-                  className={`appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border ${errors.email ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
+                  className={`appearance-none rounded-xl block w-full pl-12 pr-4 py-3.5 border ${errors.email ? 'border-red-400/50 focus:ring-red-400/50 focus:border-red-400/50' : 'border-white/20 focus:ring-blue-400/50 focus:border-blue-400/50'} bg-white/10 backdrop-blur-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:bg-white/20 transition-all duration-200`}
                   placeholder="Enter email"
                 />
                 {touchedFields.email && !errors.email && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                    <CheckCircle2 className="h-5 w-5 text-green-400" />
                   </div>
                 )}
               </div>
               {errors.email && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.email.message}
+                <p className="mt-2 text-sm text-red-300 flex items-center animate-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 mr-1.5" /> {errors.email.message}
                 </p>
               )}
             </div>
 
             {/* Position */}
-            <div>
-              <label htmlFor="position" className="block text-sm font-medium text-gray-700">
-                Position <span className="text-red-500">*</span>
+            <div className="group">
+              <label htmlFor="position" className="block text-sm font-medium text-white/90 mb-2 ml-1">
+                Position <span className="text-red-400">*</span>
               </label>
-              <div className="relative mt-1">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <UserCircle className="h-5 w-5 text-gray-400" />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200">
+                  <UserCircle className="h-5 w-5 text-blue-300 group-focus-within:text-blue-200" />
                 </div>
                 <select
                   {...register('position')}
                   id="position"
-                  className={`appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border ${errors.position ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
+                  className={`appearance-none rounded-xl block w-full pl-12 pr-4 py-3.5 border ${errors.position ? 'border-red-400/50 focus:ring-red-400/50 focus:border-red-400/50' : 'border-white/20 focus:ring-blue-400/50 focus:border-blue-400/50'} bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:bg-white/20 transition-all duration-200`}
                 >
-                  <option value="">Select position...</option>              
-                  <option value="PDO">Project Development Officer</option>
-                  <option value="LGU">LGU Stakeholder (OSCA, LSWDO, Focal)</option>
-                  <option value="NCSC Admin">NCSC Staff</option>
-                  <option value="Administrator">Administrator</option>
+                  <option value="" className="bg-slate-800">Select position...</option>              
+                  <option value="PDO" className="bg-slate-800">Project Development Officer</option>
+                  <option value="LGU" className="bg-slate-800">LGU Stakeholder (OSCA, LSWDO, Focal)</option>
+                  <option value="NCSC Admin" className="bg-slate-800">NCSC Staff</option>
+                  <option value="Administrator" className="bg-slate-800">Administrator</option>
                 </select>
                 {touchedFields.position && !errors.position && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                    <CheckCircle2 className="h-5 w-5 text-green-400" />
                   </div>
                 )}
               </div>
               {errors.position && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.position.message}
+                <p className="mt-2 text-sm text-red-300 flex items-center animate-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 mr-1.5" /> {errors.position.message}
                 </p>
               )}
             </div>
 
             {/* Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password <span className="text-red-500">*</span>
+            <div className="group">
+              <label htmlFor="password" className="block text-sm font-medium text-white/90 mb-2 ml-1">
+                Password <span className="text-red-400">*</span>
               </label>
-              <div className="relative mt-1">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200">
+                  <Lock className="h-5 w-5 text-blue-300 group-focus-within:text-blue-200" />
                 </div>
                 <input
                   {...register('password')}
                   id="password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
-                  className={`appearance-none rounded-lg relative block w-full pl-10 pr-10 px-3 py-2 border ${errors.password ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
+                  className={`appearance-none rounded-xl block w-full pl-12 pr-12 py-3.5 border ${errors.password ? 'border-red-400/50 focus:ring-red-400/50 focus:border-red-400/50' : 'border-white/20 focus:ring-blue-400/50 focus:border-blue-400/50'} bg-white/10 backdrop-blur-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:bg-white/20 transition-all duration-200`}
                   placeholder="Enter password"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center hover:text-white/80 transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
+                    <EyeOff className="h-5 w-5 text-blue-300" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
+                    <Eye className="h-5 w-5 text-blue-300" />
                   )}
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.password.message}
+                <p className="mt-2 text-sm text-red-300 flex items-center animate-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 mr-1.5" /> {errors.password.message}
                 </p>
               )}
               
               {/* Password Strength Meter */}
               {password && (
-                <div className="mt-2">
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="mt-3">
+                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
                     <div 
                       className={`h-full ${getPasswordStrengthColor()} transition-all duration-300`} 
                       style={{ width: `${(passwordStrength / 5) * 100}%` }}
                     ></div>
                   </div>
-                  <p className="text-xs text-gray-600 mt-1 flex justify-between">
+                  <p className="text-xs text-white/60 mt-1.5 flex justify-between">
                     <span>Password strength: {getPasswordStrengthText()}</span>
                     <span>{passwordStrength}/5</span>
                   </p>
@@ -327,13 +327,13 @@ function Register() {
             </div>
 
             {/* Confirm Password */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password <span className="text-red-500">*</span>
+            <div className="group">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-white/90 mb-2 ml-1">
+                Confirm Password <span className="text-red-400">*</span>
               </label>
-              <div className="relative mt-1">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200">
+                  <Lock className="h-5 w-5 text-blue-300 group-focus-within:text-blue-200" />
                 </div>
                 <input
                   {...register('confirmPassword', {
@@ -342,24 +342,24 @@ function Register() {
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
-                  className={`appearance-none rounded-lg relative block w-full pl-10 pr-10 px-3 py-2 border ${errors.confirmPassword ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
+                  className={`appearance-none rounded-xl block w-full pl-12 pr-12 py-3.5 border ${errors.confirmPassword ? 'border-red-400/50 focus:ring-red-400/50 focus:border-red-400/50' : 'border-white/20 focus:ring-blue-400/50 focus:border-blue-400/50'} bg-white/10 backdrop-blur-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:bg-white/20 transition-all duration-200`}
                   placeholder="Confirm password"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center hover:text-white/80 transition-colors"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
+                    <EyeOff className="h-5 w-5 text-blue-300" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
+                    <Eye className="h-5 w-5 text-blue-300" />
                   )}
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.confirmPassword.message}
+                <p className="mt-2 text-sm text-red-300 flex items-center animate-in slide-in-from-top-1 duration-200">
+                  <AlertCircle className="h-4 w-4 mr-1.5" /> {errors.confirmPassword.message}
                 </p>
               )}
             </div>
@@ -373,18 +373,18 @@ function Register() {
         );
       case 2:
         return (
-          <div className="space-y-4 animate-fadeIn">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
+          <div className="space-y-5 animate-fadeIn">
+            <h3 className="text-xl font-semibold text-white/90 mb-6">Personal Information</h3>
             
             {/* Full Name */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                  Last Name <span className="text-red-500">*</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="group">
+                <label htmlFor="lastName" className="block text-sm font-medium text-white/90 mb-2 ml-1">
+                  Last Name <span className="text-red-400">*</span>
                 </label>
-                <div className="relative mt-1">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <UserCircle className="h-5 w-5 text-gray-400" />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200">
+                    <UserCircle className="h-5 w-5 text-blue-300 group-focus-within:text-blue-200" />
                   </div>
                   <input
                     {...register('lastName', {
@@ -404,29 +404,29 @@ function Register() {
                     })}
                     id="lastName"
                     type="text"
-                    className={`appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border ${errors.lastName ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
+                    className={`appearance-none rounded-xl block w-full pl-12 pr-4 py-3.5 border ${errors.lastName ? 'border-red-400/50 focus:ring-red-400/50 focus:border-red-400/50' : 'border-white/20 focus:ring-blue-400/50 focus:border-blue-400/50'} bg-white/10 backdrop-blur-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:bg-white/20 transition-all duration-200`}
                     placeholder="Last name"
                   />
                   {touchedFields.lastName && !errors.lastName && (
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                      <CheckCircle2 className="h-5 w-5 text-green-400" />
                     </div>
                   )}
                 </div>
                 {errors.lastName && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" /> {errors.lastName.message}
+                  <p className="mt-2 text-sm text-red-300 flex items-center animate-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 mr-1.5" /> {errors.lastName.message}
                   </p>
                 )}
               </div>
 
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                  First Name <span className="text-red-500">*</span>
+              <div className="group">
+                <label htmlFor="firstName" className="block text-sm font-medium text-white/90 mb-2 ml-1">
+                  First Name <span className="text-red-400">*</span>
                 </label>
-                <div className="relative mt-1">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <UserCircle className="h-5 w-5 text-gray-400" />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200">
+                    <UserCircle className="h-5 w-5 text-blue-300 group-focus-within:text-blue-200" />
                   </div>
                   <input
                     {...register('firstName', {
@@ -446,31 +446,31 @@ function Register() {
                     })}
                     id="firstName"
                     type="text"
-                    className={`appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border ${errors.firstName ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
+                    className={`appearance-none rounded-xl block w-full pl-12 pr-4 py-3.5 border ${errors.firstName ? 'border-red-400/50 focus:ring-red-400/50 focus:border-red-400/50' : 'border-white/20 focus:ring-blue-400/50 focus:border-blue-400/50'} bg-white/10 backdrop-blur-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:bg-white/20 transition-all duration-200`}
                     placeholder="First name"
                   />
                   {touchedFields.firstName && !errors.firstName && (
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                      <CheckCircle2 className="h-5 w-5 text-green-400" />
                     </div>
                   )}
                 </div>
                 {errors.firstName && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" /> {errors.firstName.message}
+                  <p className="mt-2 text-sm text-red-300 flex items-center animate-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 mr-1.5" /> {errors.firstName.message}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="middleName" className="block text-sm font-medium text-gray-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="group">
+                <label htmlFor="middleName" className="block text-sm font-medium text-white/90 mb-2 ml-1">
                   Middle Name
                 </label>
-                <div className="relative mt-1">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <UserCircle className="h-5 w-5 text-gray-400" />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200">
+                    <UserCircle className="h-5 w-5 text-blue-300 group-focus-within:text-blue-200" />
                   </div>
                   <input
                     {...register('middleName', {
@@ -490,36 +490,36 @@ function Register() {
                     })}
                     id="middleName"
                     type="text"
-                    className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors duration-200"
+                    className="appearance-none rounded-xl block w-full pl-12 pr-4 py-3.5 border border-white/20 bg-white/10 backdrop-blur-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 focus:bg-white/20 transition-all duration-200"
                     placeholder="Middle name"
                   />
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="extensionName" className="block text-sm font-medium text-gray-700">
+              <div className="group">
+                <label htmlFor="extensionName" className="block text-sm font-medium text-white/90 mb-2 ml-1">
                   Extension Name
                 </label>
-                <div className="relative mt-1">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <UserCircle className="h-5 w-5 text-gray-400" />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200">
+                    <UserCircle className="h-5 w-5 text-blue-300 group-focus-within:text-blue-200" />
                   </div>
                   <select
                     {...register('extensionName')}
                     id="extensionName"
-                    className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors duration-200"
+                    className="appearance-none rounded-xl block w-full pl-12 pr-4 py-3.5 border border-white/20 bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 focus:bg-white/20 transition-all duration-200"
                   >
-                    <option value="">None</option>
-                    <option value="Jr.">Jr.</option>
-                    <option value="Sr.">Sr.</option>
-                    <option value="I">I</option>
-                    <option value="II">II</option>
-                    <option value="III">III</option>
-                    <option value="IV">IV</option>
-                    <option value="V">V</option>
-                    <option value="MD">MD</option>
-                    <option value="PhD">PhD</option>
-                    <option value="Esq.">Esq.</option>
+                    <option value="" className="bg-slate-800">None</option>
+                    <option value="Jr." className="bg-slate-800">Jr.</option>
+                    <option value="Sr." className="bg-slate-800">Sr.</option>
+                    <option value="I" className="bg-slate-800">I</option>
+                    <option value="II" className="bg-slate-800">II</option>
+                    <option value="III" className="bg-slate-800">III</option>
+                    <option value="IV" className="bg-slate-800">IV</option>
+                    <option value="V" className="bg-slate-800">V</option>
+                    <option value="MD" className="bg-slate-800">MD</option>
+                    <option value="PhD" className="bg-slate-800">PhD</option>
+                    <option value="Esq." className="bg-slate-800">Esq.</option>
                   </select>
                 </div>
               </div>
@@ -528,64 +528,64 @@ function Register() {
         );
       case 3:
         return (
-          <div className="space-y-4 animate-fadeIn">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
+          <div className="space-y-5 animate-fadeIn">
+            <h3 className="text-xl font-semibold text-white/90 mb-6">Additional Information</h3>
             
             {/* Birth Date and Sex */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">
-                  Birth Date <span className="text-red-500">*</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="group">
+                <label htmlFor="birthDate" className="block text-sm font-medium text-white/90 mb-2 ml-1">
+                  Birth Date <span className="text-red-400">*</span>
                 </label>
-                <div className="relative mt-1">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Calendar className="h-5 w-5 text-gray-400" />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200">
+                    <Calendar className="h-5 w-5 text-blue-300 group-focus-within:text-blue-200" />
                   </div>
                   <input
                     {...register('birthDate')}
                     id="birthDate"
                     type="date"
-                    className={`appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border ${errors.birthDate ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
+                    className={`appearance-none rounded-xl block w-full pl-12 pr-4 py-3.5 border ${errors.birthDate ? 'border-red-400/50 focus:ring-red-400/50 focus:border-red-400/50' : 'border-white/20 focus:ring-blue-400/50 focus:border-blue-400/50'} bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:bg-white/20 transition-all duration-200 [color-scheme:dark]`}
                   />
                   {touchedFields.birthDate && !errors.birthDate && (
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                      <CheckCircle2 className="h-5 w-5 text-green-400" />
                     </div>
                   )}
                 </div>
                 {errors.birthDate && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" /> {errors.birthDate.message}
+                  <p className="mt-2 text-sm text-red-300 flex items-center animate-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 mr-1.5" /> {errors.birthDate.message}
                   </p>
                 )}
               </div>
 
-              <div>
-                <label htmlFor="sex" className="block text-sm font-medium text-gray-700">
-                  Sex <span className="text-red-500">*</span>
+              <div className="group">
+                <label htmlFor="sex" className="block text-sm font-medium text-white/90 mb-2 ml-1">
+                  Sex <span className="text-red-400">*</span>
                 </label>
-                <div className="relative mt-1">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <UserCircle className="h-5 w-5 text-gray-400" />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200">
+                    <UserCircle className="h-5 w-5 text-blue-300 group-focus-within:text-blue-200" />
                   </div>
                   <select
                     {...register('sex')}
                     id="sex"
-                    className={`appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border ${errors.sex ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 sm:text-sm transition-colors duration-200`}
+                    className={`appearance-none rounded-xl block w-full pl-12 pr-4 py-3.5 border ${errors.sex ? 'border-red-400/50 focus:ring-red-400/50 focus:border-red-400/50' : 'border-white/20 focus:ring-blue-400/50 focus:border-blue-400/50'} bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:bg-white/20 transition-all duration-200`}
                   >
-                    <option value="">Select...</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
+                    <option value="" className="bg-slate-800">Select...</option>
+                    <option value="Male" className="bg-slate-800">Male</option>
+                    <option value="Female" className="bg-slate-800">Female</option>
                   </select>
                   {touchedFields.sex && !errors.sex && (
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                      <CheckCircle2 className="h-5 w-5 text-green-400" />
                     </div>
                   )}
                 </div>
                 {errors.sex && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" /> {errors.sex.message}
+                  <p className="mt-2 text-sm text-red-300 flex items-center animate-in slide-in-from-top-1 duration-200">
+                    <AlertCircle className="h-4 w-4 mr-1.5" /> {errors.sex.message}
                   </p>
                 )}
               </div>
@@ -598,93 +598,116 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg transition-all duration-300">
-        <div>
-          <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
-            NCSC Staff / LGU Stakeholders Registration
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Sign in
-            </Link>
-          </p>
-        </div>
-        
-        {/* Progress Steps */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="w-full flex items-center">
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${currentStep >= 1 ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300 text-gray-500'}`}>
-              1
-            </div>
-            <div className={`flex-1 h-1 mx-2 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${currentStep >= 2 ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300 text-gray-500'}`}>
-              2
-            </div>
-            <div className={`flex-1 h-1 mx-2 ${currentStep >= 3 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${currentStep >= 3 ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300 text-gray-500'}`}>
-              3
-            </div>
-          </div>
-        </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          {renderFormStep()}
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8">
-            {currentStep > 1 && (
-              <button
-                type="button"
-                onClick={prevStep}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
-              </button>
-            )}
-            
-            {currentStep < 3 ? (
-              <button
-                type="button"
-                onClick={nextStep}
-                className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ml-auto ${
-                  (currentStep === 1 && !isStep1Complete) || (currentStep === 2 && !isStep2Complete) ? 'opacity-70 cursor-not-allowed' : ''
-                }`}
-              >
-                Next
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={loading || !isStep3Complete}
-                className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ml-auto ${
-                  (loading || !isStep3Complete) ? 'opacity-70 cursor-not-allowed' : ''
-                }`}
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Registering...
-                  </>
-                ) : (
-                  'Register'
+      {/* Registration card with glassmorphism effect */}
+      <div className="relative max-w-2xl w-full">
+        <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8 sm:p-10 transform transition-all duration-500">
+          <div className="mb-8">
+            <h2 className="text-center text-3xl font-bold bg-gradient-to-r from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent">
+              NCSC Staff / LGU Stakeholders Registration
+            </h2>
+            <p className="mt-3 text-center text-sm text-white/70">
+              Already have an account?{' '}
+              <Link to="/login" className="font-semibold text-blue-300 hover:text-blue-200 transition-colors underline decoration-blue-400/50 hover:decoration-blue-300 underline-offset-2">
+                Sign in
+              </Link>
+            </p>
+          </div>
+        
+          {/* Progress Steps */}
+          <div className="flex justify-between items-center mb-10">
+            <div className="w-full flex items-center">
+              <div className={`relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 ${currentStep >= 1 ? 'border-blue-400 bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/50' : 'border-white/30 bg-white/10 text-white/50'}`}>
+                <span className="font-semibold">1</span>
+                {currentStep >= 1 && (
+                  <div className="absolute inset-0 bg-blue-400/50 rounded-full blur-md animate-pulse"></div>
                 )}
-              </button>
-            )}
+              </div>
+              <div className={`flex-1 h-1.5 mx-3 rounded-full transition-all duration-300 ${currentStep >= 2 ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : 'bg-white/20'}`}></div>
+              <div className={`relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 ${currentStep >= 2 ? 'border-blue-400 bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/50' : 'border-white/30 bg-white/10 text-white/50'}`}>
+                <span className="font-semibold">2</span>
+                {currentStep >= 2 && (
+                  <div className="absolute inset-0 bg-blue-400/50 rounded-full blur-md animate-pulse"></div>
+                )}
+              </div>
+              <div className={`flex-1 h-1.5 mx-3 rounded-full transition-all duration-300 ${currentStep >= 3 ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : 'bg-white/20'}`}></div>
+              <div className={`relative flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 ${currentStep >= 3 ? 'border-blue-400 bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/50' : 'border-white/30 bg-white/10 text-white/50'}`}>
+                <span className="font-semibold">3</span>
+                {currentStep >= 3 && (
+                  <div className="absolute inset-0 bg-blue-400/50 rounded-full blur-md animate-pulse"></div>
+                )}
+              </div>
+            </div>
           </div>
-        </form>
+          
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            {renderFormStep()}
 
-        {/* Form Completion Indicator */}
-        <div className="mt-4 pt-2 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center">
-            * Required fields
-          </p>
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8">
+              {currentStep > 1 && (
+                <button
+                  type="button"
+                  onClick={prevStep}
+                  className="group inline-flex items-center px-5 py-2.5 border border-white/30 backdrop-blur-sm bg-white/10 shadow-sm text-sm font-semibold rounded-xl text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition-all duration-200"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1 transform group-hover:-translate-x-1 transition-transform duration-200" />
+                  Previous
+                </button>
+              )}
+              
+              {currentStep < 3 ? (
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  className={`group inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-semibold rounded-xl shadow-lg text-white ml-auto transition-all duration-300 ${
+                    (currentStep === 1 && !isStep1Complete) || (currentStep === 2 && !isStep2Complete) 
+                      ? 'bg-white/20 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-blue-500/50 hover:shadow-xl hover:shadow-blue-500/60 transform hover:-translate-y-0.5'
+                  }`}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform duration-200" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={loading || !isStep3Complete}
+                  className={`group inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-semibold rounded-xl shadow-lg text-white ml-auto transition-all duration-300 ${
+                    (loading || !isStep3Complete) 
+                      ? 'bg-white/20 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-blue-500/50 hover:shadow-xl hover:shadow-blue-500/60 transform hover:-translate-y-0.5'
+                  }`}
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Registering...
+                    </>
+                  ) : (
+                    'Register'
+                  )}
+                </button>
+              )}
+            </div>
+          </form>
+
+          {/* Form Completion Indicator */}
+          <div className="mt-6 pt-4 border-t border-white/10">
+            <p className="text-xs text-white/60 text-center">
+              * Required fields
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -639,6 +639,13 @@ const deleteRecord = async (citizenId: number) => {
     e.target.value = value.toUpperCase();
   };
 
+  const handleNameInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    // Remove any numeric characters (0-9) and convert to uppercase
+    const filteredValue = value.replace(/[0-9]/g, '').toUpperCase();
+    e.target.value = filteredValue;
+  };
+
 
  
   return (
@@ -858,7 +865,7 @@ const deleteRecord = async (citizenId: number) => {
                         : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500'
                       : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                 } rounded-lg p-3 w-full transition-colors`}
-                onChange={handleUppercase}
+                onChange={handleNameInput}
               />
               {errors.lastName && (
                 <p className="text-red-500 text-sm mt-1 flex items-center">
@@ -884,7 +891,7 @@ const deleteRecord = async (citizenId: number) => {
                         : 'border-yellow-500 bg-yellow-50 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200'
                       : 'border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200'
                 } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
-                onChange={handleUppercase}
+                onChange={handleNameInput}
               />
               {errors.firstName && (
                 <p className="text-red-500 text-sm mt-1 flex items-center">
@@ -912,7 +919,7 @@ const deleteRecord = async (citizenId: number) => {
                       : 'border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200'
                 } rounded-lg p-3 w-full transition-all duration-200 shadow-sm`}
                 placeholder="Enter middle name"
-                onChange={handleUppercase}
+                onChange={handleNameInput}
               />
             </div>
             

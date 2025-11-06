@@ -97,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Clear any stored user-specific data from localStorage
     if (user) {
       localStorage.removeItem(`defaultValidationDate_${user.id}`);
+      localStorage.removeItem(`defaultValidator_${user.id}`);
     }
     
     logoutUser();

@@ -124,6 +124,26 @@ function CitizenForm() {
     }
   }, [currentValidationDate, user]);
   
+  // Effect to set default validator (load from localStorage)
+  useEffect(() => {
+    // Check if user has a stored default validator
+    const storedValidator = user ? localStorage.getItem(`defaultValidator_${user.id}`) : null;
+    
+    // Use stored validator if it exists and is in the VALIDATORS list
+    if (storedValidator && VALIDATORS.includes(storedValidator)) {
+      setValue('validator', storedValidator);
+    }
+  }, [setValue, step, user]);
+  
+  // Watch validator changes to update the default for this session
+  const currentValidator = watch('validator');
+  useEffect(() => {
+    if (currentValidator && user) {
+      // Store the current validator as the new default for this user
+      localStorage.setItem(`defaultValidator_${user.id}`, currentValidator);
+    }
+  }, [currentValidator, user]);
+  
   // Effect to check field matches in step 2
   useEffect(() => {
     if (step === 2 && firstEntry) {

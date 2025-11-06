@@ -99,6 +99,31 @@ function CitizenForm() {
   const prevMatchesRef = useRef<Record<string, boolean>>({});
   const prevMismatchCountRef = useRef<number>(0);
   
+  // Effect to set default validation date (load from localStorage or use today)
+  useEffect(() => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    
+    // Check if user has a stored default validation date
+    const storedDate = user ? localStorage.getItem(`defaultValidationDate_${user.id}`) : null;
+    
+    // Use stored date if valid and not in the future, otherwise use today
+    let defaultDate = today;
+    if (storedDate && storedDate <= today) {
+      defaultDate = storedDate;
+    }
+    
+    setValue('validationDate', defaultDate);
+  }, [setValue, step, user]);
+  
+  // Watch validation date changes to update the default for this session
+  const currentValidationDate = watch('validationDate');
+  useEffect(() => {
+    if (currentValidationDate && user) {
+      // Store the current validation date as the new default for this user
+      localStorage.setItem(`defaultValidationDate_${user.id}`, currentValidationDate);
+    }
+  }, [currentValidationDate, user]);
+  
   // Effect to check field matches in step 2
   useEffect(() => {
     if (step === 2 && firstEntry) {
@@ -299,6 +324,10 @@ function CitizenForm() {
     setFirstEntry(data);
     setStep(2);
     reset();
+    
+    // Reset validation date to today after reset
+    const today = format(new Date(), 'yyyy-MM-dd');
+    setValue('validationDate', today);
     
     // Scroll to top after form submission
     scrollToTop();

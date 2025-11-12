@@ -267,9 +267,11 @@ function DuplicateModal({
             <button onClick={onClose} className="btn-outline">
               Cancel & Edit
             </button>
-            <button onClick={onUpdate} className="btn-warning">
-              Update Existing Record
-            </button>
+            {existingRecord.status?.toLowerCase() !== 'paid' && (
+              <button onClick={onUpdate} className="btn-warning">
+                Update Existing Record
+              </button>
+            )}
             <button onClick={onProceed} className="btn-primary">
               Save as New Record
             </button>

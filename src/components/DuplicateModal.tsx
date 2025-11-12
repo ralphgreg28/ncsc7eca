@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { X } from 'lucide-react';
+import { X, AlertTriangle, User, Calendar, MapPin, Hash, CheckCircle2, FileText, Save, Edit3 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -106,7 +106,9 @@ function DuplicateModal({
   const formatDate = (date: string) => format(new Date(date), 'MMMM d, yyyy');
 
   const getFieldStyle = (field: string) => {
-    return matchedFields.includes(field) ? 'bg-yellow-100' : '';
+    return matchedFields.includes(field) 
+      ? 'bg-amber-50 border-l-4 border-amber-400 shadow-sm' 
+      : 'bg-gray-50 hover:bg-gray-100 transition-colors';
   };
 
   // CSS styles for status badges
@@ -126,158 +128,300 @@ function DuplicateModal({
     return {};
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
+  const FieldRow = ({ 
+    label, 
+    value, 
+    field, 
+    icon: Icon 
+  }: { 
+    label: string; 
+    value: string | null | undefined; 
+    field?: string;
+    icon?: React.ElementType;
+  }) => (
+    <div className={`p-2 rounded-lg ${field ? getFieldStyle(field) : 'bg-gray-50'}`}>
+      <div className="flex items-center gap-1.5 mb-0.5">
+        {Icon && <Icon size={12} className="text-gray-500" />}
+        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">{label}</span>
+      </div>
+      <p className="font-semibold text-gray-900 text-sm ml-4">{value || '-'}</p>
+    </div>
+  );
 
-        <div className="relative bg-white rounded-lg max-w-6xl w-full mx-auto shadow-xl">
-          <div className="px-6 py-4 border-b border-gray-200">
+  return (
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="flex items-center justify-center h-screen px-3 py-3">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity backdrop-blur-sm" 
+          onClick={onClose}
+        ></div>
+
+        <div className="relative bg-white rounded-xl min-w-[800px] max-w-[95vw] max-h-[96vh] shadow-2xl transform transition-all flex flex-col">
+          {/* Header */}
+          <div className="px-5 py-2.5 border-b border-gray-200 bg-gradient-to-r from-red-50 to-orange-50 flex-shrink-0 rounded-t-xl">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-red-600">Potential Duplicate Found</h3>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 bg-red-100 rounded-lg">
+                  <AlertTriangle className="text-red-600" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-red-700">Potential Duplicate Detected</h3>
+                  <p className="text-xs text-red-600">Review and resolve duplicate record</p>
+                </div>
+              </div>
+              <button 
+                onClick={onClose} 
+                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
                 <X size={20} />
               </button>
             </div>
           </div>
 
-          <div className="px-4 py-3">
-            <div className="mb-3 p-3 bg-yellow-50 rounded-md">
-              <p className="text-yellow-800">
-                A potential duplicate record has been found. Please review the information below and choose how to proceed.
-              </p>
+          {/* Alert Banner */}
+          <div className="px-5 py-2 flex-shrink-0 border-b border-gray-100">
+            <div className="flex items-start gap-2.5 p-2.5 bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-400 rounded-lg shadow-sm">
+              <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={16} />
+              <div className="flex-1">
+                <p className="text-xs font-medium text-amber-900">
+                  A record with similar information already exists in the database. Please carefully review both records below and choose the appropriate action.
+                  {matchedFields.length > 0 && (
+                    <span className="font-semibold"> Highlighted fields indicate matching data.</span>
+                  )}
+                </p>
+              </div>
             </div>
+          </div>
 
+          {/* Comparison Grid */}
+          <div className="px-5 py-3">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold text-lg text-gray-900">New Entry</h4>
-                <div className="space-y-1 max-h-[60vh] overflow-y-auto pr-2">
-                  <div className={`p-2 rounded ${getFieldStyle('last_name')}`}>
-                    <span className="text-sm text-gray-500">Last Name</span>
-                    <p className="font-medium">{newRecord.last_name}</p>
+              {/* New Entry */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 pb-1.5 border-b-2 border-blue-200 mb-2 flex-shrink-0">
+                  <div className="p-1 bg-blue-100 rounded">
+                    <Edit3 size={14} className="text-blue-600" />
                   </div>
-                  <div className={`p-2 rounded ${getFieldStyle('first_name')}`}>
-                    <span className="text-sm text-gray-500">First Name</span>
-                    <p className="font-medium">{newRecord.first_name}</p>
-                  </div>
-                  <div className={`p-2 rounded ${getFieldStyle('middle_name')}`}>
-                    <span className="text-sm text-gray-500">Middle Name</span>
-                    <p className="font-medium">{newRecord.middle_name || '-'}</p>
-                  </div>
-                  <div className="p-2 rounded">
-                    <span className="text-sm text-gray-500">Extension Name</span>
-                    <p className="font-medium">{newRecord.extension_name || '-'}</p>
-                  </div>
-                  <div className={`p-2 rounded ${getFieldStyle('birth_date')}`}>
-                    <span className="text-sm text-gray-500">Birth Date</span>
-                    <p className="font-medium">{formatDate(newRecord.birth_date)}</p>
-                  </div>
-                  <div className="p-2 rounded">
-                    <span className="text-sm text-gray-500">Sex</span>
-                    <p className="font-medium">{newRecord.sex}</p>
-                  </div>
-                  <div className="p-2 rounded">
-                    <span className="text-sm text-gray-500">Address</span>
-                    <p className="font-medium">
-                      {isLoading ? (
-                        "Loading address details..."
-                      ) : newAddressNames ? (
-                        `${newAddressNames.barangay_name}, ${newAddressNames.lgu_name}, ${newAddressNames.province_name}`
-                      ) : (
-                        `${newRecord.barangay_code}, ${newRecord.lgu_code}, ${newRecord.province_code}`
-                      )}
-                    </p>
-                  </div>
-                  <div className="p-2 rounded">
-                    <span className="text-sm text-gray-500">OSCA ID</span>
-                    <p className="font-medium">{newRecord.osca_id || 'N/A'}</p>
-                  </div>
-                  <div className="p-2 rounded">
-                    <span className="text-sm text-gray-500">RRN</span>
-                    <p className="font-medium">{newRecord.rrn || 'N/A'}</p>
-                  </div>
-                  <div className="p-2 rounded">
-                    <span className="text-sm text-gray-500">Status</span>
-                    <p 
-                      className="font-medium px-2 py-1 rounded-full text-center text-sm"
-                      style={getStatusStyle(newRecord.status)}
-                    >
-                      {newRecord.status || 'N/A'}
-                    </p>
+                  <h4 className="text-base font-bold text-blue-700">New Entry</h4>
+                  <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                    Pending
+                  </span>
+                </div>
+                <div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <FieldRow 
+                      label="Last Name" 
+                      value={newRecord.last_name} 
+                      field="last_name"
+                      icon={User}
+                    />
+                    <FieldRow 
+                      label="First Name" 
+                      value={newRecord.first_name} 
+                      field="first_name"
+                      icon={User}
+                    />
+                    <FieldRow 
+                      label="Middle Name" 
+                      value={newRecord.middle_name} 
+                      field="middle_name"
+                      icon={User}
+                    />
+                    <FieldRow 
+                      label="Extension" 
+                      value={newRecord.extension_name}
+                      icon={User}
+                    />
+                    <FieldRow 
+                      label="Birth Date" 
+                      value={formatDate(newRecord.birth_date)} 
+                      field="birth_date"
+                      icon={Calendar}
+                    />
+                    <FieldRow 
+                      label="Sex" 
+                      value={newRecord.sex}
+                      icon={User}
+                    />
+                    <div className="col-span-2 p-2 rounded-lg bg-gray-50">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <MapPin size={12} className="text-gray-500" />
+                        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Address</span>
+                      </div>
+                      <p className="font-semibold text-gray-900 text-sm ml-4 leading-tight">
+                        {isLoading ? (
+                          <span className="text-gray-400">Loading...</span>
+                        ) : newAddressNames ? (
+                          `${newAddressNames.barangay_name}, ${newAddressNames.lgu_name}, ${newAddressNames.province_name}`
+                        ) : (
+                          `${newRecord.barangay_code}, ${newRecord.lgu_code}, ${newRecord.province_code}`
+                        )}
+                      </p>
+                    </div>
+                    <FieldRow 
+                      label="OSCA ID" 
+                      value={newRecord.osca_id || 'N/A'}
+                      icon={Hash}
+                    />
+                    <FieldRow 
+                      label="RRN" 
+                      value={newRecord.rrn || 'N/A'}
+                      icon={FileText}
+                    />
+                    <div className="col-span-2 p-2 rounded-lg bg-gray-50">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <CheckCircle2 size={12} className="text-gray-500" />
+                        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Status</span>
+                      </div>
+                      <div className="ml-4">
+                        <span 
+                          className="inline-block font-semibold px-2.5 py-1 rounded-full text-xs shadow-sm"
+                          style={getStatusStyle(newRecord.status)}
+                        >
+                          {newRecord.status || 'N/A'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h4 className="font-semibold text-lg text-gray-900">Existing Record</h4>
-                <div className="space-y-1 max-h-[60vh] overflow-y-auto pr-2">
-                  <div className={`p-2 rounded ${getFieldStyle('last_name')}`}>
-                    <span className="text-sm text-gray-500">Last Name</span>
-                    <p className="font-medium">{existingRecord.last_name}</p>
+              {/* Divider */}
+              <div className="absolute left-1/2 top-24 bottom-16 w-px bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
+
+              {/* Existing Record */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 pb-1.5 border-b-2 border-green-200 mb-2 flex-shrink-0">
+                  <div className="p-1 bg-green-100 rounded">
+                    <FileText size={14} className="text-green-600" />
                   </div>
-                  <div className={`p-2 rounded ${getFieldStyle('first_name')}`}>
-                    <span className="text-sm text-gray-500">First Name</span>
-                    <p className="font-medium">{existingRecord.first_name}</p>
-                  </div>
-                  <div className={`p-2 rounded ${getFieldStyle('middle_name')}`}>
-                    <span className="text-sm text-gray-500">Middle Name</span>
-                    <p className="font-medium">{existingRecord.middle_name || '-'}</p>
-                  </div>
-                  <div className="p-2 rounded">
-                    <span className="text-sm text-gray-500">Extension Name</span>
-                    <p className="font-medium">{existingRecord.extension_name || '-'}</p>
-                  </div>
-                  <div className={`p-2 rounded ${getFieldStyle('birth_date')}`}>
-                    <span className="text-sm text-gray-500">Birth Date</span>
-                    <p className="font-medium">{formatDate(existingRecord.birth_date)}</p>
-                  </div>
-                  <div className="p-2 rounded">
-                    <span className="text-sm text-gray-500">Sex</span>
-                    <p className="font-medium">{existingRecord.sex}</p>
-                  </div>
-                  <div className="p-2 rounded">
-                    <span className="text-sm text-gray-500">Address</span>
-                    <p className="font-medium">
-                      {addressDetails.barangay_name}, {addressDetails.lgu_name}, {addressDetails.province_name}
-                    </p>
-                  </div>
-                  <div className="p-2 rounded">
-                    <span className="text-sm text-gray-500">OSCA ID</span>
-                    <p className="font-medium">{existingRecord.osca_id || 'N/A'}</p>
-                  </div>
-                  <div className="p-2 rounded">
-                    <span className="text-sm text-gray-500">RRN</span>
-                    <p className="font-medium">{existingRecord.rrn || 'N/A'}</p>
-                  </div>
-                  <div className="p-2 rounded">
-                    <span className="text-sm text-gray-500">Status</span>
-                    <p 
-                      className="font-medium px-2 py-1 rounded-full text-center text-sm"
-                      style={getStatusStyle(existingRecord.status)}
-                    >
-                      {existingRecord.status || 'N/A'}
-                    </p>
+                  <h4 className="text-base font-bold text-green-700">Existing Record</h4>
+                  <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                    In Database
+                  </span>
+                </div>
+                <div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <FieldRow 
+                      label="Last Name" 
+                      value={existingRecord.last_name} 
+                      field="last_name"
+                      icon={User}
+                    />
+                    <FieldRow 
+                      label="First Name" 
+                      value={existingRecord.first_name} 
+                      field="first_name"
+                      icon={User}
+                    />
+                    <FieldRow 
+                      label="Middle Name" 
+                      value={existingRecord.middle_name} 
+                      field="middle_name"
+                      icon={User}
+                    />
+                    <FieldRow 
+                      label="Extension" 
+                      value={existingRecord.extension_name}
+                      icon={User}
+                    />
+                    <FieldRow 
+                      label="Birth Date" 
+                      value={formatDate(existingRecord.birth_date)} 
+                      field="birth_date"
+                      icon={Calendar}
+                    />
+                    <FieldRow 
+                      label="Sex" 
+                      value={existingRecord.sex}
+                      icon={User}
+                    />
+                    <div className="col-span-2 p-2 rounded-lg bg-gray-50">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <MapPin size={12} className="text-gray-500" />
+                        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Address</span>
+                      </div>
+                      <p className="font-semibold text-gray-900 text-sm ml-4 leading-tight">
+                        {addressDetails.barangay_name}, {addressDetails.lgu_name}, {addressDetails.province_name}
+                      </p>
+                    </div>
+                    <FieldRow 
+                      label="OSCA ID" 
+                      value={existingRecord.osca_id || 'N/A'}
+                      icon={Hash}
+                    />
+                    <FieldRow 
+                      label="RRN" 
+                      value={existingRecord.rrn || 'N/A'}
+                      icon={FileText}
+                    />
+                    <div className="col-span-2 p-2 rounded-lg bg-gray-50">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <CheckCircle2 size={12} className="text-gray-500" />
+                        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Status</span>
+                      </div>
+                      <div className="ml-4">
+                        <span 
+                          className="inline-block font-semibold px-2.5 py-1 rounded-full text-xs shadow-sm"
+                          style={getStatusStyle(existingRecord.status)}
+                        >
+                          {existingRecord.status || 'N/A'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="px-4 py-3 bg-gray-50 rounded-b-lg flex justify-end space-x-3">
-            <button onClick={onClose} className="btn-outline">
-              Cancel & Edit
-            </button>
-            {existingRecord.status?.toLowerCase() !== 'paid' && (
-              <button onClick={onUpdate} className="btn-warning">
-                Update Existing Record
+          {/* Footer Actions */}
+          <div className="px-5 py-2.5 bg-gray-50 rounded-b-xl border-t border-gray-200 flex-shrink-0">
+            <div className="flex flex-row gap-2.5 justify-end">
+              <button 
+                onClick={onClose} 
+                className="btn-outline flex items-center justify-center gap-2 group px-4 py-2"
+              >
+                <X size={16} className="group-hover:rotate-90 transition-transform" />
+                <span className="text-sm">Cancel & Edit</span>
               </button>
-            )}
-            <button onClick={onProceed} className="btn-primary">
-              Save as New Record
-            </button>
+              {existingRecord.status?.toLowerCase() !== 'paid' && (
+                <button 
+                  onClick={onUpdate} 
+                  className="btn-warning flex items-center justify-center gap-2 group px-4 py-2"
+                >
+                  <Edit3 size={16} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-sm">Update Existing Record</span>
+                </button>
+              )}
+              <button 
+                onClick={onProceed} 
+                className="btn-primary flex items-center justify-center gap-2 group px-4 py-2"
+              >
+                <Save size={16} className="group-hover:scale-110 transition-transform" />
+                <span className="text-sm">Save as New Record</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}</style>
     </div>
   );
 }

@@ -171,27 +171,7 @@ function Navbar({ onMenuClick, isAtTop, className = '' }: NavbarProps) {
                 </div>
               </div>
 
-              {/* System-wide Encoded Stats */}
-              <div className="hidden xl:flex items-center gap-2 bg-white rounded-2xl py-2 px-3.5 shadow-sm border border-blue-100/50 hover:border-blue-200 transition-all duration-300">
-                <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
-                  <Users className="h-4 w-4 text-white" />
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-medium text-gray-500">Today:</span>
-                    <span className="text-xs font-bold text-blue-600">{todayEncoded}</span>
-                    <span className="text-gray-300">|</span>
-                    <span className="text-[10px] font-medium text-gray-500">Week:</span>
-                    <span className="text-xs font-bold text-blue-600">{weekEncoded}</span>
-                    <span className="text-gray-300">|</span>
-                    <span className="text-[10px] font-medium text-gray-500">Total:</span>
-                    <span className="text-xs font-bold text-blue-600">{totalEncoded}</span>
-                  </div>
-                  <span className="text-[10px] font-medium text-blue-600">
-                    All Encoded
-                  </span>
-                </div>
-              </div>
+            
 
               <div className="group flex items-center bg-white hover:bg-gradient-to-br hover:from-blue-50 hover:to-blue-100/50 rounded-2xl py-2 px-3.5 cursor-pointer transition-all duration-300 ease-out shadow-sm hover:shadow-md border border-blue-100/50 hover:border-blue-200">
                 <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-2.5 shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">

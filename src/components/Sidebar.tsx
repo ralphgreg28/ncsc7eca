@@ -1,6 +1,9 @@
-import { X, Home, Users, Settings, AlertTriangle, UserPlus, ChevronRight, Info, ClipboardList, BarChart2, Gift, PieChart } from 'lucide-react';
+import { X, Home, Users, Settings, AlertTriangle, UserPlus, ChevronRight, Info, ClipboardList, BarChart2, Gift, PieChart, User as UserIcon, Users as UsersIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+import { startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
 
 interface SidebarProps {
   open: boolean;
@@ -22,6 +25,83 @@ interface NavItemsProps {
 
 function Sidebar({ open, onClose, isAtTop }: SidebarProps) {
   const { user } = useAuth();
+  const [todayEncoded, setTodayEncoded] = useState(0);
+  const [weekEncoded, setWeekEncoded] = useState(0);
+  const [totalEncoded, setTotalEncoded] = useState(0);
+  const [userTodayEncoded, setUserTodayEncoded] = useState(0);
+  const [userWeekEncoded, setUserWeekEncoded] = useState(0);
+  const [userTotalEncoded, setUserTotalEncoded] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      fetchEncodedCounts();
+      // Refresh counts every 30 seconds
+      const interval = setInterval(fetchEncodedCounts, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const fetchEncodedCounts = async () => {
+    if (!user) return;
+    
+    try {
+      const today = new Date();
+      const weekStart = startOfWeek(today, { weekStartsOn: 0 });
+      const weekEnd = endOfWeek(today, { weekStartsOn: 0 });
+      
+      const encodedByName = `${user.last_name}, ${user.first_name}${user.middle_name ? ` ${user.middle_name}` : ''}`;
+      
+      const { count: todayCount } = await supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Encoded')
+        .gte('encoded_date', startOfDay(today).toISOString())
+        .lte('encoded_date', endOfDay(today).toISOString());
+
+      const { count: weekCount } = await supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Encoded')
+        .gte('encoded_date', weekStart.toISOString())
+        .lte('encoded_date', weekEnd.toISOString());
+
+      const { count: totalCount } = await supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Encoded');
+
+      const { count: userTodayCount } = await supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Encoded')
+        .eq('encoded_by', encodedByName)
+        .gte('encoded_date', startOfDay(today).toISOString())
+        .lte('encoded_date', endOfDay(today).toISOString());
+
+      const { count: userWeekCount } = await supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Encoded')
+        .eq('encoded_by', encodedByName)
+        .gte('encoded_date', weekStart.toISOString())
+        .lte('encoded_date', weekEnd.toISOString());
+
+      const { count: userTotalCount } = await supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Encoded')
+        .eq('encoded_by', encodedByName);
+
+      setTodayEncoded(todayCount || 0);
+      setWeekEncoded(weekCount || 0);
+      setTotalEncoded(totalCount || 0);
+      setUserTodayEncoded(userTodayCount || 0);
+      setUserWeekEncoded(userWeekCount || 0);
+      setUserTotalEncoded(userTotalCount || 0);
+    } catch (error) {
+      console.error('Error fetching encoded counts:', error);
+    }
+  };
 
   const items: NavItem[] = [
     { to: '/', icon: <Home size={18} />, label: 'Home' },
@@ -72,6 +152,57 @@ function Sidebar({ open, onClose, isAtTop }: SidebarProps) {
           </div>
           
           <div className="flex-1 overflow-y-auto py-4 px-3">
+            {/* Encoded Stats Section */}
+            <div className="mb-4 space-y-2">
+              {/* User's Encoded Stats */}
+              <div className="bg-gradient-to-br from-violet-50 to-violet-100/50 rounded-xl p-3 border border-violet-200/50 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-shrink-0 h-6 w-6 bg-gradient-to-br from-violet-500 to-violet-600 rounded-lg flex items-center justify-center">
+                    <UserIcon className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <span className="text-xs font-bold text-violet-900">Your Encoded</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-white/60 rounded-lg p-2">
+                    <div className="text-xs font-bold text-violet-600">{userTodayEncoded}</div>
+                    <div className="text-[10px] text-gray-600">Today</div>
+                  </div>
+                  <div className="bg-white/60 rounded-lg p-2">
+                    <div className="text-xs font-bold text-violet-600">{userWeekEncoded}</div>
+                    <div className="text-[10px] text-gray-600">Week</div>
+                  </div>
+                  <div className="bg-white/60 rounded-lg p-2">
+                    <div className="text-xs font-bold text-violet-600">{userTotalEncoded}</div>
+                    <div className="text-[10px] text-gray-600">Total</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* System-wide Encoded Stats */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-3 border border-blue-200/50 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-shrink-0 h-6 w-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <UsersIcon className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <span className="text-xs font-bold text-blue-900">All Encoded</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-white/60 rounded-lg p-2">
+                    <div className="text-xs font-bold text-blue-600">{todayEncoded}</div>
+                    <div className="text-[10px] text-gray-600">Today</div>
+                  </div>
+                  <div className="bg-white/60 rounded-lg p-2">
+                    <div className="text-xs font-bold text-blue-600">{weekEncoded}</div>
+                    <div className="text-[10px] text-gray-600">Week</div>
+                  </div>
+                  <div className="bg-white/60 rounded-lg p-2">
+                    <div className="text-xs font-bold text-blue-600">{totalEncoded}</div>
+                    <div className="text-[10px] text-gray-600">Total</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <NavItems onItemClick={onClose} items={items} />
           </div>
           
@@ -89,6 +220,57 @@ function Sidebar({ open, onClose, isAtTop }: SidebarProps) {
       >
         <div className="w-64 h-full bg-gradient-to-b from-white via-blue-50/20 to-white border-r border-blue-100/50 shadow-lg flex flex-col">
           <div className="flex-1 overflow-y-auto py-4 px-3">
+            {/* Encoded Stats Section */}
+            <div className="mb-4 space-y-2">
+              {/* User's Encoded Stats */}
+              <div className="bg-gradient-to-br from-violet-50 to-violet-100/50 rounded-xl p-3 border border-violet-200/50 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-shrink-0 h-6 w-6 bg-gradient-to-br from-violet-500 to-violet-600 rounded-lg flex items-center justify-center">
+                    <UserIcon className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <span className="text-xs font-bold text-violet-900">Your Encoded</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-white/60 rounded-lg p-2">
+                    <div className="text-xs font-bold text-violet-600">{userTodayEncoded}</div>
+                    <div className="text-[10px] text-gray-600">Today</div>
+                  </div>
+                  <div className="bg-white/60 rounded-lg p-2">
+                    <div className="text-xs font-bold text-violet-600">{userWeekEncoded}</div>
+                    <div className="text-[10px] text-gray-600">Week</div>
+                  </div>
+                  <div className="bg-white/60 rounded-lg p-2">
+                    <div className="text-xs font-bold text-violet-600">{userTotalEncoded}</div>
+                    <div className="text-[10px] text-gray-600">Total</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* System-wide Encoded Stats */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-3 border border-blue-200/50 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-shrink-0 h-6 w-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <UsersIcon className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <span className="text-xs font-bold text-blue-900">All Encoded</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-white/60 rounded-lg p-2">
+                    <div className="text-xs font-bold text-blue-600">{todayEncoded}</div>
+                    <div className="text-[10px] text-gray-600">Today</div>
+                  </div>
+                  <div className="bg-white/60 rounded-lg p-2">
+                    <div className="text-xs font-bold text-blue-600">{weekEncoded}</div>
+                    <div className="text-[10px] text-gray-600">Week</div>
+                  </div>
+                  <div className="bg-white/60 rounded-lg p-2">
+                    <div className="text-xs font-bold text-blue-600">{totalEncoded}</div>
+                    <div className="text-[10px] text-gray-600">Total</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <NavItems items={items} />
           </div>
           

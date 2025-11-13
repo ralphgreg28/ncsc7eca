@@ -1,7 +1,9 @@
-import { Menu, LogOut, User, ChevronDown } from 'lucide-react';
+import { Menu, LogOut, User, ChevronDown, FileCheck, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -11,7 +13,91 @@ interface NavbarProps {
 
 function Navbar({ onMenuClick, isAtTop, className = '' }: NavbarProps) {
   const [imageError, setImageError] = useState(false);
+  const [todayEncoded, setTodayEncoded] = useState(0);
+  const [weekEncoded, setWeekEncoded] = useState(0);
+  const [totalEncoded, setTotalEncoded] = useState(0);
+  const [userTodayEncoded, setUserTodayEncoded] = useState(0);
+  const [userWeekEncoded, setUserWeekEncoded] = useState(0);
+  const [userTotalEncoded, setUserTotalEncoded] = useState(0);
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      fetchEncodedCounts();
+      // Refresh counts every 30 seconds
+      const interval = setInterval(fetchEncodedCounts, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const fetchEncodedCounts = async () => {
+    if (!user) return;
+    
+    try {
+      const today = new Date();
+      const weekStart = startOfWeek(today, { weekStartsOn: 0 }); // Week starts on Sunday
+      const weekEnd = endOfWeek(today, { weekStartsOn: 0 });
+      
+      // Format the user's name to match the encoded_by format
+      const encodedByName = `${user.last_name}, ${user.first_name}${user.middle_name ? ` ${user.middle_name}` : ''}`;
+      
+      // Get today's encoded count (all users)
+      const { count: todayCount } = await supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Encoded')
+        .gte('encoded_date', startOfDay(today).toISOString())
+        .lte('encoded_date', endOfDay(today).toISOString());
+
+      // Get this week's encoded count (all users)
+      const { count: weekCount } = await supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Encoded')
+        .gte('encoded_date', weekStart.toISOString())
+        .lte('encoded_date', weekEnd.toISOString());
+
+      // Get total encoded count (all time, all users)
+      const { count: totalCount } = await supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Encoded');
+
+      // Get today's encoded count for current user
+      const { count: userTodayCount } = await supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Encoded')
+        .eq('encoded_by', encodedByName)
+        .gte('encoded_date', startOfDay(today).toISOString())
+        .lte('encoded_date', endOfDay(today).toISOString());
+
+      // Get this week's encoded count for current user
+      const { count: userWeekCount } = await supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Encoded')
+        .eq('encoded_by', encodedByName)
+        .gte('encoded_date', weekStart.toISOString())
+        .lte('encoded_date', weekEnd.toISOString());
+
+      // Get total encoded count for current user (all time)
+      const { count: userTotalCount } = await supabase
+        .from('citizens')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Encoded')
+        .eq('encoded_by', encodedByName);
+
+      setTodayEncoded(todayCount || 0);
+      setWeekEncoded(weekCount || 0);
+      setTotalEncoded(totalCount || 0);
+      setUserTodayEncoded(userTodayCount || 0);
+      setUserWeekEncoded(userWeekCount || 0);
+      setUserTotalEncoded(userTotalCount || 0);
+    } catch (error) {
+      console.error('Error fetching encoded counts:', error);
+    }
+  };
 
   return (
     <nav className={`fixed top-0 left-0 right-0 bg-gradient-to-r from-white via-blue-50/30 to-white backdrop-blur-sm w-full z-50 shadow-md border-b border-blue-100/50 transition-transform duration-300 ease-in-out ${
@@ -60,9 +146,53 @@ function Navbar({ onMenuClick, isAtTop, className = '' }: NavbarProps) {
             </Link>
           </div>
 
-          {/* Right: User & Logout */}
+          {/* Right: Encoded Counters, User & Logout */}
           {user && (
             <div className="flex items-center gap-2">
+              {/* User's Encoded Stats */}
+              <div className="hidden xl:flex items-center gap-2 bg-white rounded-2xl py-2 px-3.5 shadow-sm border border-violet-100/50 hover:border-violet-200 transition-all duration-300">
+                <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md">
+                  <User className="h-4 w-4 text-white" />
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-medium text-gray-500">Today:</span>
+                    <span className="text-xs font-bold text-violet-600">{userTodayEncoded}</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="text-[10px] font-medium text-gray-500">Week:</span>
+                    <span className="text-xs font-bold text-violet-600">{userWeekEncoded}</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="text-[10px] font-medium text-gray-500">Total:</span>
+                    <span className="text-xs font-bold text-violet-600">{userTotalEncoded}</span>
+                  </div>
+                  <span className="text-[10px] font-medium text-violet-600">
+                    Your Encoded
+                  </span>
+                </div>
+              </div>
+
+              {/* System-wide Encoded Stats */}
+              <div className="hidden xl:flex items-center gap-2 bg-white rounded-2xl py-2 px-3.5 shadow-sm border border-blue-100/50 hover:border-blue-200 transition-all duration-300">
+                <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                  <Users className="h-4 w-4 text-white" />
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-medium text-gray-500">Today:</span>
+                    <span className="text-xs font-bold text-blue-600">{todayEncoded}</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="text-[10px] font-medium text-gray-500">Week:</span>
+                    <span className="text-xs font-bold text-blue-600">{weekEncoded}</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="text-[10px] font-medium text-gray-500">Total:</span>
+                    <span className="text-xs font-bold text-blue-600">{totalEncoded}</span>
+                  </div>
+                  <span className="text-[10px] font-medium text-blue-600">
+                    All Encoded
+                  </span>
+                </div>
+              </div>
+
               <div className="group flex items-center bg-white hover:bg-gradient-to-br hover:from-blue-50 hover:to-blue-100/50 rounded-2xl py-2 px-3.5 cursor-pointer transition-all duration-300 ease-out shadow-sm hover:shadow-md border border-blue-100/50 hover:border-blue-200">
                 <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-2.5 shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
                   <User className="h-4 w-4 text-white" />

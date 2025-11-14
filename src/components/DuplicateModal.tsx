@@ -19,6 +19,8 @@ interface Citizen {
   rrn?: string;
   validator?: string | null;
   validation_date?: string | null;
+  encoded_by?: string | null;
+  created_at?: string | null;
   status?: string | null;
 }
 
@@ -139,12 +141,12 @@ function DuplicateModal({
     field?: string;
     icon?: React.ElementType;
   }) => (
-    <div className={`p-3 rounded-lg ${field ? getFieldStyle(field) : 'bg-gray-50'}`}>
-      <div className="flex items-center gap-2 mb-1">
-        {Icon && <Icon size={14} className="text-gray-500" />}
-        <span className="text-sm font-medium text-gray-600 uppercase tracking-wide">{label}</span>
+    <div className={`p-2 rounded-md ${field ? getFieldStyle(field) : 'bg-gray-50'}`}>
+      <div className="flex items-center gap-1.5 mb-0.5">
+        {Icon && <Icon size={12} className="text-gray-500" />}
+        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">{label}</span>
       </div>
-      <p className="font-semibold text-gray-900 text-base ml-5">{value || '-'}</p>
+      <p className="font-semibold text-gray-900 text-sm ml-4">{value || '-'}</p>
     </div>
   );
 
@@ -282,6 +284,26 @@ function DuplicateModal({
                         </span>
                       </div>
                     </div>
+                    <FieldRow 
+                      label="Validator" 
+                      value={newRecord.validator || 'N/A'}
+                      icon={User}
+                    />
+                    <FieldRow 
+                      label="Date Validated" 
+                      value={newRecord.validation_date ? formatDate(newRecord.validation_date) : 'N/A'}
+                      icon={Calendar}
+                    />
+                    <FieldRow 
+                      label="Encoded By" 
+                      value={newRecord.encoded_by || 'N/A'}
+                      icon={User}
+                    />
+                    <FieldRow 
+                      label="Date Encoded" 
+                      value={newRecord.created_at ? formatDate(newRecord.created_at) : 'N/A'}
+                      icon={Calendar}
+                    />
                   </div>
                 </div>
               </div>
@@ -369,6 +391,26 @@ function DuplicateModal({
                         </span>
                       </div>
                     </div>
+                    <FieldRow 
+                      label="Validator" 
+                      value={existingRecord.validator || 'N/A'}
+                      icon={User}
+                    />
+                    <FieldRow 
+                      label="Date Validated" 
+                      value={existingRecord.validation_date ? formatDate(existingRecord.validation_date) : 'N/A'}
+                      icon={Calendar}
+                    />
+                    <FieldRow 
+                      label="Encoded By" 
+                      value={existingRecord.encoded_by || 'N/A'}
+                      icon={User}
+                    />
+                    <FieldRow 
+                      label="Date Encoded" 
+                      value={existingRecord.created_at ? formatDate(existingRecord.created_at) : 'N/A'}
+                      icon={Calendar}
+                    />
                   </div>
                 </div>
               </div>

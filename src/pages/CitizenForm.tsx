@@ -675,6 +675,35 @@ const deleteRecord = async (citizenId: number) => {
     }
   };
   
+  const handleCancelAndEdit = () => {
+    // Close the modal
+    setShowDuplicateModal(false);
+    
+    // Go back to step 1
+    setStep(1);
+    
+    // Clear the first entry
+    setFirstEntry(null);
+    
+    // Reset the form to clear all fields
+    reset();
+    
+    // Reset validation date to today's default after clearing
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const storedDate = user ? localStorage.getItem(`defaultValidationDate_${user.id}`) : null;
+    const defaultDate = (storedDate && storedDate <= today) ? storedDate : today;
+    setValue('validationDate', defaultDate);
+    
+    // Reset validator to default after clearing
+    const storedValidator = user ? localStorage.getItem(`defaultValidator_${user.id}`) : null;
+    if (storedValidator && VALIDATORS.includes(storedValidator)) {
+      setValue('validator', storedValidator);
+    }
+    
+    // Scroll to top
+    scrollToTop();
+  };
+  
   const goBack = () => {
     if (step === 2) {
       setStep(1);
@@ -1520,7 +1549,7 @@ const deleteRecord = async (citizenId: number) => {
           }}
           existingRecord={duplicateRecord}
           addressDetails={addressDetails}
-          onClose={() => setShowDuplicateModal(false)}
+          onClose={handleCancelAndEdit}
           onProceed={() => {
             setShowDuplicateModal(false);
             saveRecord(firstEntry);

@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { X, AlertTriangle, User, Calendar, MapPin, Hash, CheckCircle2, FileText, Save, Edit3 } from 'lucide-react';
+import { X, AlertTriangle, User, Calendar, MapPin, Hash, CheckCircle2, FileText, Save, Edit3, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -22,6 +22,7 @@ interface Citizen {
   encoded_by?: string | null;
   created_at?: string | null;
   status?: string | null;
+  remarks?: string | null;
 }
 
 interface DuplicateModalProps {
@@ -141,12 +142,12 @@ function DuplicateModal({
     field?: string;
     icon?: React.ElementType;
   }) => (
-    <div className={`p-2 rounded-md ${field ? getFieldStyle(field) : 'bg-gray-50'}`}>
-      <div className="flex items-center gap-1.5 mb-0.5">
-        {Icon && <Icon size={12} className="text-gray-500" />}
-        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">{label}</span>
+    <div className={`p-1.5 rounded ${field ? getFieldStyle(field) : 'bg-gray-50'}`}>
+      <div className="flex items-center gap-1 mb-0">
+        {Icon && <Icon size={11} className="text-gray-500" />}
+        <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wide">{label}</span>
       </div>
-      <p className="font-semibold text-gray-900 text-sm ml-4">{value || '-'}</p>
+      <p className="font-semibold text-gray-900 text-xs ml-3">{value || '-'}</p>
     </div>
   );
 
@@ -160,32 +161,32 @@ function DuplicateModal({
 
         <div className="relative bg-white rounded-xl w-[92vw] xl:w-[88vw] 2xl:w-[85vw] max-w-[2200px] max-h-[94vh] shadow-2xl transform transition-all flex flex-col">
           {/* Header */}
-          <div className="px-8 py-4 border-b border-gray-200 bg-gradient-to-r from-red-50 to-orange-50 flex-shrink-0 rounded-t-xl">
+          <div className="px-6 py-2.5 border-b border-gray-200 bg-gradient-to-r from-red-50 to-orange-50 flex-shrink-0 rounded-t-xl">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-2.5 bg-red-100 rounded-lg">
-                  <AlertTriangle className="text-red-600" size={26} />
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-red-100 rounded-lg">
+                  <AlertTriangle className="text-red-600" size={20} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-red-700">Potential Duplicate Detected</h3>
-                  <p className="text-sm text-red-600 mt-0.5">Review and resolve duplicate record</p>
+                  <h3 className="text-lg font-bold text-red-700">Potential Duplicate Detected</h3>
+                  <p className="text-xs text-red-600">Review and resolve duplicate record</p>
                 </div>
               </div>
               <button 
                 onClick={onClose} 
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <X size={26} />
+                <X size={20} />
               </button>
             </div>
           </div>
 
           {/* Alert Banner */}
-          <div className="px-8 py-3 flex-shrink-0 border-b border-gray-100">
-            <div className="flex items-start gap-3 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-400 rounded-lg shadow-sm">
-              <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
+          <div className="px-6 py-2 flex-shrink-0 border-b border-gray-100">
+            <div className="flex items-start gap-2 p-2.5 bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-400 rounded-lg shadow-sm">
+              <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={16} />
               <div className="flex-1">
-                <p className="text-sm font-medium text-amber-900">
+                <p className="text-xs font-medium text-amber-900">
                   A record with similar information already exists in the database. Please carefully review both records below and choose the appropriate action.
                   {matchedFields.length > 0 && (
                     <span className="font-semibold"> Highlighted fields indicate matching data.</span>
@@ -196,21 +197,21 @@ function DuplicateModal({
           </div>
 
           {/* Comparison Grid */}
-          <div className="px-8 py-5">
-            <div className="grid grid-cols-2 gap-8">
+          <div className="px-6 py-3 overflow-y-auto custom-scrollbar flex-1">
+            <div className="grid grid-cols-2 gap-5">
               {/* New Entry */}
               <div className="flex flex-col">
-                <div className="flex items-center gap-2.5 pb-2.5 border-b-2 border-blue-200 mb-3 flex-shrink-0">
-                  <div className="p-1.5 bg-blue-100 rounded">
-                    <Edit3 size={18} className="text-blue-600" />
+                <div className="flex items-center gap-2 pb-1.5 border-b-2 border-blue-200 mb-2 flex-shrink-0">
+                  <div className="p-1 bg-blue-100 rounded">
+                    <Edit3 size={14} className="text-blue-600" />
                   </div>
-                  <h4 className="text-xl font-bold text-blue-700">New Entry</h4>
-                  <span className="ml-auto text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
+                  <h4 className="text-base font-bold text-blue-700">New Entry</h4>
+                  <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
                     Pending
                   </span>
                 </div>
                 <div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <FieldRow 
                       label="Last Name" 
                       value={newRecord.last_name} 
@@ -245,12 +246,12 @@ function DuplicateModal({
                       value={newRecord.sex}
                       icon={User}
                     />
-                    <div className="col-span-2 p-3 rounded-lg bg-gray-50">
-                      <div className="flex items-center gap-2 mb-1">
-                        <MapPin size={14} className="text-gray-500" />
-                        <span className="text-sm font-medium text-gray-600 uppercase tracking-wide">Address</span>
+                    <div className="col-span-2 p-2 rounded-md bg-gray-50">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <MapPin size={12} className="text-gray-500" />
+                        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Address</span>
                       </div>
-                      <p className="font-semibold text-gray-900 text-base ml-5 leading-relaxed">
+                      <p className="font-semibold text-gray-900 text-sm ml-4">
                         {isLoading ? (
                           <span className="text-gray-400">Loading...</span>
                         ) : newAddressNames ? (
@@ -270,14 +271,14 @@ function DuplicateModal({
                       value={newRecord.rrn || 'N/A'}
                       icon={FileText}
                     />
-                    <div className="col-span-2 p-3 rounded-lg bg-gray-50">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <CheckCircle2 size={14} className="text-gray-500" />
-                        <span className="text-sm font-medium text-gray-600 uppercase tracking-wide">Status</span>
+                    <div className="col-span-2 p-2 rounded-md bg-gray-50">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <CheckCircle2 size={12} className="text-gray-500" />
+                        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Status</span>
                       </div>
-                      <div className="ml-5">
+                      <div className="ml-4">
                         <span 
-                          className="inline-block font-semibold px-3 py-1.5 rounded-full text-sm shadow-sm"
+                          className="inline-block font-semibold px-2.5 py-1 rounded-full text-xs shadow-sm"
                           style={getStatusStyle(newRecord.status)}
                         >
                           {newRecord.status || 'N/A'}
@@ -304,6 +305,15 @@ function DuplicateModal({
                       value={newRecord.created_at ? formatDate(newRecord.created_at) : 'N/A'}
                       icon={Calendar}
                     />
+                    <div className="col-span-2 p-2 rounded-md bg-gray-50">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <MessageSquare size={12} className="text-gray-500" />
+                        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Remarks</span>
+                      </div>
+                      <p className="font-semibold text-gray-900 text-sm ml-4 whitespace-pre-wrap break-words">
+                        {newRecord.remarks || 'No remarks'}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -313,17 +323,17 @@ function DuplicateModal({
 
               {/* Existing Record */}
               <div className="flex flex-col">
-                <div className="flex items-center gap-2.5 pb-2.5 border-b-2 border-green-200 mb-3 flex-shrink-0">
-                  <div className="p-1.5 bg-green-100 rounded">
-                    <FileText size={18} className="text-green-600" />
+                <div className="flex items-center gap-2 pb-1.5 border-b-2 border-green-200 mb-2 flex-shrink-0">
+                  <div className="p-1 bg-green-100 rounded">
+                    <FileText size={14} className="text-green-600" />
                   </div>
-                  <h4 className="text-xl font-bold text-green-700">Existing Record</h4>
-                  <span className="ml-auto text-sm bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+                  <h4 className="text-base font-bold text-green-700">Existing Record</h4>
+                  <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
                     In Database
                   </span>
                 </div>
                 <div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <FieldRow 
                       label="Last Name" 
                       value={existingRecord.last_name} 
@@ -358,12 +368,12 @@ function DuplicateModal({
                       value={existingRecord.sex}
                       icon={User}
                     />
-                    <div className="col-span-2 p-3 rounded-lg bg-gray-50">
-                      <div className="flex items-center gap-2 mb-1">
-                        <MapPin size={14} className="text-gray-500" />
-                        <span className="text-sm font-medium text-gray-600 uppercase tracking-wide">Address</span>
+                    <div className="col-span-2 p-2 rounded-md bg-gray-50">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <MapPin size={12} className="text-gray-500" />
+                        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Address</span>
                       </div>
-                      <p className="font-semibold text-gray-900 text-base ml-5 leading-relaxed">
+                      <p className="font-semibold text-gray-900 text-sm ml-4">
                         {addressDetails.barangay_name}, {addressDetails.lgu_name}, {addressDetails.province_name}
                       </p>
                     </div>
@@ -377,14 +387,14 @@ function DuplicateModal({
                       value={existingRecord.rrn || 'N/A'}
                       icon={FileText}
                     />
-                    <div className="col-span-2 p-3 rounded-lg bg-gray-50">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <CheckCircle2 size={14} className="text-gray-500" />
-                        <span className="text-sm font-medium text-gray-600 uppercase tracking-wide">Status</span>
+                    <div className="col-span-2 p-2 rounded-md bg-gray-50">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <CheckCircle2 size={12} className="text-gray-500" />
+                        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Status</span>
                       </div>
-                      <div className="ml-5">
+                      <div className="ml-4">
                         <span 
-                          className="inline-block font-semibold px-3 py-1.5 rounded-full text-sm shadow-sm"
+                          className="inline-block font-semibold px-2.5 py-1 rounded-full text-xs shadow-sm"
                           style={getStatusStyle(existingRecord.status)}
                         >
                           {existingRecord.status || 'N/A'}
@@ -411,6 +421,15 @@ function DuplicateModal({
                       value={existingRecord.created_at ? formatDate(existingRecord.created_at) : 'N/A'}
                       icon={Calendar}
                     />
+                    <div className="col-span-2 p-2 rounded-md bg-gray-50">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <MessageSquare size={12} className="text-gray-500" />
+                        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Remarks</span>
+                      </div>
+                      <p className="font-semibold text-gray-900 text-sm ml-4 whitespace-pre-wrap break-words">
+                        {existingRecord.remarks || 'No remarks'}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -418,30 +437,30 @@ function DuplicateModal({
           </div>
 
           {/* Footer Actions */}
-          <div className="px-8 py-4 bg-gray-50 rounded-b-xl border-t border-gray-200 flex-shrink-0">
-            <div className="flex flex-row gap-3 justify-end">
+          <div className="px-6 py-2.5 bg-gray-50 rounded-b-xl border-t border-gray-200 flex-shrink-0">
+            <div className="flex flex-row gap-2 justify-end">
               <button 
                 onClick={onClose} 
-                className="btn-outline flex items-center justify-center gap-2 group px-5 py-2.5"
+                className="btn-outline flex items-center justify-center gap-2 group px-4 py-2"
               >
-                <X size={18} className="group-hover:rotate-90 transition-transform" />
-                <span className="text-base">Cancel & Edit</span>
+                <X size={16} className="group-hover:rotate-90 transition-transform" />
+                <span className="text-sm">Cancel & Edit</span>
               </button>
               {existingRecord.status?.toLowerCase() !== 'paid' && (
                 <button 
                   onClick={onUpdate} 
-                  className="btn-warning flex items-center justify-center gap-2 group px-5 py-2.5"
+                  className="btn-warning flex items-center justify-center gap-2 group px-4 py-2"
                 >
-                  <Edit3 size={18} className="group-hover:scale-110 transition-transform" />
-                  <span className="text-base">Update Existing Record</span>
+                  <Edit3 size={16} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-sm">Update Existing Record</span>
                 </button>
               )}
               <button 
                 onClick={onProceed} 
-                className="btn-primary flex items-center justify-center gap-2 group px-5 py-2.5"
+                className="btn-primary flex items-center justify-center gap-2 group px-4 py-2"
               >
-                <Save size={18} className="group-hover:scale-110 transition-transform" />
-                <span className="text-base">Save as New Record</span>
+                <Save size={16} className="group-hover:scale-110 transition-transform" />
+                <span className="text-sm">Save as New Record</span>
               </button>
             </div>
           </div>

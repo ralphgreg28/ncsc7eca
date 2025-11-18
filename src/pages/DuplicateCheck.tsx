@@ -9,6 +9,13 @@ interface Citizen {
   middle_name: string | null;
   extension_name: string | null;
   birth_date: string;
+  province_code: string;
+  lgu_code: string;
+  barangay_code: string;
+  province_name: string;
+  lgu_name: string;
+  barangay_name: string;
+  status: string;
 }
 
 interface DuplicateMatch {
@@ -16,10 +23,18 @@ interface DuplicateMatch {
   citizen2: Citizen;
   confidenceScore: number;
   matchDetails: {
-    fullNameSimilarity: number;
-    birthDateMatch: boolean;
-    exactNameMatch: boolean;
-    partialNameMatch: boolean;
+    // Name field scores (0-100%)
+    lastNameScore: number;
+    firstNameScore: number;
+    middleNameScore: number;
+    extensionScore: number;
+    nameScore: number;  // Combined name score
+    
+    // Birthdate component matches
+    birthMonthMatch: boolean;
+    birthDayMatch: boolean;
+    birthYearMatch: boolean;
+    birthDateScore: number;  // Combined birthdate score
   };
 }
 
@@ -87,61 +102,78 @@ const DuplicateCheck = () => {
     return ((maxLength - distance) / maxLength) * 100;
   };
 
-  // Calculate confidence score based on multiple factors
+  // Calculate confidence score based on individual field matching
+  // Equal weighting: Each of the 7 fields contributes 14.3% (1/7) to the total score
   const calculateConfidenceScore = (citizen1: Citizen, citizen2: Citizen) => {
-    const fullName1 = createFullName(citizen1);
-    const fullName2 = createFullName(citizen2);
+    const FIELD_WEIGHT = 100 / 7; // 14.285714% per field
     
-    // Full name similarity (weighted heavily)
-    const fullNameSimilarity = calculateSimilarity(fullName1, fullName2);
+    // === NAME FIELD SCORING (14.3% each) ===
     
-    // Check for exact name match (after normalization)
-    const exactNameMatch = fullName1 === fullName2;
-    
-    // Check for partial name matches (individual components)
+    // Last Name (14.3% of total)
     const lastName1 = normalizeText(citizen1.last_name);
     const lastName2 = normalizeText(citizen2.last_name);
+    const lastNameScore = calculateSimilarity(lastName1, lastName2);
+    
+    // First Name (14.3% of total)
     const firstName1 = normalizeText(citizen1.first_name);
     const firstName2 = normalizeText(citizen2.first_name);
+    const firstNameScore = calculateSimilarity(firstName1, firstName2);
     
-    const lastNameMatch = lastName1 === lastName2;
-    const firstNameMatch = firstName1 === firstName2;
-    const partialNameMatch = lastNameMatch || firstNameMatch;
+    // Middle Name (14.3% of total) - handle nulls
+    const middleName1 = normalizeText(citizen1.middle_name || '');
+    const middleName2 = normalizeText(citizen2.middle_name || '');
+    const middleNameScore = calculateSimilarity(middleName1, middleName2);
     
-    // Birth date comparison
-    const birthDateMatch = citizen1.birth_date === citizen2.birth_date;
+    // Extension Name (14.3% of total) - handle nulls
+    const extensionName1 = normalizeText(citizen1.extension_name || '');
+    const extensionName2 = normalizeText(citizen2.extension_name || '');
+    const extensionScore = calculateSimilarity(extensionName1, extensionName2);
     
-    // Calculate weighted confidence score
-    let confidenceScore = 0;
+    // === BIRTHDATE COMPONENT SCORING (14.3% each) ===
     
-    // Full name similarity (60% weight)
-    confidenceScore += fullNameSimilarity * 0.6;
+    const date1 = new Date(citizen1.birth_date);
+    const date2 = new Date(citizen2.birth_date);
     
-    // Exact name match bonus (25% weight)
-    if (exactNameMatch) {
-      confidenceScore += 25;
-    }
+    // Birth Month (14.3% of total)
+    const birthMonthMatch = date1.getMonth() === date2.getMonth();
+    const birthMonthScore = birthMonthMatch ? 100 : 0;
     
-    // Birth date match bonus (15% weight)
-    if (birthDateMatch) {
-      confidenceScore += 15;
-    }
+    // Birth Day (14.3% of total)
+    const birthDayMatch = date1.getDate() === date2.getDate();
+    const birthDayScore = birthDayMatch ? 100 : 0;
     
-    // Partial name match bonus (10% weight)
-    if (partialNameMatch && !exactNameMatch) {
-      confidenceScore += 10;
-    }
+    // Birth Year (14.3% of total)
+    const birthYearMatch = date1.getFullYear() === date2.getFullYear();
+    const birthYearScore = birthYearMatch ? 100 : 0;
     
-    // Cap at 100%
-    confidenceScore = Math.min(confidenceScore, 100);
+    // === FINAL CONFIDENCE SCORE ===
+    // Sum all 7 fields, each weighted at 14.3%
+    const confidenceScore = (
+      (lastNameScore * FIELD_WEIGHT / 100) +
+      (firstNameScore * FIELD_WEIGHT / 100) +
+      (middleNameScore * FIELD_WEIGHT / 100) +
+      (extensionScore * FIELD_WEIGHT / 100) +
+      (birthMonthScore * FIELD_WEIGHT / 100) +
+      (birthDayScore * FIELD_WEIGHT / 100) +
+      (birthYearScore * FIELD_WEIGHT / 100)
+    );
+    
+    // Calculate combined scores for display purposes
+    const nameScore = (lastNameScore + firstNameScore + middleNameScore + extensionScore) / 4;
+    const birthDateScore = (birthMonthScore + birthDayScore + birthYearScore) / 3;
     
     return {
       confidenceScore: Math.round(confidenceScore),
       matchDetails: {
-        fullNameSimilarity: Math.round(fullNameSimilarity),
-        birthDateMatch,
-        exactNameMatch,
-        partialNameMatch
+        lastNameScore: Math.round(lastNameScore),
+        firstNameScore: Math.round(firstNameScore),
+        middleNameScore: Math.round(middleNameScore),
+        extensionScore: Math.round(extensionScore),
+        nameScore: Math.round(nameScore),
+        birthMonthMatch,
+        birthDayMatch,
+        birthYearMatch,
+        birthDateScore: Math.round(birthDateScore)
       }
     };
   };
@@ -149,35 +181,102 @@ const DuplicateCheck = () => {
   const findDuplicates = async () => {
     setLoading(true);
     try {
-      const { data: citizens, error } = await supabase
+      // Fetch "Encoded" status citizens (new entries to check)
+      const { data: encodedCitizens, error: encodedError } = await supabase
         .from('citizens')
-        .select('id, last_name, first_name, middle_name, extension_name, birth_date')
+        .select('id, last_name, first_name, middle_name, extension_name, birth_date, province_code, lgu_code, barangay_code, status')
+        .eq('status', 'Encoded')
         .order('last_name, first_name');
 
-      if (error || !citizens) {
-        throw new Error(error?.message || 'Failed to fetch citizens data');
+      if (encodedError) {
+        throw new Error(encodedError.message || 'Failed to fetch encoded citizens');
       }
 
-      setTotalRecords(citizens.length);
+      // Fetch all non-"Encoded" status citizens (existing verified records)
+      const { data: nonEncodedCitizens, error: nonEncodedError } = await supabase
+        .from('citizens')
+        .select('id, last_name, first_name, middle_name, extension_name, birth_date, province_code, lgu_code, barangay_code, status')
+        .neq('status', 'Encoded')
+        .order('last_name, first_name');
+
+      if (nonEncodedError) {
+        throw new Error(nonEncodedError.message || 'Failed to fetch non-encoded citizens');
+      }
+
+      // Fetch all provinces, lgus, and barangays for mapping (handle large datasets)
+      const [provincesRes, lgusRes] = await Promise.all([
+        supabase.from('provinces').select('code, name'),
+        supabase.from('lgus').select('code, name')
+      ]);
+
+      // Fetch ALL barangays (there might be more than 1000)
+      let allBarangays: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('barangays')
+          .select('code, name')
+          .range(from, from + batchSize - 1);
+        
+        if (error) {
+          console.error('Error fetching barangays:', error);
+          break;
+        }
+        
+        if (data) {
+          allBarangays = [...allBarangays, ...data];
+          hasMore = data.length === batchSize;
+          from += batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      // Create lookup maps for faster access
+      const provincesMap = new Map(provincesRes.data?.map(p => [p.code, p.name]) || []);
+      const lgusMap = new Map(lgusRes.data?.map(l => [l.code, l.name]) || []);
+      const barangaysMap = new Map(allBarangays.map(b => [b.code, b.name]));
+
+      // Map the data to include the address names
+      const mapCitizen = (citizen: any): Citizen => ({
+        ...citizen,
+        province_name: provincesMap.get(citizen.province_code) || '',
+        lgu_name: lgusMap.get(citizen.lgu_code) || '',
+        barangay_name: barangaysMap.get(citizen.barangay_code) || ''
+      });
+
+      const mappedEncodedCitizens = encodedCitizens?.map(mapCitizen) || [];
+      const mappedNonEncodedCitizens = nonEncodedCitizens?.map(mapCitizen) || [];
+
+      const encodedCount = encodedCitizens?.length || 0;
+      const nonEncodedCount = nonEncodedCitizens?.length || 0;
+      setTotalRecords(encodedCount + nonEncodedCount);
 
       const duplicateMatches: DuplicateMatch[] = [];
       
-      // Compare each citizen with every other citizen
-      for (let i = 0; i < citizens.length; i++) {
-        for (let j = i + 1; j < citizens.length; j++) {
-          const citizen1 = citizens[i];
-          const citizen2 = citizens[j];
+      // Only compare "Encoded" citizens against non-"Encoded" citizens
+      // This prevents heavy O(n²) comparisons and focuses on new vs existing records
+      if (mappedEncodedCitizens.length > 0 && mappedNonEncodedCitizens.length > 0) {
+        for (let i = 0; i < mappedEncodedCitizens.length; i++) {
+          const encodedCitizen = mappedEncodedCitizens[i];
           
-          const { confidenceScore, matchDetails } = calculateConfidenceScore(citizen1, citizen2);
-          
-          // Only include matches above minimum confidence threshold
-          if (confidenceScore >= minConfidence) {
-            duplicateMatches.push({
-              citizen1,
-              citizen2,
-              confidenceScore,
-              matchDetails
-            });
+          for (let j = 0; j < mappedNonEncodedCitizens.length; j++) {
+            const nonEncodedCitizen = mappedNonEncodedCitizens[j];
+            
+            const { confidenceScore, matchDetails } = calculateConfidenceScore(encodedCitizen, nonEncodedCitizen);
+            
+            // Only include matches above minimum confidence threshold
+            if (confidenceScore >= minConfidence) {
+              duplicateMatches.push({
+                citizen1: encodedCitizen,
+                citizen2: nonEncodedCitizen,
+                confidenceScore,
+                matchDetails
+              });
+            }
           }
         }
       }
@@ -368,22 +467,13 @@ const DuplicateCheck = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="space-y-1">
-                            {match.matchDetails.exactNameMatch && (
-                              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                                Exact Name
-                              </span>
-                            )}
-                            {match.matchDetails.birthDateMatch && (
-                              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800">
-                                Same Birth Date
-                              </span>
-                            )}
-                            {match.matchDetails.partialNameMatch && !match.matchDetails.exactNameMatch && (
-                              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Partial Name
-                              </span>
-                            )}
+                          <div className="flex flex-col gap-1">
+                            <div className="text-xs">
+                              <span className="font-medium">Names:</span> {match.matchDetails.nameScore}%
+                            </div>
+                            <div className="text-xs">
+                              <span className="font-medium">Birth:</span> {match.matchDetails.birthDateScore}%
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -459,85 +549,68 @@ const DuplicateCheck = () => {
           </div>
         )}
 
-        {/* Detail Modal */}
+        {/* Detail Modal - Ultra Compact Version */}
         {showModal && selectedMatch && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">Duplicate Match Analysis</h3>
-                <button
-                  onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors duration-150"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+            <div className="relative w-full max-w-6xl shadow-lg rounded-md bg-white max-h-[95vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between z-10">
+                <h3 className="text-lg font-bold text-gray-900">Duplicate Analysis - {selectedMatch.confidenceScore}% Match</h3>
+                <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                {/* Record 1 */}
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <h4 className="text-lg font-semibold text-blue-900 mb-3">Record 1</h4>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-sm font-medium text-blue-700">Full Name:</span>
-                      <p className="text-blue-900">{formatFullName(selectedMatch.citizen1)}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-blue-700">Normalized:</span>
-                      <p className="text-blue-900 font-mono text-sm">{createFullName(selectedMatch.citizen1)}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-blue-700">Birth Date:</span>
-                      <p className="text-blue-900">{format(new Date(selectedMatch.citizen1.birth_date), 'MMMM dd, yyyy')}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-blue-700">ID:</span>
-                      <p className="text-blue-900">#{selectedMatch.citizen1.id}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Record 2 */}
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <h4 className="text-lg font-semibold text-green-900 mb-3">Record 2</h4>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-sm font-medium text-green-700">Full Name:</span>
-                      <p className="text-green-900">{formatFullName(selectedMatch.citizen2)}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-green-700">Normalized:</span>
-                      <p className="text-green-900 font-mono text-sm">{createFullName(selectedMatch.citizen2)}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-green-700">Birth Date:</span>
-                      <p className="text-green-900">{format(new Date(selectedMatch.citizen2.birth_date), 'MMMM dd, yyyy')}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-green-700">ID:</span>
-                      <p className="text-green-900">#{selectedMatch.citizen2.id}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Match Analysis */}
-              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Match Analysis</h4>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
+              <div className="p-4">
+                {/* Records & Analysis Side by Side */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                  {/* Record 1 - Compact */}
+                  <div className="bg-blue-50 rounded p-3 border border-blue-200">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">Overall Confidence</span>
-                      <span className={`text-2xl font-bold ${getConfidenceColor(selectedMatch.confidenceScore)}`}>
+                      <h4 className="text-sm font-bold text-blue-900">New Entry</h4>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">{selectedMatch.citizen1.status}</span>
+                    </div>
+                    <div className="space-y-1 text-xs">
+                      <p className="font-semibold text-blue-900">{formatFullName(selectedMatch.citizen1)}</p>
+                      <p className="text-blue-700">Born: {format(new Date(selectedMatch.citizen1.birth_date), 'MMM dd, yyyy')}</p>
+                      <p className="text-blue-600">
+                        {selectedMatch.citizen1.barangay_name || selectedMatch.citizen1.barangay_code}, {selectedMatch.citizen1.lgu_name || selectedMatch.citizen1.lgu_code}
+                      </p>
+                      <p className="text-blue-500 text-[10px]">ID: #{selectedMatch.citizen1.id}</p>
+                    </div>
+                  </div>
+
+                  {/* Record 2 - Compact */}
+                  <div className="bg-green-50 rounded p-3 border border-green-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-bold text-green-900">Existing Record</h4>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800">{selectedMatch.citizen2.status}</span>
+                    </div>
+                    <div className="space-y-1 text-xs">
+                      <p className="font-semibold text-green-900">{formatFullName(selectedMatch.citizen2)}</p>
+                      <p className="text-green-700">Born: {format(new Date(selectedMatch.citizen2.birth_date), 'MMM dd, yyyy')}</p>
+                      <p className="text-green-600">
+                        {selectedMatch.citizen2.barangay_name || selectedMatch.citizen2.barangay_code}, {selectedMatch.citizen2.lgu_name || selectedMatch.citizen2.lgu_code}
+                      </p>
+                      <p className="text-green-500 text-[10px]">ID: #{selectedMatch.citizen2.id}</p>
+                    </div>
+                  </div>
+
+                  {/* Overall Score - Compact */}
+                  <div className="bg-gray-50 rounded p-3 border border-gray-200">
+                    <h4 className="text-sm font-bold text-gray-900 mb-2">Confidence</h4>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-3xl font-bold ${getConfidenceColor(selectedMatch.confidenceScore)}`}>
                         {selectedMatch.confidenceScore}%
                       </span>
+                      <span className={`text-xs font-semibold ${getConfidenceColor(selectedMatch.confidenceScore)}`}>
+                        {getConfidenceLabel(selectedMatch.confidenceScore)}
+                      </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        className={`h-3 rounded-full ${
+                        className={`h-2 rounded-full ${
                           selectedMatch.confidenceScore >= 90 ? 'bg-red-500' :
                           selectedMatch.confidenceScore >= 80 ? 'bg-orange-500' :
                           selectedMatch.confidenceScore >= 70 ? 'bg-yellow-500' : 'bg-gray-500'
@@ -545,77 +618,85 @@ const DuplicateCheck = () => {
                         style={{ width: `${selectedMatch.confidenceScore}%` }}
                       ></div>
                     </div>
-                    <p className={`text-sm mt-1 ${getConfidenceColor(selectedMatch.confidenceScore)}`}>
-                      {getConfidenceLabel(selectedMatch.confidenceScore)} Risk
-                    </p>
+                  </div>
+                </div>
+
+                {/* Field Analysis - Horizontal Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
+                  {/* Name Fields */}
+                  <div className="bg-indigo-50 rounded p-3 border border-indigo-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="text-sm font-bold text-indigo-900">Name Fields (14.3% each)</h5>
+                      <span className="text-sm font-bold text-indigo-600">{selectedMatch.matchDetails.nameScore}%</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <div className="flex justify-between items-center mb-0.5">
+                          <span className="text-gray-600">Last</span>
+                          <span className="font-semibold">{selectedMatch.matchDetails.lastNameScore}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${selectedMatch.matchDetails.lastNameScore}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between items-center mb-0.5">
+                          <span className="text-gray-600">First</span>
+                          <span className="font-semibold">{selectedMatch.matchDetails.firstNameScore}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${selectedMatch.matchDetails.firstNameScore}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between items-center mb-0.5">
+                          <span className="text-gray-600">Middle</span>
+                          <span className="font-semibold">{selectedMatch.matchDetails.middleNameScore}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${selectedMatch.matchDetails.middleNameScore}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between items-center mb-0.5">
+                          <span className="text-gray-600">Ext.</span>
+                          <span className="font-semibold">{selectedMatch.matchDetails.extensionScore}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${selectedMatch.matchDetails.extensionScore}%` }}></div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <span className="text-sm font-medium text-gray-700">Name Similarity</span>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-semibold text-gray-900">
-                        {selectedMatch.matchDetails.fullNameSimilarity}%
-                      </span>
-                      <div className="w-24 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-500 h-2 rounded-full"
-                          style={{ width: `${selectedMatch.matchDetails.fullNameSimilarity}%` }}
-                        ></div>
+                  {/* Birthdate Fields */}
+                  <div className="bg-purple-50 rounded p-3 border border-purple-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="text-sm font-bold text-purple-900">Birthdate Fields (14.3% each)</h5>
+                      <span className="text-sm font-bold text-purple-600">{selectedMatch.matchDetails.birthDateScore}%</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className={`p-2 rounded text-center ${selectedMatch.matchDetails.birthMonthMatch ? 'bg-green-100 border border-green-300' : 'bg-red-100 border border-red-300'}`}>
+                        <div className="text-[10px] font-medium text-gray-700">Month</div>
+                        <div className={`text-base font-bold ${selectedMatch.matchDetails.birthMonthMatch ? 'text-green-700' : 'text-red-700'}`}>
+                          {selectedMatch.matchDetails.birthMonthMatch ? '✓' : '✗'}
+                        </div>
+                      </div>
+                      <div className={`p-2 rounded text-center ${selectedMatch.matchDetails.birthDayMatch ? 'bg-green-100 border border-green-300' : 'bg-red-100 border border-red-300'}`}>
+                        <div className="text-[10px] font-medium text-gray-700">Day</div>
+                        <div className={`text-base font-bold ${selectedMatch.matchDetails.birthDayMatch ? 'text-green-700' : 'text-red-700'}`}>
+                          {selectedMatch.matchDetails.birthDayMatch ? '✓' : '✗'}
+                        </div>
+                      </div>
+                      <div className={`p-2 rounded text-center ${selectedMatch.matchDetails.birthYearMatch ? 'bg-green-100 border border-green-300' : 'bg-red-100 border border-red-300'}`}>
+                        <div className="text-[10px] font-medium text-gray-700">Year</div>
+                        <div className={`text-base font-bold ${selectedMatch.matchDetails.birthYearMatch ? 'text-green-700' : 'text-red-700'}`}>
+                          {selectedMatch.matchDetails.birthYearMatch ? '✓' : '✗'}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className={`p-3 rounded-lg border ${
-                    selectedMatch.matchDetails.exactNameMatch 
-                      ? 'bg-red-50 border-red-200' 
-                      : 'bg-gray-50 border-gray-200'
-                  }`}>
-                    <div className="flex items-center">
-                      <div className={`w-3 h-3 rounded-full mr-2 ${
-                        selectedMatch.matchDetails.exactNameMatch ? 'bg-red-500' : 'bg-gray-300'
-                      }`}></div>
-                      <span className="text-sm font-medium text-gray-700">Exact Name Match</span>
-                    </div>
-                  </div>
-
-                  <div className={`p-3 rounded-lg border ${
-                    selectedMatch.matchDetails.birthDateMatch 
-                      ? 'bg-orange-50 border-orange-200' 
-                      : 'bg-gray-50 border-gray-200'
-                  }`}>
-                    <div className="flex items-center">
-                      <div className={`w-3 h-3 rounded-full mr-2 ${
-                        selectedMatch.matchDetails.birthDateMatch ? 'bg-orange-500' : 'bg-gray-300'
-                      }`}></div>
-                      <span className="text-sm font-medium text-gray-700">Birth Date Match</span>
-                    </div>
-                  </div>
-
-                  <div className={`p-3 rounded-lg border ${
-                    selectedMatch.matchDetails.partialNameMatch 
-                      ? 'bg-yellow-50 border-yellow-200' 
-                      : 'bg-gray-50 border-gray-200'
-                  }`}>
-                    <div className="flex items-center">
-                      <div className={`w-3 h-3 rounded-full mr-2 ${
-                        selectedMatch.matchDetails.partialNameMatch ? 'bg-yellow-500' : 'bg-gray-300'
-                      }`}></div>
-                      <span className="text-sm font-medium text-gray-700">Partial Name Match</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Actions */}
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={closeModal}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Close
-                </button>
               </div>
             </div>
           </div>

@@ -76,44 +76,44 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
     setFormData(prev => ({ ...prev, payment_date: null }));
   };
 
-  const inputClass = "mt-1 block w-full rounded-lg border-2 border-gray-200 px-4 py-2.5 text-sm transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none hover:border-gray-300";
+  const inputClass = "mt-1 block w-full rounded-lg border-2 border-gray-200 px-3 sm:px-4 py-2 sm:py-2.5 text-sm transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none hover:border-gray-300";
   const labelClass = "block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5";
-  const sectionClass = "bg-gradient-to-br from-gray-50 to-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300";
+  const sectionClass = "bg-gradient-to-br from-gray-50 to-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-sm p-4 overflow-auto">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl relative animate-fadeIn max-h-[95vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-black/40 to-black/60 backdrop-blur-sm p-2 sm:p-4 overflow-auto">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-7xl relative animate-fadeIn max-h-[98vh] sm:max-h-[95vh] overflow-hidden flex flex-col">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 sm:px-6 md:px-8 py-4 sm:py-6 relative overflow-hidden">
           <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
-          <div className="relative z-10">
-            <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-3">
-              <span className="w-1.5 h-8 bg-white/80 rounded-full"></span>
-              Edit Senior Citizen Record
+          <div className="relative z-10 pr-8 sm:pr-0">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1 flex items-center gap-2 sm:gap-3">
+              <span className="w-1 sm:w-1.5 h-6 sm:h-8 bg-white/80 rounded-full"></span>
+              <span className="line-clamp-1">Edit Senior Citizen Record</span>
             </h2>
-            <p className="text-blue-100 text-sm">Update citizen information and status details</p>
+            <p className="text-blue-100 text-xs sm:text-sm">Update citizen information and status details</p>
           </div>
           <button 
             onClick={onClose} 
-            className="absolute top-6 right-6 text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-2 transition-all duration-200 z-20"
+            className="absolute top-3 sm:top-4 md:top-6 right-3 sm:right-4 md:right-6 text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-1.5 sm:p-2 transition-all duration-200 z-20"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto flex-1 px-8 py-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="overflow-y-auto flex-1 px-4 sm:px-6 md:px-8 py-4 sm:py-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Identification */}
             <section className={sectionClass}>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">ID</span>
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm sm:text-lg">ID</span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-800">Identification</h3>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800">Identification</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 {['osca_id', 'rrn'].map((field) => (
                   <div key={field} className="group">
                     <label className={labelClass}>{field.replace('_', ' ')}</label>
@@ -132,13 +132,13 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
 
             {/* Personal Info */}
             <section className={sectionClass}>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">👤</span>
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm sm:text-lg">👤</span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-800">Personal Information</h3>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800">Personal Information</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 {[
                   { label: 'Last Name', name: 'last_name' },
                   { label: 'First Name', name: 'first_name' },
@@ -220,13 +220,13 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
 
             {/* Status Info */}
             <section className={sectionClass}>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">📋</span>
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm sm:text-lg">📋</span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-800">Status Information</h3>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800">Status Information</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 <div className="group">
                   <label className={labelClass}>Status</label>
                   <select
@@ -254,7 +254,7 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
                     <button
                       type="button"
                       onClick={clearPaymentDate}
-                      className="px-4 py-2.5 text-sm font-medium text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border-2 border-red-200 hover:border-red-600 rounded-lg transition-all duration-200 flex-shrink-0"
+                      className="px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border-2 border-red-200 hover:border-red-600 rounded-lg transition-all duration-200 flex-shrink-0"
                       title="Clear payment date"
                     >
                       ×
@@ -291,11 +291,11 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
 
             {/* Remarks */}
             <section className={sectionClass}>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">📝</span>
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm sm:text-lg">📝</span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-800">Additional Information</h3>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800">Additional Information</h3>
               </div>
               <div className="group">
                 <label className={labelClass}>Remarks</label>
@@ -304,14 +304,14 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
                   value={formData.remarks || ''}
                   onChange={handleChange}
                   className={`${inputClass} resize-none`}
-                  rows={4}
+                  rows={3}
                   maxLength={500}
                   placeholder="Enter any additional notes or remarks..."
                 />
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
                   <p className="text-xs text-gray-500">Maximum 500 characters</p>
                   <div className="flex items-center gap-2">
-                    <div className="w-32 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="w-full sm:w-32 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 rounded-full"
                         style={{ width: `${((formData.remarks?.length || 0) / 500 * 100)}%` }}
@@ -324,14 +324,14 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
             </section>
 
             {/* Address */}
-            <section className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border-2 border-blue-200">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-lg">📍</span>
+            <section className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 rounded-xl border-2 border-blue-200">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm sm:text-lg">📍</span>
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Current Address</h3>
-                  <p className="text-base text-gray-800 font-medium leading-relaxed">
+                  <h3 className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wide mb-1 sm:mb-2">Current Address</h3>
+                  <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
                     {addressDetails.barangay_name}, {addressDetails.lgu_name}, {addressDetails.province_name}
                   </p>
                 </div>
@@ -341,11 +341,11 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
         </div>
 
         {/* Footer Actions */}
-        <div className="bg-gray-50 px-8 py-5 border-t border-gray-200 flex justify-end gap-3">
+        <div className="bg-gray-50 px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 border-t border-gray-200 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 text-sm font-semibold rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 text-sm font-semibold rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow"
           >
             Cancel
           </button>
@@ -353,7 +353,7 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
             type="submit"
             disabled={loading}
             onClick={handleSubmit}
-            className="px-8 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
+            className="w-full sm:w-auto px-6 sm:px-8 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
           >
             {loading ? (
               <span className="flex items-center gap-2">

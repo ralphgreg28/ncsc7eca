@@ -1421,15 +1421,57 @@ if (filters.searchTerm) {
       const lguCodes = [...new Set(citizens.map(c => c.lgu_code))];
       const barangayCodes = [...new Set(citizens.map(c => c.barangay_code))];
 
-      const [provinces, lgus, barangays] = await Promise.all([
+      // Fetch provinces and LGUs
+      const [provinces, lgus] = await Promise.all([
         supabase.from('provinces').select('code, name').in('code', provinceCodes),
-        supabase.from('lgus').select('code, name').in('code', lguCodes),
-        supabase.from('barangays').select('code, name').in('code', barangayCodes)
+        supabase.from('lgus').select('code, name').in('code', lguCodes)
       ]);
 
-      const provinceMap = Object.fromEntries((provinces.data || []).map(p => [p.code, p.name]));
-      const lguMap = Object.fromEntries((lgus.data || []).map(l => [l.code, l.name]));
-      const barangayMap = Object.fromEntries((barangays.data || []).map(b => [b.code, b.name]));
+      // Fetch ALL barangays in batches (there are more than 1000)
+      let allBarangays: Array<{ code: string; name: string; }> = [];
+      let hasMore = true;
+      let start = 0;
+      const BARANGAY_BATCH_SIZE = 1000;
+      
+      while (hasMore) {
+        const { data: barangayBatch, error: barangayError } = await supabase
+          .from('barangays')
+          .select('code, name')
+          .in('code', barangayCodes)
+          .range(start, start + BARANGAY_BATCH_SIZE - 1)
+          .order('code');
+        
+        if (barangayError) {
+          console.error('Error fetching barangays:', barangayError);
+          break;
+        }
+        
+        if (barangayBatch && barangayBatch.length > 0) {
+          allBarangays = [...allBarangays, ...barangayBatch];
+          start += BARANGAY_BATCH_SIZE;
+        }
+        
+        hasMore = barangayBatch && barangayBatch.length === BARANGAY_BATCH_SIZE;
+      }
+
+      // Create lookup maps
+      const provinceMap = new Map<string, string>();
+      const lguMap = new Map<string, string>();
+      const barangayMap = new Map<string, string>();
+      
+      (provinces.data || []).forEach(p => {
+        provinceMap.set(p.code, p.name);
+      });
+      
+      (lgus.data || []).forEach(l => {
+        lguMap.set(l.code, l.name);
+      });
+      
+      allBarangays.forEach(b => {
+        barangayMap.set(b.code, b.name);
+      });
+      
+      console.log(`Loaded ${provinceMap.size} provinces, ${lguMap.size} LGUs, ${barangayMap.size} barangays for export`);
 
       toast.info('Preparing export file...');
 
@@ -1455,9 +1497,9 @@ if (filters.searchTerm) {
     'Extension Name': citizen.extension_name || '',
     'Birth Date': format(new Date(citizen.birth_date), 'MM/dd/yyyy'),
     'Sex': citizen.sex,
-    'Province': provinceMap[citizen.province_code] || citizen.province_code,
-    'City/Municipality': lguMap[citizen.lgu_code] || citizen.lgu_code,
-    'Barangay': barangayMap[citizen.barangay_code] || citizen.barangay_code,
+    'Province': provinceMap.get(citizen.province_code) || citizen.province_code || 'N/A',
+    'City/Municipality': lguMap.get(citizen.lgu_code) || citizen.lgu_code || 'N/A',
+    'Barangay': barangayMap.get(citizen.barangay_code) || citizen.barangay_code || 'N/A',
     'Status': citizen.status,
     'Payment Date': citizen.payment_date ? format(new Date(citizen.payment_date), 'MM/dd/yyyy') : '',
     'OSCA ID': citizen.osca_id || 'N/A',
@@ -1471,10 +1513,11 @@ if (filters.searchTerm) {
     'Barangay Code': citizen.barangay_code,
     'Encoded By': citizen.encoded_by || '',
     'Encoded Date': format(new Date(citizen.encoded_date), 'MM/dd/yyyy HH:mm:ss'),
-    'Calendar Year': citizen.calendar_year || '',
-    'Specimen':  citizen.specimen || '',
-    'Disability': citizen.disability || '',
-    'Indigenous': citizen.indigenous || ''
+    'Calendar Year': citizen.calendar_year,
+    'Specimen': (citizen as any).specimen || '',
+    'Disability': (citizen as any).disability || 'no',
+    'Indigenous People': (citizen as any).indigenous_people || 'no',
+    'Cleanlist Code': citizen.cleanlist_code || ''
   }));
 
       const csv = Papa.unparse(exportData);

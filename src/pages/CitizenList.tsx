@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { format } from 'date-fns';
 import { Download, Search, Edit, Trash2, AlertTriangle, Eye, ChevronUp, ChevronDown, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -79,7 +79,7 @@ interface AddressDetails {
 type SortField = 'last_name' | 'birth_date' | 'sex' | 'status' | 'payment_date' | 'created_at';
 type SortOrder = 'asc' | 'desc';
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 10;
 const EXPORT_BATCH_SIZE = 1000;
 
 // Helper function to get quarter from birth date
@@ -160,6 +160,8 @@ function CitizenList() {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalRecords, setTotalRecords] = useState(0);
   const [availableBirthYears, setAvailableBirthYears] = useState<string[]>([]);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   // Quarters are fixed, so we don't need a state for them
   const [filters, setFilters] = useState<Filters>({
     provinceCode: '',
@@ -176,6 +178,27 @@ function CitizenList() {
   });
 
   const totalPages = Math.ceil(totalRecords / PAGE_SIZE);
+
+  // Debounce search input (300ms delay)
+  useEffect(() => {
+    setIsSearching(true);
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(filters.searchTerm);
+      setIsSearching(false);
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      setIsSearching(false);
+    };
+  }, [filters.searchTerm]);
+
+  // Use debounced search term for actual filtering
+  useEffect(() => {
+    if (debouncedSearchTerm !== filters.searchTerm) return;
+    setCurrentPage(0);
+    fetchCitizens();
+  }, [debouncedSearchTerm, filters.provinceCode, filters.lguCode, filters.barangayCode, filters.status, filters.paymentDateFrom, filters.paymentDateTo, filters.birthYears, filters.birthQuarters, filters.birthMonths, filters.remarks, sortField, sortOrder]);
 
   const statusOptions = [
     'Encoded',
@@ -344,10 +367,8 @@ function CitizenList() {
     }
   }, [filters.lguCode]);
 
-  useEffect(() => {
-    setCurrentPage(0);
-    fetchCitizens();
-  }, [filters, sortField, sortOrder]);
+  // Remove the old useEffect that was causing immediate fetching
+  // Now using debounced search effect above
 
   useEffect(() => {
     fetchCitizens();
@@ -411,21 +432,52 @@ function CitizenList() {
     }
   };
 
-  const fetchAddressDetails = async (citizens: Citizen[]) => {
+  // Lazy loading for address details - fetch only when needed
+  const fetchAddressDetails = useCallback(async (citizens: Citizen[]) => {
     try {
+      // Check if we already have some of these addresses cached
       const provinceCodes = [...new Set(citizens.map(c => c.province_code))];
       const lguCodes = [...new Set(citizens.map(c => c.lgu_code))];
       const barangayCodes = [...new Set(citizens.map(c => c.barangay_code))];
 
-      const [{ data: provinces }, { data: lgus }, { data: barangays }] = await Promise.all([
-        supabase.from('provinces').select('code, name').in('code', provinceCodes),
-        supabase.from('lgus').select('code, name').in('code', lguCodes),
-        supabase.from('barangays').select('code, name').in('code', barangayCodes)
-      ]);
+      // Filter out codes we already have
+      const newProvinceCodes = provinceCodes.filter(code => !addressMaps.provinces[code]);
+      const newLguCodes = lguCodes.filter(code => !addressMaps.lgus[code]);
+      const newBarangayCodes = barangayCodes.filter(code => !addressMaps.barangays[code]);
 
-      const provinceMap = Object.fromEntries((provinces || []).map(p => [p.code, p.name]));
-      const lguMap = Object.fromEntries((lgus || []).map(l => [l.code, l.name]));
-      const barangayMap = Object.fromEntries((barangays || []).map(b => [b.code, b.name]));
+      // Only fetch what we don't have
+      const promises: Promise<{ data: any[] | null; error: any }>[] = [];
+      
+      if (newProvinceCodes.length > 0) {
+        promises.push(
+          supabase.from('provinces').select('code, name').in('code', newProvinceCodes).then(result => result)
+        );
+      } else {
+        promises.push(Promise.resolve({ data: [], error: null }));
+      }
+
+      if (newLguCodes.length > 0) {
+        promises.push(
+          supabase.from('lgus').select('code, name').in('code', newLguCodes).then(result => result)
+        );
+      } else {
+        promises.push(Promise.resolve({ data: [], error: null }));
+      }
+
+      if (newBarangayCodes.length > 0) {
+        promises.push(
+          supabase.from('barangays').select('code, name').in('code', newBarangayCodes).then(result => result)
+        );
+      } else {
+        promises.push(Promise.resolve({ data: [], error: null }));
+      }
+
+      const [{ data: provinces }, { data: lgus }, { data: barangays }] = await Promise.all(promises);
+
+      // Merge new data with existing cache
+      const provinceMap = { ...addressMaps.provinces, ...Object.fromEntries((provinces || []).map((p: any) => [p.code, p.name])) };
+      const lguMap = { ...addressMaps.lgus, ...Object.fromEntries((lgus || []).map((l: any) => [l.code, l.name])) };
+      const barangayMap = { ...addressMaps.barangays, ...Object.fromEntries((barangays || []).map((b: any) => [b.code, b.name])) };
 
       setAddressMaps({
         provinces: provinceMap,
@@ -433,13 +485,15 @@ function CitizenList() {
         barangays: barangayMap
       });
 
-      const details: Record<string, AddressDetails> = {};
+      const details: Record<string, AddressDetails> = { ...addressDetails };
       citizens.forEach(citizen => {
-        details[citizen.id] = {
-          province_name: provinceMap[citizen.province_code] || 'Unknown',
-          lgu_name: lguMap[citizen.lgu_code] || 'Unknown',
-          barangay_name: barangayMap[citizen.barangay_code] || 'Unknown'
-        };
+        if (!details[citizen.id]) {
+          details[citizen.id] = {
+            province_name: provinceMap[citizen.province_code] || 'Unknown',
+            lgu_name: lguMap[citizen.lgu_code] || 'Unknown',
+            barangay_name: barangayMap[citizen.barangay_code] || 'Unknown'
+          };
+        }
       });
 
       setAddressDetails(details);
@@ -448,7 +502,7 @@ function CitizenList() {
       console.error('Error fetching address details:', error);
       return { provinces: [], lgus: [], barangays: [] };
     }
-  };
+  }, [addressMaps, addressDetails]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -484,9 +538,10 @@ function CitizenList() {
       
       let query = supabase.from('citizens').select('*', { count: 'exact' });
 
-if (filters.searchTerm) {
+      // Use debounced search term instead of direct filters.searchTerm
+      if (debouncedSearchTerm) {
         // Split search term by spaces to allow searching for multiple terms
-        const searchTerms = filters.searchTerm.trim().split(/[\s,-]+/);
+        const searchTerms = debouncedSearchTerm.trim().split(/[\s,-]+/);
         
         // For each term, create a filter condition
         searchTerms.forEach(term => {
@@ -627,14 +682,14 @@ if (filters.searchTerm) {
           if (filters.paymentDateFrom) yearQuery.gte('payment_date', filters.paymentDateFrom);
           if (filters.paymentDateTo) yearQuery.lte('payment_date', filters.paymentDateTo);
           if (filters.remarks) yearQuery.ilike('remarks', `%${filters.remarks}%`);
-          if (filters.searchTerm) {
+          if (debouncedSearchTerm) {
             // Split search term by spaces to allow searching for multiple terms
-            const searchTerms = filters.searchTerm.trim().split(/\s+/);
+            const searchTerms = debouncedSearchTerm.trim().split(/\s+/);
             
             if (searchTerms.length === 1) {
               // If only one search term, use the original search logic
               yearQuery.or(
-                `last_name.ilike.%${filters.searchTerm}%,first_name.ilike.%${filters.searchTerm}%,middle_name.ilike.%${filters.searchTerm}%`
+                `last_name.ilike.%${debouncedSearchTerm}%,first_name.ilike.%${debouncedSearchTerm}%,middle_name.ilike.%${debouncedSearchTerm}%`
               );
             } else {
                 // For multiple search terms, build a more complex query
@@ -708,14 +763,14 @@ if (filters.searchTerm) {
           if (filters.paymentDateFrom) monthQuery.gte('payment_date', filters.paymentDateFrom);
           if (filters.paymentDateTo) monthQuery.lte('payment_date', filters.paymentDateTo);
           if (filters.remarks) monthQuery.ilike('remarks', `%${filters.remarks}%`);
-          if (filters.searchTerm) {
+          if (debouncedSearchTerm) {
             // Split search term by spaces to allow searching for multiple terms
-            const searchTerms = filters.searchTerm.trim().split(/\s+/);
+            const searchTerms = debouncedSearchTerm.trim().split(/\s+/);
             
             if (searchTerms.length === 1) {
               // If only one search term, use the original search logic
               monthQuery.or(
-                `last_name.ilike.%${filters.searchTerm}%,first_name.ilike.%${filters.searchTerm}%,middle_name.ilike.%${filters.searchTerm}%`
+                `last_name.ilike.%${debouncedSearchTerm}%,first_name.ilike.%${debouncedSearchTerm}%,middle_name.ilike.%${debouncedSearchTerm}%`
               );
             } else {
               // For multiple search terms, build a more complex query
@@ -868,14 +923,14 @@ if (filters.searchTerm) {
             if (filters.paymentDateFrom) monthQuery.gte('payment_date', filters.paymentDateFrom);
             if (filters.paymentDateTo) monthQuery.lte('payment_date', filters.paymentDateTo);
             if (filters.remarks) monthQuery.ilike('remarks', `%${filters.remarks}%`);
-            if (filters.searchTerm) {
+            if (debouncedSearchTerm) {
               // Split search term by spaces to allow searching for multiple terms
-              const searchTerms = filters.searchTerm.trim().split(/\s+/);
+              const searchTerms = debouncedSearchTerm.trim().split(/\s+/);
               
               if (searchTerms.length === 1) {
                 // If only one search term, use the original search logic
                 monthQuery.or(
-                  `last_name.ilike.%${filters.searchTerm}%,first_name.ilike.%${filters.searchTerm}%,middle_name.ilike.%${filters.searchTerm}%`
+                  `last_name.ilike.%${debouncedSearchTerm}%,first_name.ilike.%${debouncedSearchTerm}%,middle_name.ilike.%${debouncedSearchTerm}%`
                 );
               } else {
                 // For multiple search terms, build a more complex query

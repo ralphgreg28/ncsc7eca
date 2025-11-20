@@ -53,6 +53,17 @@ interface Stats {
     disqualified: number;
     total: number;
   }[];
+  paidBySpecificAge: {
+    age: number;
+    count: number;
+    maleCount: number;
+    femaleCount: number;
+    malePercentage: number;
+    femalePercentage: number;
+    percentage: number;
+    cashGift: number;
+    totalAmount: number;
+  }[];
 }
 
 function Summary() {
@@ -75,7 +86,8 @@ function Summary() {
       disqualified: 0,
       total: 0
     },
-    provinceStats: []
+    provinceStats: [],
+    paidBySpecificAge: []
   });
   
   const [provinces, setProvinces] = useState<AddressOption[]>([]);
@@ -179,6 +191,15 @@ function Summary() {
         { count: barangaysCount }
       ] = countsResult;
 
+      // Fetch paid by specific age stats using backend function
+      const { data: paidByAgeData, error: paidByAgeError } = await supabase.rpc('get_dashboard_paid_by_age', params);
+      
+      if (paidByAgeError) {
+        console.error('Error fetching paid by age stats:', paidByAgeError);
+      }
+
+      const paidBySpecificAge = paidByAgeData || [];
+
       setStats({
         totalCitizens: basicStats.totalCitizens || 0,
         provinces: provincesCount || 0,
@@ -195,7 +216,8 @@ function Summary() {
           disqualified: 0,
           total: 0
         },
-        provinceStats: provinceStats
+        provinceStats: provinceStats,
+        paidBySpecificAge
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -636,6 +658,97 @@ function Summary() {
           </div>
         </div>
       )}
+
+      {/* Paid Citizens by Specific Ages */}
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <h2 className="text-sm font-semibold mb-2 flex items-center">
+          <span className="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-xs mr-2">Paid Citizens by Specific Ages</span>
+        </h2>
+        <p className="text-xs text-gray-600 mb-2">
+          Analysis of citizens with "Paid" status at specific ages: 80, 85, 90, 95, and 100 years old
+        </p>
+        <p className="text-xs text-blue-600 font-medium mb-3">
+          {filters.calendarYear.length > 0 
+            ? `Using Calendar Years: ${filters.calendarYear.join(', ')} for age calculations`
+            : `Using Calendar Year: ${new Date().getFullYear()} for age calculations`
+          }
+        </p>
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">Exact Age</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Total Count</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Male</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Female</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Percentage</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Cash Gift (PHP)</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Total Amount (PHP)</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-100">
+              {stats.paidBySpecificAge.map((ageGroup) => (
+                <tr key={ageGroup.age} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-900">
+                    {ageGroup.age} years old
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-green-600 font-semibold">
+                    {ageGroup.count}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-blue-600 font-medium">
+                    {ageGroup.maleCount} ({ageGroup.malePercentage.toFixed(1)}%)
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-pink-600 font-medium">
+                    {ageGroup.femaleCount} ({ageGroup.femalePercentage.toFixed(1)}%)
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-900">
+                    {ageGroup.percentage.toFixed(2)}%
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-blue-600 font-medium">
+                    {ageGroup.cashGift.toLocaleString()}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-indigo-600 font-medium">
+                    {ageGroup.totalAmount.toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+              <tr className="bg-gray-50">
+                <td className="px-3 py-2 whitespace-nowrap text-xs font-semibold text-gray-900">
+                  Total
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-green-600 font-semibold">
+                  {stats.paidBySpecificAge.reduce((sum, item) => sum + item.count, 0)}
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-blue-600 font-medium">
+                  {(() => {
+                    const totalMale = stats.paidBySpecificAge.reduce((sum, item) => sum + item.maleCount, 0);
+                    const totalCount = stats.paidBySpecificAge.reduce((sum, item) => sum + item.count, 0);
+                    const percentage = totalCount > 0 ? (totalMale / totalCount) * 100 : 0;
+                    return `${totalMale} (${percentage.toFixed(1)}%)`;
+                  })()}
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-pink-600 font-medium">
+                  {(() => {
+                    const totalFemale = stats.paidBySpecificAge.reduce((sum, item) => sum + item.femaleCount, 0);
+                    const totalCount = stats.paidBySpecificAge.reduce((sum, item) => sum + item.count, 0);
+                    const percentage = totalCount > 0 ? (totalFemale / totalCount) * 100 : 0;
+                    return `${totalFemale} (${percentage.toFixed(1)}%)`;
+                  })()}
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-900 font-semibold">
+                  100%
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-blue-600 font-medium">
+                  -
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-indigo-600 font-semibold">
+                  {stats.paidBySpecificAge.reduce((sum, item) => sum + item.totalAmount, 0).toLocaleString()}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

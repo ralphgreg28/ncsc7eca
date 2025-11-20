@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { format } from 'date-fns';
 import { Download, Search, Edit, Trash2, AlertTriangle, Eye, ChevronUp, ChevronDown, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -82,54 +82,233 @@ type SortOrder = 'asc' | 'desc';
 const PAGE_SIZE = 10;
 const EXPORT_BATCH_SIZE = 1000;
 
-// Helper function to get quarter from birth date
+// Memoized helper function to get quarter from birth date
 const getBirthQuarter = (birthDate: string): number => {
-  const month = new Date(birthDate).getMonth() + 1; // getMonth() returns 0-11, so add 1
-  if (month >= 1 && month <= 3) return 1; // Q1: Jan-Mar
-  if (month >= 4 && month <= 6) return 2; // Q2: Apr-Jun
-  if (month >= 7 && month <= 9) return 3; // Q3: Jul-Sep
-  return 4; // Q4: Oct-Dec
+  const month = new Date(birthDate).getMonth() + 1;
+  if (month >= 1 && month <= 3) return 1;
+  if (month >= 4 && month <= 6) return 2;
+  if (month >= 7 && month <= 9) return 3;
+  return 4;
 };
 
-// Helper function to get quarter colors
-const getQuarterColors = (quarter: number): { bg: string; text: string; border: string } => {
-  switch (quarter) {
-    case 1: // 1st Quarter (Jan-Mar) - Winter/Spring - Blue theme
-      return { bg: 'bg-blue-50', text: 'text-blue-800', border: 'border-blue-200' };
-    case 2: // 2nd Quarter (Apr-Jun) - Spring/Summer - Green theme
-      return { bg: 'bg-green-50', text: 'text-green-800', border: 'border-green-200' };
-    case 3: // 3rd Quarter (Jul-Sep) - Summer/Fall - Orange theme
-      return { bg: 'bg-orange-50', text: 'text-orange-800', border: 'border-orange-200' };
-    case 4: // 4th Quarter (Oct-Dec) - Fall/Winter - Purple theme
-      return { bg: 'bg-purple-50', text: 'text-purple-800', border: 'border-purple-200' };
-    default:
-      return { bg: 'bg-gray-50', text: 'text-gray-800', border: 'border-gray-200' };
-  }
+// Cached color configurations
+const QUARTER_COLORS = {
+  1: { bg: 'bg-blue-50', text: 'text-blue-800', border: 'border-blue-200' },
+  2: { bg: 'bg-green-50', text: 'text-green-800', border: 'border-green-200' },
+  3: { bg: 'bg-orange-50', text: 'text-orange-800', border: 'border-orange-200' },
+  4: { bg: 'bg-purple-50', text: 'text-purple-800', border: 'border-purple-200' },
+} as const;
+
+const CYCLE_YEAR_COLORS = [
+  { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+  { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+  { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
+  { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
+] as const;
+
+const getQuarterColors = (quarter: number) => 
+  QUARTER_COLORS[quarter as keyof typeof QUARTER_COLORS] || { bg: 'bg-gray-50', text: 'text-gray-800', border: 'border-gray-200' };
+
+const getCycleYearColors = (cycleYear: string) => {
+  const colorIndex = parseInt(cycleYear) % 6;
+  return CYCLE_YEAR_COLORS[colorIndex] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
 };
 
-// Helper function to get cycle year colors
-const getCycleYearColors = (cycleYear: string): { bg: string; text: string; border: string } => {
-  // Create a color scheme based on the cycle year
-  const year = parseInt(cycleYear);
-  const colorIndex = year % 6; // Cycle through 6 different color schemes
+// Memoized CitizenRow component
+const CitizenRow = memo(({ 
+  citizen, 
+  addressDetail,
+  onView,
+  onEdit,
+  onDelete,
+  userPosition
+}: {
+  citizen: Citizen;
+  addressDetail?: AddressDetails;
+  onView: (citizen: Citizen) => void;
+  onEdit: (citizen: Citizen) => void;
+  onDelete: (id: number) => void;
+  userPosition?: string;
+}) => {
+  const quarter = useMemo(() => getBirthQuarter(citizen.birth_date), [citizen.birth_date]);
+  const quarterColors = useMemo(() => getQuarterColors(quarter), [quarter]);
+  const cycleColors = useMemo(() => getCycleYearColors(citizen.calendar_year), [citizen.calendar_year]);
   
-  switch (colorIndex) {
-    case 0:
-      return { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' };
-    case 1:
-      return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' };
-    case 2:
-      return { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' };
-    case 3:
-      return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' };
-    case 4:
-      return { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' };
-    case 5:
-      return { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' };
-    default:
-      return { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
-  }
-};
+  const provinceColorClass = useMemo(() => {
+    if (!addressDetail) return 'bg-gray-50 border-gray-200';
+    switch (addressDetail.province_name) {
+      case 'BOHOL': return 'bg-yellow-50 border-yellow-200';
+      case 'CEBU': return 'bg-blue-50 border-blue-200';
+      case 'NEGROS ORIENTAL': return 'bg-green-50 border-green-200';
+      case 'SIQUIJOR': return 'bg-purple-50 border-purple-200';
+      default: return 'bg-gray-50 border-gray-200';
+    }
+  }, [addressDetail?.province_name]);
+
+  return (
+    <tr className="hover:bg-gray-50 transition-colors duration-150 group">
+      <td className="px-6 py-4">
+        <div className="text-s font-medium text-gray-900 whitespace-nowrap group-hover:text-blue-700 transition-colors duration-150">
+          {citizen.last_name},
+        </div>
+        <div className="text-s font-medium text-gray-900 whitespace-nowrap">
+          {citizen.first_name}
+        </div>
+        <div className="text-s text-gray-500 whitespace-nowrap">
+          {citizen.middle_name && `${citizen.middle_name} `}
+          {citizen.extension_name && `(${citizen.extension_name})`}
+        </div>
+      </td>
+      <td className="px-6 py-4 text-s whitespace-nowrap font-medium text-center">
+        <div className="space-y-1">
+          <div className={`px-2 py-1 rounded-md border ${quarterColors.bg} ${quarterColors.text} ${quarterColors.border}`}>
+            <div className="font-medium">
+              {format(new Date(citizen.birth_date), 'MMMM d, yyyy')}
+            </div>
+            <div className="text-xs opacity-75">
+              Q{quarter} - {quarter === 1 ? 'Jan-Mar' : quarter === 2 ? 'Apr-Jun' : quarter === 3 ? 'Jul-Sep' : 'Oct-Dec'}
+            </div>
+          </div>
+          <div className={`px-2 py-1 rounded-md border ${cycleColors.bg} ${cycleColors.text} ${cycleColors.border}`}>
+            <div className="text-xs font-medium">
+              CY {citizen.calendar_year}
+            </div>
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-m font-medium ${
+          citizen.sex === 'Male' ? 'bg-blue-200 text-blue-800' : 'bg-pink-200 text-pink-800'
+        }`}>
+          {citizen.sex === 'Male' ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          )}
+          {citizen.sex}
+        </span>
+      </td>
+      <td className="px-6 py-4">
+        <div className={`text-sm text-gray-900 whitespace-nowrap p-2 rounded border ${provinceColorClass}`}>
+          {addressDetail ? (
+            <div className="flex flex-col text-left">
+              <div className="font-small">{addressDetail.barangay_name}</div>
+              <div className="text-gray-500 text-xs mt-1 flex flex-col text-left">
+                <div className="whitespace-nowrap flex items-center font-small">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {addressDetail.lgu_name}
+                </div>
+                <div className="whitespace-nowrap flex items-left">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                  </svg>
+                  {addressDetail.province_name}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-1">
+              <div className="animate-pulse rounded-full h-4 w-4 border-b-2 border-t-2 border-gray-300 mr-2"></div>
+              <span className="text-gray-400">Loading...</span>
+            </div>
+          )}
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <span className={`inline-flex items-center px-4 py-2 rounded-full text-s font-medium ${
+          citizen.status === 'Encoded' ? 'bg-gray-200 text-gray-800' :
+          citizen.status === 'Validated' ? 'bg-blue-200 text-blue-800' :
+          citizen.status === 'Cleanlisted' ? 'bg-green-200 text-green-800' :
+          citizen.status === 'Waitlisted' ? 'bg-yellow-200 text-yellow-800' : 
+          citizen.status === 'Paid' ? 'bg-emerald-200 text-emerald-800' :
+          citizen.status === 'Unpaid' ? 'bg-yellow-200 text-yellow-800' :
+          citizen.status === 'Compliance' ? 'bg-purple-200 text-purple-800' :
+          'bg-red-200 text-red-800'
+        }`}>
+          {citizen.status === 'Validated' && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+          {citizen.status === 'Cleanlisted' && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )}
+          {citizen.status === 'Paid' && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )}
+          {citizen.status === 'Unpaid' && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )}
+          {citizen.status === 'Disqualified' && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+          {citizen.status}
+        </span>
+      </td>
+      <td className="px-6 py-4">
+        <div className="text-[10px] text-gray-500 w-[100px] line-clamp-5 text-center" title={citizen.remarks || '-'}>
+          {citizen.remarks || '-'}
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="text-[11px] text-gray-500 max-w-xs truncate w-[70px]">
+          {citizen.encoded_date ? format(new Date(citizen.encoded_date), 'MMM dd, yyyy') : '-'}
+        </div>
+        <div className="text-[10px] text-gray-500 max-w-xs truncate">
+          {citizen.encoded_date ? format(new Date(citizen.encoded_date), 'hh:mm:ss a') : '-'}
+        </div>
+      </td>
+      <td className="px-4 py-4 text-center whitespace-nowrap">
+        <div className="flex justify-end space-x-2">
+          <button
+            onClick={() => onView(citizen)}
+            className="text-gray-600 hover:text-gray-900 transition-colors duration-150 p-1.5 rounded-full hover:bg-gray-100"
+            title="View Details"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          {(userPosition === 'Administrator' || userPosition === 'PDO') && (
+            <button
+              onClick={() => onEdit(citizen)}
+              className="text-blue-600 hover:text-blue-900 transition-colors duration-150 p-1.5 rounded-full hover:bg-blue-50"
+              title="Edit Record"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+          )}
+          {userPosition === 'Administrator' && (
+            <button
+              onClick={() => onDelete(citizen.id)}
+              className="text-red-600 hover:text-red-900 transition-colors duration-150 p-1.5 rounded-full hover:bg-red-50"
+              title="Delete Record"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+});
+
+CitizenRow.displayName = 'CitizenRow';
 
 function CitizenList() {
   const [showFilters, setShowFilters] = useState(false);
@@ -2400,215 +2579,17 @@ function CitizenList() {
                   </td>
                 </tr>
               ) : (
-                citizens.map((citizen) => {
-                  const addressDetail = addressDetails[citizen.id];
-                  return (
-                    <tr 
-                      key={citizen.id} 
-                      className="hover:bg-gray-50 transition-colors duration-150 group"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="text-s font-medium text-gray-900 whitespace-nowrap group-hover:text-blue-700 transition-colors duration-150">
-                          {citizen.last_name},
-                        </div>
-                        <div className="text-s font-medium text-gray-900 whitespace-nowrap">
-                          {citizen.first_name}
-                        </div>
-                        
-                        <div className="text-s text-gray-500 whitespace-nowrap">
-                          {citizen.middle_name && `${citizen.middle_name} `}
-                          {citizen.extension_name && `(${citizen.extension_name})`}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-s whitespace-nowrap font-medium text-center">
-                        <div className="space-y-1">
-                          {/* Birth Date with Quarter Color Coding */}
-                          <div className={`px-2 py-1 rounded-md border ${(() => {
-                            const quarter = getBirthQuarter(citizen.birth_date);
-                            const colors = getQuarterColors(quarter);
-                            return `${colors.bg} ${colors.text} ${colors.border}`;
-                          })()}`}>
-                            <div className="font-medium">
-                              {format(new Date(citizen.birth_date), 'MMMM d, yyyy')}
-                            </div>
-                            <div className="text-xs opacity-75">
-                              Q{getBirthQuarter(citizen.birth_date)} - {
-                                getBirthQuarter(citizen.birth_date) === 1 ? 'Jan-Mar' :
-                                getBirthQuarter(citizen.birth_date) === 2 ? 'Apr-Jun' :
-                                getBirthQuarter(citizen.birth_date) === 3 ? 'Jul-Sep' : 'Oct-Dec'
-                              }
-                            </div>
-                          </div>
-                          
-                          {/* Cycle Year with Color Coding */}
-                          <div className={`px-2 py-1 rounded-md border ${(() => {
-                            const colors = getCycleYearColors(citizen.calendar_year);
-                            return `${colors.bg} ${colors.text} ${colors.border}`;
-                          })()}`}>
-                            <div className="text-xs font-medium">
-                              CY {citizen.calendar_year}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-m font-medium  ${
-                          citizen.sex === 'Male' ? 'bg-blue-200 text-blue-800' : 'bg-pink-200 text-pink-800'
-                        }`}>
-                          {citizen.sex === 'Male' ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                          )}
-                          {citizen.sex}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div
-                          className={`text-sm text-gray-900 whitespace-nowrap p-2 rounded border ${
-                            addressDetail?.province_name === 'BOHOL'
-                              ? 'bg-yellow-50 border-yellow-200'
-                              : addressDetail?.province_name === 'CEBU'
-                              ? 'bg-blue-50 border-blue-200'
-                              : addressDetail?.province_name === 'NEGROS ORIENTAL'
-                              ? 'bg-green-50 border-green-200'
-                              : addressDetail?.province_name === 'SIQUIJOR'
-                              ? 'bg-purple-50 border-purple-200'
-                              : 'bg-gray-50 border-gray-200'
-                          }`}
-                        >
-                          {addressDetail ? (
-                            <div className="flex flex-col text-left">
-                              <div className="font-small">
-                                {addressDetail.barangay_name}
-                              </div>
-                              <div className="text-gray-500 text-xs mt-1 flex flex-col text-left">
-                                <div className="whitespace-nowrap flex items-center font-small">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  </svg>
-                                  {addressDetail.lgu_name}
-                                </div>
-                                <div className="whitespace-nowrap flex items-left">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
-                                  </svg>
-                                  {addressDetail.province_name}
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center py-1">
-                              <div className="animate-pulse rounded-full h-4 w-4 border-b-2 border-t-2 border-gray-300 mr-2"></div>
-                              <span className="text-gray-400">Loading...</span>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-4 py-2 rounded-full text-s font-medium ${
-                          citizen.status === 'Encoded' ? 'bg-gray-200 text-gray-800' :
-                          citizen.status === 'Validated' ? 'bg-blue-200 text-blue-800' :
-                          citizen.status === 'Cleanlisted' ? 'bg-green-200 text-green-800' :
-                          citizen.status === 'Waitlisted' ? 'bg-yellow-200 text-yellow-800' : 
-                          citizen.status === 'Paid' ? 'bg-emerald-200 text-emerald-800' :
-                          citizen.status === 'Unpaid' ? 'bg-yellow-200 text-yellow-800' :
-                          citizen.status === 'Compliance' ? 'bg-purple-200 text-purple-800' :
-                          'bg-red-200 text-red-800'
-                        }`}>
-                          {citizen.status === 'Validated' && (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                          {citizen.status === 'Cleanlisted' && (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          )}
-                          {citizen.status === 'Paid' && (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          )}
-                          {citizen.status === 'Unpaid' && (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          )}
-                          {citizen.status === 'Disqualified' && (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          )}
-                          {citizen.status}
-                        </span>
-                      </td>
-                     
-                      { /*
-                      <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap text-center w-[50px]">
-                        {citizen.payment_date ? format(new Date(citizen.payment_date), 'MMM d, yyyy') : '-'}
-                      </td>
-                      */}
-
-                      <td className="px-6 py-4">
-                      <div 
-                        className="text-[10px] text-gray-500 w-[100px] line-clamp-5 text-center" 
-                        title={citizen.remarks || '-'}
-                      >
-                        {citizen.remarks || '-'}
-                      </div>
-                    </td>
-        
-                      <td className="px-6 py-4">
-                        <div className="text-[11px] text-gray-500 max-w-xs truncate w-[70px]">
-                          {citizen.encoded_date ? format(new Date(citizen.encoded_date), 'MMM dd, yyyy') : '-'}
-                        </div>      
-                        <div className="text-[10px] text-gray-500 max-w-xs truncate">
-                        {citizen.encoded_date ? format(new Date(citizen.encoded_date), 'hh:mm:ss a') : '-'}
-                        </div>               
-                      </td>
-                     
-                      <td className="px-4 py-4 text-center whitespace-nowrap">
-                        <div className="flex justify-end space-x-2">
-                          <button
-                            onClick={() => setViewingCitizen(citizen)}
-                            className="text-gray-600 hover:text-gray-900 transition-colors duration-150 p-1.5 rounded-full hover:bg-gray-100"
-                            title="View Details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-
-                          {(user?.position === 'Administrator' || user?.position === 'PDO') && (  
-                            <button
-                              onClick={() => setEditingCitizen(citizen)}
-                              className="text-blue-600 hover:text-blue-900 transition-colors duration-150 p-1.5 rounded-full hover:bg-blue-50"
-                              title="Edit Record"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                          )}
-                          
-                          {user?.position === 'Administrator' && (
-                            <button
-                              onClick={() => setShowDeleteConfirm(citizen.id)}
-                              className="text-red-600 hover:text-red-900 transition-colors duration-150 p-1.5 rounded-full hover:bg-red-50"
-                              title="Delete Record"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-
-                    </tr>
-                  );
-                })
+                citizens.map((citizen) => (
+                  <CitizenRow
+                    key={citizen.id}
+                    citizen={citizen}
+                    addressDetail={addressDetails[citizen.id]}
+                    onView={setViewingCitizen}
+                    onEdit={setEditingCitizen}
+                    onDelete={setShowDeleteConfirm}
+                    userPosition={user?.position}
+                  />
+                ))
               )}
             </tbody>
           </table>

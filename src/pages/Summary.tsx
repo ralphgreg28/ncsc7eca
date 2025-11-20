@@ -585,15 +585,15 @@ function Summary() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">LGU</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-600 uppercase">Encoded</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-600 uppercase">Validated</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-600 uppercase">Paid</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-600 uppercase">Unpaid</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-600 uppercase">Cleanlisted</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-600 uppercase">Waitlisted</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-600 uppercase">Compliance</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-600 uppercase">Disqualified</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-600 uppercase">Total</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Encoded</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Validated</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Paid</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Unpaid</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Cleanlisted</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Waitlisted</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Compliance</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Disqualified</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Total</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
@@ -602,31 +602,31 @@ function Summary() {
                     <td className="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-900">
                       {lgu.name}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-violet-600">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-violet-600">
                       {lgu.encoded.toLocaleString()}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-orange-600">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-orange-600">
                       {lgu.validated.toLocaleString()}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-green-600 font-semibold">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-green-600 font-semibold">
                       {lgu.paid.toLocaleString()}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-yellow-600 font-semibold">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-yellow-600 font-semibold">
                       {lgu.unpaid.toLocaleString()}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-blue-600">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-blue-600">
                       {lgu.cleanlisted.toLocaleString()}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-gray-600">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-600">
                       {lgu.waitlisted.toLocaleString()}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-red-600">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-red-600">
                       {lgu.compliance.toLocaleString()}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-rose-600">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-rose-600">
                       {lgu.disqualified.toLocaleString()}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-right text-gray-900 font-semibold">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-900 font-semibold">
                       {lgu.total.toLocaleString()}
                     </td>
                   </tr>

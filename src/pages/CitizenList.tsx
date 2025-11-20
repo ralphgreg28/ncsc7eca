@@ -116,7 +116,7 @@ const getCycleYearColors = (cycleYear: string) => {
   return CYCLE_YEAR_COLORS[colorIndex] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
 };
 
-// Memoized CitizenRow component
+// Memoized CitizenRow component with optimized rendering
 const CitizenRow = memo(({ 
   citizen, 
   addressDetail,
@@ -148,9 +148,9 @@ const CitizenRow = memo(({
   }, [addressDetail?.province_name]);
 
   return (
-    <tr className="hover:bg-gray-50 transition-colors duration-150 group">
+    <tr className="hover:bg-gray-50 will-change-auto" style={{ contain: 'paint' }}>
       <td className="px-6 py-4">
-        <div className="text-s font-medium text-gray-900 whitespace-nowrap group-hover:text-blue-700 transition-colors duration-150">
+        <div className="text-s font-medium text-gray-900 whitespace-nowrap">
           {citizen.last_name},
         </div>
         <div className="text-s font-medium text-gray-900 whitespace-nowrap">
@@ -279,7 +279,7 @@ const CitizenRow = memo(({
         <div className="flex justify-end space-x-2">
           <button
             onClick={() => onView(citizen)}
-            className="text-gray-600 hover:text-gray-900 transition-colors duration-150 p-1.5 rounded-full hover:bg-gray-100"
+            className="text-gray-600 hover:text-gray-900 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
             title="View Details"
           >
             <Eye className="h-4 w-4" />
@@ -287,7 +287,7 @@ const CitizenRow = memo(({
           {(userPosition === 'Administrator' || userPosition === 'PDO') && (
             <button
               onClick={() => onEdit(citizen)}
-              className="text-blue-600 hover:text-blue-900 transition-colors duration-150 p-1.5 rounded-full hover:bg-blue-50"
+              className="text-blue-600 hover:text-blue-900 p-1.5 rounded-full hover:bg-blue-50 transition-colors"
               title="Edit Record"
             >
               <Edit className="h-4 w-4" />
@@ -296,7 +296,7 @@ const CitizenRow = memo(({
           {userPosition === 'Administrator' && (
             <button
               onClick={() => onDelete(citizen.id)}
-              className="text-red-600 hover:text-red-900 transition-colors duration-150 p-1.5 rounded-full hover:bg-red-50"
+              className="text-red-600 hover:text-red-900 p-1.5 rounded-full hover:bg-red-50 transition-colors"
               title="Delete Record"
             >
               <Trash2 className="h-4 w-4" />

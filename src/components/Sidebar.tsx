@@ -105,7 +105,9 @@ function Sidebar({ open, onClose, isAtTop }: SidebarProps) {
 
   const items: NavItem[] = [
     { to: '/', icon: <Home size={18} />, label: 'Home' },
+    { to: '/summary', icon: <PieChart size={18} />, label: 'Summary' },
     { to: '/dashboard', icon: <BarChart2 size={18} />, label: 'Dashboard' },
+
     
     ...((user?.position === 'PDO' || user?.position === 'Administrator') ? [
     { to: '/citizens/new', icon: <Users size={18} />, label: 'SC Registration', badge: 'Hot!' },

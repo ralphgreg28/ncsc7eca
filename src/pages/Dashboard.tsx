@@ -7,8 +7,6 @@ import { supabase } from '../lib/supabase';
 interface Filters {
   startDate: string;
   endDate: string;
-  birthDateStart: string;
-  birthDateEnd: string;
   province: string;
   lgu: string;
   barangay: string;
@@ -161,8 +159,6 @@ function Dashboard() {
   const [filters, setFilters] = useState<Filters>({
     startDate: format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd'),
     endDate: format(new Date(), 'yyyy-MM-dd'),
-    birthDateStart: '',
-    birthDateEnd: '',
     province: '',
     lgu: '',
     barangay: '',
@@ -274,8 +270,6 @@ function Dashboard() {
     setFilters({
       startDate: format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd'),
       endDate: format(new Date(), 'yyyy-MM-dd'),
-      birthDateStart: '',
-      birthDateEnd: '',
       province: '',
       lgu: '',
       barangay: '',
@@ -314,7 +308,7 @@ function Dashboard() {
     status: string;
     payment_date: string | null;
     created_at: string;
-    [key: string]: any; // For any other properties
+    [key: string]: any;
   }
 
   const fetchAllCitizens = async (query: any): Promise<Citizen[]> => {
@@ -343,15 +337,13 @@ function Dashboard() {
   // Calculate total amount based on age using calendar year
   const calculateTotalAmount = useCallback((citizens: Citizen[], selectedYears: string[]) => {
     return citizens.reduce((total, citizen) => {
-      // Check if citizen qualifies for payment in ANY of the selected calendar years
       const qualifiesForPayment = selectedYears.some(yearStr => {
         const year = parseInt(yearStr);
         const age = year - new Date(citizen.birth_date).getFullYear();
-        return age >= 80; // Qualifies if 80 or older in any selected year
+        return age >= 80;
       });
       
       if (qualifiesForPayment) {
-        // Find the highest age across all selected years to determine payment amount
         const maxAge = Math.max(...selectedYears.map(yearStr => {
           const year = parseInt(yearStr);
           return year - new Date(citizen.birth_date).getFullYear();
@@ -374,272 +366,248 @@ function Dashboard() {
 
       let query = supabase.from('citizens').select('*');
 
-          if (filters.startDate) {
-            query = query.gte('created_at', startOfDay(parseISO(filters.startDate)).toISOString());
-          }
-          if (filters.endDate) {
-            query = query.lte('created_at', endOfDay(parseISO(filters.endDate)).toISOString());
-          }
+      if (filters.startDate) {
+        query = query.gte('created_at', startOfDay(parseISO(filters.startDate)).toISOString());
+      }
+      if (filters.endDate) {
+        query = query.lte('created_at', endOfDay(parseISO(filters.endDate)).toISOString());
+      }
 
-          if (filters.birthDateStart) {
-            query = query.gte('birth_date', filters.birthDateStart);
-          }
-          if (filters.birthDateEnd) {
-            query = query.lte('birth_date', filters.birthDateEnd);
-          }
+      if (filters.paymentDateStart) {
+        query = query.gte('payment_date', filters.paymentDateStart);
+      }
+      if (filters.paymentDateEnd) {
+        query = query.lte('payment_date', filters.paymentDateEnd);
+      }
 
-          if (filters.paymentDateStart) {
-            query = query.gte('payment_date', filters.paymentDateStart);
-          }
-          if (filters.paymentDateEnd) {
-            query = query.lte('payment_date', filters.paymentDateEnd);
-          }
+      if (filters.province) {
+        query = query.eq('province_code', filters.province);
+      }
+      if (filters.lgu) {
+        query = query.eq('lgu_code', filters.lgu);
+      }
+      if (filters.barangay) {
+        query = query.eq('barangay_code', filters.barangay);
+      }
 
-          if (filters.province) {
-            query = query.eq('province_code', filters.province);
-          }
-          if (filters.lgu) {
-            query = query.eq('lgu_code', filters.lgu);
-          }
-          if (filters.barangay) {
-            query = query.eq('barangay_code', filters.barangay);
-          }
+      if (filters.status.length > 0) {
+        query = query.in('status', filters.status);
+      }
 
-          if (filters.status.length > 0) {
-            query = query.in('status', filters.status);
-          }
+      const selectedYears = filters.calendarYear.length > 0 
+        ? filters.calendarYear 
+        : ['2023','2024', '2025', '2026', '2027', '2028'];
+      
+      query = query.in('calendar_year', selectedYears.map(year => parseInt(year)));
 
-          // If no calendar years are selected, default to all available years
-          const selectedYears = filters.calendarYear.length > 0 
-            ? filters.calendarYear 
-            : ['2023','2024', '2025', '2026', '2027', '2028'];
-          
-          query = query.in('calendar_year', selectedYears.map(year => parseInt(year)));
+      const citizens = await fetchAllCitizens(query);
 
-          const citizens = await fetchAllCitizens(query);
+      const filteredCitizens = citizens.filter(citizen => {
+        return selectedYears.some(yearStr => {
+          const year = parseInt(yearStr);
+          const age = year - new Date(citizen.birth_date).getFullYear();
+          const meetsAgeStart = !filters.ageStart || age >= parseInt(filters.ageStart);
+          const meetsAgeEnd = !filters.ageEnd || age <= parseInt(filters.ageEnd);
+          return meetsAgeStart && meetsAgeEnd;
+        });
+      });
 
-          // For age calculations, we need to consider all selected calendar years
-          const filteredCitizens = citizens.filter(citizen => {
-            // Use selectedYears (which defaults to all years if none selected)
-            return selectedYears.some(yearStr => {
+      const byStatus = Object.entries(
+        filteredCitizens.reduce((acc, citizen) => {
+          acc[citizen.status] = (acc[citizen.status] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      ).map(([status, count]) => ({ status, count }));
+
+      const bySex = Object.entries(
+        filteredCitizens.reduce((acc, citizen) => {
+          acc[citizen.sex] = (acc[citizen.sex] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      ).map(([sex, count]) => ({ sex, count }));
+
+      const referenceYear = filters.calendarYear.length > 0 ? parseInt(filters.calendarYear[0]) : new Date().getFullYear();
+      
+      const byAge = AGE_RANGES.map(range => ({
+        range: range.label,
+        count: filteredCitizens.filter(citizen => {
+          if (filters.calendarYear.length > 0) {
+            return filters.calendarYear.some(yearStr => {
               const year = parseInt(yearStr);
               const age = year - new Date(citizen.birth_date).getFullYear();
-              const meetsAgeStart = !filters.ageStart || age >= parseInt(filters.ageStart);
-              const meetsAgeEnd = !filters.ageEnd || age <= parseInt(filters.ageEnd);
-              return meetsAgeStart && meetsAgeEnd;
+              return age >= range.min && age <= range.max;
             });
-          });
+          } else {
+            const age = referenceYear - new Date(citizen.birth_date).getFullYear();
+            return age >= range.min && age <= range.max;
+          }
+        }).length
+      }));
 
-          const byStatus = Object.entries(
-            filteredCitizens.reduce((acc, citizen) => {
-              acc[citizen.status] = (acc[citizen.status] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>)
-          ).map(([status, count]) => ({ status, count }));
+      const byQuarter = [1, 2, 3, 4].map(q => ({
+        quarter: `Q${q}`,
+        count: filteredCitizens.filter(citizen => {
+          const date = new Date(citizen.birth_date);
+          return Math.floor(date.getMonth() / 3) + 1 === q;
+        }).length
+      }));
 
-          const bySex = Object.entries(
-            filteredCitizens.reduce((acc, citizen) => {
-              acc[citizen.sex] = (acc[citizen.sex] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>)
-          ).map(([sex, count]) => ({ sex, count }));
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      
+      const byMonth = monthNames.map((month, index) => ({
+        month,
+        count: filteredCitizens.filter(citizen => {
+          const date = new Date(citizen.birth_date);
+          return date.getMonth() === index;
+        }).length
+      }));
 
-          // Use the first selected calendar year for age range calculations, or current year as fallback
-          const referenceYear = filters.calendarYear.length > 0 ? parseInt(filters.calendarYear[0]) : new Date().getFullYear();
-          
-          const byAge = AGE_RANGES.map(range => ({
-            range: range.label,
-            count: filteredCitizens.filter(citizen => {
-              // Check if citizen meets age criteria for any of the selected calendar years
-              if (filters.calendarYear.length > 0) {
-                return filters.calendarYear.some(yearStr => {
-                  const year = parseInt(yearStr);
-                  const age = year - new Date(citizen.birth_date).getFullYear();
-                  return age >= range.min && age <= range.max;
-                });
-              } else {
-                const age = referenceYear - new Date(citizen.birth_date).getFullYear();
-                return age >= range.min && age <= range.max;
-              }
-            }).length
-          }));
+      const encodedCitizens = filteredCitizens.filter(c => c.status === 'Encoded');
+      const validatedCitizens = filteredCitizens.filter(c => c.status === 'Validated');
+      const paidStatusCitizens = filteredCitizens.filter(c => c.status === 'Paid');
+      const unpaidCitizens = filteredCitizens.filter(c => c.status === 'Unpaid');
+      const cleanlistedCitizens = filteredCitizens.filter(c => c.status === 'Cleanlisted');
+      const complianceCitizens = filteredCitizens.filter(c => c.status === 'Compliance');
+      const disqualifiedCitizens = filteredCitizens.filter(c => c.status === 'Disqualified');
+      const waitlistedCitizens = filteredCitizens.filter(c => c.status === 'Waitlisted');
+      
+      const paymentStats = {
+        paid: paidStatusCitizens.length,
+        unpaid: unpaidCitizens.length,
+        compliance: complianceCitizens.length,
+        disqualified: disqualifiedCitizens.length,
+        encoded: encodedCitizens.length,
+        validated: validatedCitizens.length,
+        cleanlisted: cleanlistedCitizens.length,
+        waitlisted: waitlistedCitizens.length,
+        total: filteredCitizens.length,
+        paidAmount: calculateTotalAmount(paidStatusCitizens, selectedYears),
+        unpaidAmount: calculateTotalAmount(unpaidCitizens, selectedYears),
+        complianceAmount: calculateTotalAmount(complianceCitizens, selectedYears),
+        disqualifiedAmount: calculateTotalAmount(disqualifiedCitizens, selectedYears),
+        encodedAmount: calculateTotalAmount(encodedCitizens, selectedYears),
+        validatedAmount: calculateTotalAmount(validatedCitizens, selectedYears),
+        cleanlistedAmount: calculateTotalAmount(cleanlistedCitizens, selectedYears),
+        waitlistedAmount: calculateTotalAmount(waitlistedCitizens, selectedYears)
+      };
 
-          const byQuarter = [1, 2, 3, 4].map(q => ({
-            quarter: `Q${q}`,
-            count: filteredCitizens.filter(citizen => {
-              const date = new Date(citizen.birth_date);
-              return Math.floor(date.getMonth() / 3) + 1 === q;
-            }).length
-          }));
+      const specificAges = [80, 85, 90, 95, 100];
+      const paidCitizens = filteredCitizens.filter(c => c.status === 'Paid');
+      const totalPaid = paidCitizens.length;
 
-          // Calculate monthly distribution based on birth date
-          const monthNames = [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-          ];
-          
-          const byMonth = monthNames.map((month, index) => ({
-            month,
-            count: filteredCitizens.filter(citizen => {
-              const date = new Date(citizen.birth_date);
-              return date.getMonth() === index;
-            }).length
-          }));
+      const paidBySpecificAge = specificAges.map(targetAge => {
+        const exactAgeCitizens = paidCitizens.filter(citizen => {
+          if (filters.calendarYear.length > 0) {
+            return filters.calendarYear.some(yearStr => {
+              const year = parseInt(yearStr);
+              const age = year - new Date(citizen.birth_date).getFullYear();
+              return age === targetAge;
+            });
+          } else {
+            const age = referenceYear - new Date(citizen.birth_date).getFullYear();
+            return age === targetAge;
+          }
+        });
+        
+        const count = exactAgeCitizens.length;
+        const maleCount = exactAgeCitizens.filter(c => c.sex === 'Male').length;
+        const femaleCount = exactAgeCitizens.filter(c => c.sex === 'Female').length;
+        const cashGift = targetAge === 100 ? 100000 : 10000;
+        
+        return {
+          age: targetAge,
+          count,
+          maleCount,
+          femaleCount,
+          malePercentage: count > 0 ? (maleCount / count) * 100 : 0,
+          femalePercentage: count > 0 ? (femaleCount / count) * 100 : 0,
+          percentage: totalPaid > 0 ? (count / totalPaid) * 100 : 0,
+          cashGift,
+          totalAmount: count * cashGift
+        };
+      });
 
-          // Group citizens by status
-          const encodedCitizens = filteredCitizens.filter(c => c.status === 'Encoded');
-          const validatedCitizens = filteredCitizens.filter(c => c.status === 'Validated');
-          const paidStatusCitizens = filteredCitizens.filter(c => c.status === 'Paid');
-          const unpaidCitizens = filteredCitizens.filter(c => c.status === 'Unpaid');
-          const cleanlistedCitizens = filteredCitizens.filter(c => c.status === 'Cleanlisted');
-          const complianceCitizens = filteredCitizens.filter(c => c.status === 'Compliance');
-          const disqualifiedCitizens = filteredCitizens.filter(c => c.status === 'Disqualified');
-          const waitlistedCitizens = filteredCitizens.filter(c => c.status === 'Waitlisted');
-          
-          // Calculate total amounts for each status
-          const paymentStats = {
-            paid: paidStatusCitizens.length,
-            unpaid: unpaidCitizens.length,
-            compliance: complianceCitizens.length,
-            disqualified: disqualifiedCitizens.length,
-            encoded: encodedCitizens.length,
-            validated: validatedCitizens.length,
-            cleanlisted: cleanlistedCitizens.length,
-            waitlisted: waitlistedCitizens.length,
-            total: filteredCitizens.length,
-            paidAmount: calculateTotalAmount(paidStatusCitizens, selectedYears),
-            unpaidAmount: calculateTotalAmount(unpaidCitizens, selectedYears),
-            complianceAmount: calculateTotalAmount(complianceCitizens, selectedYears),
-            disqualifiedAmount: calculateTotalAmount(disqualifiedCitizens, selectedYears),
-            encodedAmount: calculateTotalAmount(encodedCitizens, selectedYears),
-            validatedAmount: calculateTotalAmount(validatedCitizens, selectedYears),
-            cleanlistedAmount: calculateTotalAmount(cleanlistedCitizens, selectedYears),
-            waitlistedAmount: calculateTotalAmount(waitlistedCitizens, selectedYears)
+      const { data: allProvinces } = await supabase
+        .from('provinces')
+        .select('code, name')
+        .order('name');
+
+      const provinceStats = await Promise.all(
+        (allProvinces || []).map(async (province) => {
+          const provinceCitizens = filteredCitizens.filter(c => c.province_code === province.code);
+          return {
+            name: province.name,
+            paid: provinceCitizens.filter(c => c.status === 'Paid').length,
+            unpaid: provinceCitizens.filter(c => c.status === 'Unpaid').length,
+            encoded: provinceCitizens.filter(c => c.status === 'Encoded').length,
+            validated: provinceCitizens.filter(c => c.status === 'Validated').length,
+            cleanlisted: provinceCitizens.filter(c => c.status === 'Cleanlisted').length,
+            waitlisted: provinceCitizens.filter(c => c.status === 'Waitlisted').length,
+            compliance: provinceCitizens.filter(c => c.status === 'Compliance').length,
+            disqualified: provinceCitizens.filter(c => c.status === 'Disqualified').length,
+            total: provinceCitizens.length
           };
+        })
+      );
 
-          // Calculate statistics for paid citizens at specific ages (exactly 80, 85, 90, 95, 100)
-          const specificAges = [80, 85, 90, 95, 100];
-          const paidCitizens = filteredCitizens.filter(c => c.status === 'Paid');
-          const totalPaid = paidCitizens.length;
-          
-          //wew
+      if (filters.province) {
+        const { data: lgus } = await supabase
+          .from('lgus')
+          .select('code, name')
+          .eq('province_code', filters.province)
+          .order('name');
 
-          const paidBySpecificAge = specificAges.map(targetAge => {
-            // Count citizens who are exactly the target age in ANY of the selected calendar years
-            const exactAgeCitizens = paidCitizens.filter(citizen => {
-              if (filters.calendarYear.length > 0) {
-                return filters.calendarYear.some(yearStr => {
-                  const year = parseInt(yearStr);
-                  const age = year - new Date(citizen.birth_date).getFullYear();
-                  return age === targetAge; // Exact age match for any selected year
-                });
-              } else {
-                const age = referenceYear - new Date(citizen.birth_date).getFullYear();
-                return age === targetAge;
-              }
-            });
-            
-            const count = exactAgeCitizens.length;
-            
-            // Count by sex
-            const maleCount = exactAgeCitizens.filter(c => c.sex === 'Male').length;
-            const femaleCount = exactAgeCitizens.filter(c => c.sex === 'Female').length;
-            
-            // Cash gift amount based on age
-            const cashGift = targetAge === 100 ? 100000 : 10000;
-            
-            // Calculate percentage of all paid citizens who are at this specific age
-            return {
-              age: targetAge,
-              count,
-              maleCount,
-              femaleCount,
-              malePercentage: count > 0 ? (maleCount / count) * 100 : 0,
-              femalePercentage: count > 0 ? (femaleCount / count) * 100 : 0,
-              percentage: totalPaid > 0 ? (count / totalPaid) * 100 : 0,
-              cashGift,
-              totalAmount: count * cashGift
-            };
-          });
-
-          const { data: allProvinces } = await supabase
-            .from('provinces')
-            .select('code, name')
-            .order('name');
-
-          const provinceStats = await Promise.all(
-            (allProvinces || []).map(async (province) => {
-              const provinceCitizens = filteredCitizens.filter(c => c.province_code === province.code);
+        if (lgus) {
+          const lguStatsData = await Promise.all(
+            lgus.map(async (lgu) => {
+              const lguCitizens = filteredCitizens.filter(c => c.lgu_code === lgu.code);
               return {
-                name: province.name,
-                paid: provinceCitizens.filter(c => c.status === 'Paid').length,
-                unpaid: provinceCitizens.filter(c => c.status === 'Unpaid').length,
-                encoded: provinceCitizens.filter(c => c.status === 'Encoded').length,
-                validated: provinceCitizens.filter(c => c.status === 'Validated').length,
-                cleanlisted: provinceCitizens.filter(c => c.status === 'Cleanlisted').length,
-                waitlisted: provinceCitizens.filter(c => c.status === 'Waitlisted').length,
-                compliance: provinceCitizens.filter(c => c.status === 'Compliance').length,
-                disqualified: provinceCitizens.filter(c => c.status === 'Disqualified').length,
-                total: provinceCitizens.length
+                name: lgu.name,
+                paid: lguCitizens.filter(c => c.status === 'Paid').length,
+                unpaid: lguCitizens.filter(c => c.status === 'Unpaid').length,
+                encoded: lguCitizens.filter(c => c.status === 'Encoded').length,
+                validated: lguCitizens.filter(c => c.status === 'Validated').length,
+                cleanlisted: lguCitizens.filter(c => c.status === 'Cleanlisted').length,
+                waitlisted: lguCitizens.filter(c => c.status === 'Waitlisted').length,
+                compliance: lguCitizens.filter(c => c.status === 'Compliance').length,
+                disqualified: lguCitizens.filter(c => c.status === 'Disqualified').length,
+                total: lguCitizens.length
               };
             })
           );
+          setLguStats(lguStatsData);
+        }
+      } else {
+        setLguStats([]);
+      }
 
-          if (filters.province) {
-            const { data: lgus } = await supabase
-              .from('lgus')
-              .select('code, name')
-              .eq('province_code', filters.province)
-              .order('name');
+      const [
+        { count: provincesCount },
+        { count: lgusCount },
+        { count: barangaysCount }
+      ] = await Promise.all([
+        supabase.from('provinces').select('*', { count: 'exact', head: true }),
+        supabase.from('lgus').select('*', { count: 'exact', head: true }),
+        supabase.from('barangays').select('*', { count: 'exact', head: true })
+      ]);
 
-            if (lgus) {
-              const lguStatsData = await Promise.all(
-                lgus.map(async (lgu) => {
-                  const lguCitizens = filteredCitizens.filter(c => c.lgu_code === lgu.code);
-                  return {
-                    name: lgu.name,
-                    paid: lguCitizens.filter(c => c.status === 'Paid').length,
-                    unpaid: lguCitizens.filter(c => c.status === 'Unpaid').length,
-                    encoded: lguCitizens.filter(c => c.status === 'Encoded').length,
-                    validated: lguCitizens.filter(c => c.status === 'Validated').length,
-                    cleanlisted: lguCitizens.filter(c => c.status === 'Cleanlisted').length,
-                    waitlisted: lguCitizens.filter(c => c.status === 'Waitlisted').length,
-                    compliance: lguCitizens.filter(c => c.status === 'Compliance').length,
-                    disqualified: lguCitizens.filter(c => c.status === 'Disqualified').length,
-                    total: lguCitizens.length
-                  };
-                })
-              );
-              setLguStats(lguStatsData);
-            }
-          } else {
-            setLguStats([]);
-          }
-
-          const [
-            { count: provincesCount },
-            { count: lgusCount },
-            { count: barangaysCount }
-          ] = await Promise.all([
-            supabase.from('provinces').select('*', { count: 'exact', head: true }),
-            supabase.from('lgus').select('*', { count: 'exact', head: true }),
-            supabase.from('barangays').select('*', { count: 'exact', head: true })
-          ]);
-
-          setStats({
-            totalCitizens: filteredCitizens.length,
-            provinces: provincesCount || 0,
-            lgus: lgusCount || 0,
-            barangays: barangaysCount || 0,
-            byStatus,
-            bySex,
-            byAge,
-            byQuarter,
-            byMonth,
-            paymentStats,
-            provinceStats,
-            paidBySpecificAge
-          });
+      setStats({
+        totalCitizens: filteredCitizens.length,
+        provinces: provincesCount || 0,
+        lgus: lgusCount || 0,
+        barangays: barangaysCount || 0,
+        byStatus,
+        bySex,
+        byAge,
+        byQuarter,
+        byMonth,
+        paymentStats,
+        provinceStats,
+        paidBySpecificAge
+      });
     } catch (error) {
       console.error('Error fetching stats:', error);
       setError('Failed to load dashboard data. Please try again.');
@@ -797,27 +765,8 @@ function Dashboard() {
               </select>
             </div>
           </div>
-<br />
-  <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Birth Date Range</label>
-              <div className="grid grid-cols-4 gap-2">
-                <input
-                  type="date"
-                  value={filters.birthDateStart}
-                  onChange={(e) => setFilters(prev => ({ ...prev, birthDateStart: e.target.value }))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <input
-                  type="date"
-                  value={filters.birthDateEnd}
-                  onChange={(e) => setFilters(prev => ({ ...prev, birthDateEnd: e.target.value }))}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-<br />
-                      
-            <div>
+
+          <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Calendar Year</label>
               <div className="flex flex-wrap gap-2">
                 {['2024', '2025','2026','2027','2028'].map(year => (

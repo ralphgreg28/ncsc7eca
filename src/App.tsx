@@ -15,6 +15,7 @@ import BroadcastMessages from './pages/BroadcastMessages';
 import StakeholdersDirectory from './pages/StakeholdersDirectory';
 import AuditTrail from './pages/AuditTrail';
 import EncodedStatusMonitor from './pages/EncodedStatusMonitor';
+import Summary from './pages/Summary';
 import NotFoundRedirect from './components/NotFoundRedirect';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -31,6 +32,7 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="summary" element={<Summary />} />
           <Route path="citizens/new" element={<CitizenForm />} />
           <Route path="citizens/list" element={<CitizenList />} />
           <Route path="citizens/duplicates" element={<DuplicateCheck />} />

@@ -5,14 +5,9 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, 
 import { supabase } from '../lib/supabase';
 
 interface Filters {
-  startDate: string;
-  endDate: string;
   province: string;
   lgu: string;
   barangay: string;
-  status: string[];
-  paymentDateStart: string;
-  paymentDateEnd: string;
   ageStart: string;
   ageEnd: string;
   calendarYear: string[];
@@ -155,19 +150,15 @@ function Dashboard() {
   const [provinces, setProvinces] = useState<AddressOption[]>([]);
   const [lgus, setLgus] = useState<AddressOption[]>([]);
   const [barangays, setBarangays] = useState<AddressOption[]>([]);
+  const [availableCalendarYears, setAvailableCalendarYears] = useState<number[]>([]);
   
   const [filters, setFilters] = useState<Filters>({
-    startDate: format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd'),
-    endDate: format(new Date(), 'yyyy-MM-dd'),
     province: '',
     lgu: '',
     barangay: '',
-    status: [],
-    paymentDateStart: '',
-    paymentDateEnd: '',
     ageStart: '',
     ageEnd: '',
-    calendarYear: ['2023','2024', '2025', '2026', '2027', '2028']
+    calendarYear: []
   });
 
   const [lguStats, setLguStats] = useState<{
@@ -185,20 +176,31 @@ function Dashboard() {
 
   }[]>([]);
 
-  const statusOptions = useMemo(() => [
-    'Encoded',
-    'Validated',
-    'Cleanlisted',
-    'Waitlisted',
-    'Paid',
-    'Unpaid',
-    'Compliance',
-    'Disqualified'
-  ], []);
-
   useEffect(() => {
     fetchProvinces();
+    fetchAvailableCalendarYears();
     fetchStats();
+  }, []);
+
+  const fetchAvailableCalendarYears = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_distinct_calendar_years');
+
+      if (error) throw error;
+      
+      const years = (data || []).map((item: { calendar_year: number }) => item.calendar_year);
+      setAvailableCalendarYears(years);
+      
+      // Set all available years as selected by default
+      setFilters(prev => ({
+        ...prev,
+        calendarYear: years.map(String)
+      }));
+    } catch (error) {
+      console.error('Error fetching calendar years:', error);
+      setError('Failed to load calendar years');
+    }
   }, []);
 
   useEffect(() => {
@@ -268,20 +270,15 @@ function Dashboard() {
 
   const resetFilters = useCallback(() => {
     setFilters({
-      startDate: format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd'),
-      endDate: format(new Date(), 'yyyy-MM-dd'),
       province: '',
       lgu: '',
       barangay: '',
-      status: [],
-      paymentDateStart: '',
-      paymentDateEnd: '',
       ageStart: '',
       ageEnd: '',
-      calendarYear: ['2023','2024', '2025', '2026', '2027', '2028']
+      calendarYear: availableCalendarYears.map(String)
     });
     setError(null);
-  }, []);
+  }, [availableCalendarYears]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -366,19 +363,6 @@ function Dashboard() {
 
       let query = supabase.from('citizens').select('*');
 
-      if (filters.startDate) {
-        query = query.gte('created_at', startOfDay(parseISO(filters.startDate)).toISOString());
-      }
-      if (filters.endDate) {
-        query = query.lte('created_at', endOfDay(parseISO(filters.endDate)).toISOString());
-      }
-
-      if (filters.paymentDateStart) {
-        query = query.gte('payment_date', filters.paymentDateStart);
-      }
-      if (filters.paymentDateEnd) {
-        query = query.lte('payment_date', filters.paymentDateEnd);
-      }
 
       if (filters.province) {
         query = query.eq('province_code', filters.province);
@@ -390,11 +374,7 @@ function Dashboard() {
         query = query.eq('barangay_code', filters.barangay);
       }
 
-      if (filters.status.length > 0) {
-        query = query.in('status', filters.status);
-      }
-
-      const selectedYears = filters.calendarYear.length > 0 
+      const selectedYears = filters.calendarYear.length > 0
         ? filters.calendarYear 
         : ['2023','2024', '2025', '2026', '2027', '2028'];
       
@@ -499,17 +479,10 @@ function Dashboard() {
       const totalPaid = paidCitizens.length;
 
       const paidBySpecificAge = specificAges.map(targetAge => {
+        // Calculate age using each citizen's specific calendar_year field
         const exactAgeCitizens = paidCitizens.filter(citizen => {
-          if (filters.calendarYear.length > 0) {
-            return filters.calendarYear.some(yearStr => {
-              const year = parseInt(yearStr);
-              const age = year - new Date(citizen.birth_date).getFullYear();
-              return age === targetAge;
-            });
-          } else {
-            const age = referenceYear - new Date(citizen.birth_date).getFullYear();
-            return age === targetAge;
-          }
+          const age = citizen.calendar_year - new Date(citizen.birth_date).getFullYear();
+          return age === targetAge;
         });
         
         const count = exactAgeCitizens.length;
@@ -766,19 +739,20 @@ function Dashboard() {
             </div>
           </div>
 
-          <div>
+          <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">Calendar Year</label>
               <div className="flex flex-wrap gap-2">
-                {['2024', '2025','2026','2027','2028'].map(year => (
+                {availableCalendarYears.map(year => (
                   <button
                     key={year}
                     onClick={() => {
                       setFilters(prev => {
+                        const yearStr = String(year);
                         const currentYears = prev.calendarYear;
                         
-                        if (currentYears.includes(year)) {
+                        if (currentYears.includes(yearStr)) {
                           // If clicking on a selected year, deselect it
-                          const newYears = currentYears.filter(y => y !== year);
+                          const newYears = currentYears.filter(y => y !== yearStr);
                           return {
                             ...prev,
                             calendarYear: newYears
@@ -787,13 +761,13 @@ function Dashboard() {
                           // If clicking on an unselected year, add it
                           return {
                             ...prev,
-                            calendarYear: [...currentYears, year]
+                            calendarYear: [...currentYears, yearStr]
                           };
                         }
                       });
                     }}
                     className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-150 ${
-                      filters.calendarYear.includes(year)
+                      filters.calendarYear.includes(String(year))
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-gray-100 text-gray-800'
                     }`}
@@ -803,32 +777,6 @@ function Dashboard() {
                 ))}
               </div>
             </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <div className="flex flex-wrap gap-2">
-              {statusOptions.map(status => (
-                <button
-                  key={status}
-                  onClick={() => {
-                    setFilters(prev => ({
-                      ...prev,
-                      status: prev.status.includes(status)
-                        ? prev.status.filter(s => s !== status)
-                        : [...prev.status, status]
-                    }));
-                  }}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-150 ${
-                    filters.status.includes(status)
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       )}
 

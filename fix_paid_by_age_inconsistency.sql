@@ -1,4 +1,6 @@
--- Function to get paid citizens by specific age
+-- Fix for "Paid Citizens by Specific Ages" data inconsistency
+-- This updates the get_dashboard_paid_by_age function to prevent duplicate counting
+
 CREATE OR REPLACE FUNCTION get_dashboard_paid_by_age(
   p_start_date timestamptz DEFAULT NULL,
   p_end_date timestamptz DEFAULT NULL,

@@ -986,7 +986,16 @@ const deleteRecord = async (citizenId: number) => {
               <input
                 id="middleName"
                 type="text"
-                {...register('middleName')}
+                {...register('middleName', {
+                  validate: (value) => {
+                    if (!value) return true; // Allow empty since it's optional
+                    const trimmedValue = value.trim();
+                    if (trimmedValue.length === 1) {
+                      return 'Middle name cannot be a single letter or initial';
+                    }
+                    return true;
+                  }
+                })}
                 className={`border ${
                   errors.middleName 
                     ? 'border-red-500 bg-red-50' 
@@ -999,6 +1008,12 @@ const deleteRecord = async (citizenId: number) => {
                 placeholder="Enter middle name"
                 onChange={handleNameInput}
               />
+              {errors.middleName && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle size={14} className="mr-1" />
+                  {errors.middleName.message}
+                </p>
+              )}
             </div>
             
             <div className="form-group">

@@ -93,6 +93,7 @@ function Summary() {
   const [provinces, setProvinces] = useState<AddressOption[]>([]);
   const [lgus, setLgus] = useState<AddressOption[]>([]);
   const [barangays, setBarangays] = useState<AddressOption[]>([]);
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
   
   const [filters, setFilters] = useState<Filters>({
     startDate: format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd'),
@@ -100,7 +101,7 @@ function Summary() {
     province: '',
     lgu: '',
     barangay: '',
-    calendarYear: ['2024', '2025', '2026', '2027', '2028']
+    calendarYear: []
   });
 
   const [lguStats, setLguStats] = useState<{
@@ -229,8 +230,20 @@ function Summary() {
 
   useEffect(() => {
     fetchProvinces();
-    fetchStats();
-  }, [fetchStats]);
+    fetchAvailableYears();
+  }, []);
+
+  useEffect(() => {
+    if (availableYears.length > 0 && filters.calendarYear.length === 0) {
+      setFilters(prev => ({ ...prev, calendarYear: availableYears }));
+    }
+  }, [availableYears]);
+
+  useEffect(() => {
+    if (filters.calendarYear.length > 0) {
+      fetchStats();
+    }
+  }, [fetchStats, filters.calendarYear]);
 
   useEffect(() => {
     if (filters.province) {
@@ -243,6 +256,43 @@ function Summary() {
       fetchBarangays();
     }
   }, [filters.lgu]);
+
+  const fetchAvailableYears = useCallback(async () => {
+    try {
+      // Use a SQL query to get distinct calendar years
+      const { data, error } = await supabase.rpc('get_distinct_calendar_years');
+
+      if (error) {
+        console.error('Error from RPC:', error);
+        // Try direct query as fallback
+        const { data: directData, error: directError } = await supabase
+          .from('citizens')
+          .select('calendar_year')
+          .not('calendar_year', 'is', null);
+
+        if (directError) throw directError;
+        
+        // Extract unique years and sort them
+        const uniqueYears = Array.from(
+          new Set(directData?.map(item => {
+            const year = item.calendar_year;
+            return year ? year.toString() : null;
+          }).filter(Boolean) || [])
+        ).sort((a, b) => parseInt(a) - parseInt(b));
+        
+        setAvailableYears(uniqueYears);
+        return;
+      }
+      
+      // Process the results from RPC function
+      const years = data?.map((item: any) => item.calendar_year?.toString()).filter(Boolean) || [];
+      setAvailableYears(years.sort((a: string, b: string) => parseInt(a) - parseInt(b)));
+    } catch (error) {
+      console.error('Error fetching available years:', error);
+      // Fallback to default years if fetch fails
+      setAvailableYears(['2024', '2025', '2026', '2027', '2028']);
+    }
+  }, []);
 
   const fetchProvinces = useCallback(async () => {
     try {
@@ -297,10 +347,10 @@ function Summary() {
       province: '',
       lgu: '',
       barangay: '',
-      calendarYear: ['2024', '2025', '2026', '2027', '2028']
+      calendarYear: availableYears
     });
     setError(null);
-  }, []);
+  }, [availableYears]);
 
   if (loading) {
     return (
@@ -397,7 +447,7 @@ function Summary() {
         <div className="mt-3 sm:col-span-2 lg:col-span-3">
           <label className="block text-xs font-medium text-gray-700 mb-1.5">Calendar Year</label>
           <div className="flex flex-wrap gap-1.5">
-            {['2024', '2025', '2026', '2027', '2028'].map(year => (
+            {availableYears.map(year => (
               <button
                 key={year}
                 onClick={() => {

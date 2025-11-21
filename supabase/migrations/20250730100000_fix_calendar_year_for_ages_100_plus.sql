@@ -1,28 +1,14 @@
 /*
-  # Add calendar_year column to citizens table
-
-  1. Changes
-    - Add function to calculate calendar year based on birth_date
-    - Add calendar_year computed column to citizens table
-    - Add index for performance optimization
-    
-  2. Logic
-    - Calendar year is calculated to make age exactly 80, 85, 90, 95, or 100
-    - Pattern based on birth year's last digit for consistent grouping
-    - Future-proof design that works for any birth year
-    
-  3. Examples
-    - Birth year 1945 → calendar_year 2025 (age 80)
-    - Birth year 1940 → calendar_year 2025 (age 85)
-    - Birth year 1944 → calendar_year 2024 (age 80)
-    - Birth year 1939 → calendar_year 2024 (age 85)
-    - Birth year 1918 → calendar_year 2018 (age 100)
-    - Birth year 1920 → calendar_year 2020 (age 100)
-    - Birth year 1925 → calendar_year 2025 (age 100)
-    - Birth year 1928 → calendar_year 2028 (age 100)
+  # Fix calendar_year calculation for ages 100+
+  
+  Updates the calculate_calendar_year function to properly handle
+  birth years ≤ 1928 using the birth_year + 100 formula.
+  
+  Also drops and recreates the calendar_year column to force
+  recalculation for all existing data.
 */
 
--- Create function to calculate calendar year based on birth date
+-- Step 1: Drop and recreate the function with correct logic
 CREATE OR REPLACE FUNCTION calculate_calendar_year(birth_date DATE)
 RETURNS INTEGER AS $$
 DECLARE
@@ -36,6 +22,7 @@ BEGIN
   -- For ages 100 and above (birth years ≤ 1928), calendar year is birth_year + 100
   -- This ensures they get their proper calendar year at exactly age 100
   -- Example: Birth year 1918 → Calendar year 2018 (age 100)
+  -- Example: Birth year 1923 → Calendar year 2023 (age 100)
   -- Example: Birth year 1928 → Calendar year 2028 (age 100)
   IF birth_year <= 1928 THEN
     RETURN birth_year + 100;
@@ -66,16 +53,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
--- Add calendar_year column as a computed column
+-- Step 2: Drop the existing calendar_year column
+-- This is necessary to force recalculation of all existing data
+ALTER TABLE citizens DROP COLUMN IF EXISTS calendar_year;
+
+-- Step 3: Recreate the calendar_year column with the updated function
+-- This will recalculate all values using the new logic
 ALTER TABLE citizens 
-ADD COLUMN IF NOT EXISTS calendar_year INTEGER 
+ADD COLUMN calendar_year INTEGER 
 GENERATED ALWAYS AS (calculate_calendar_year(birth_date)) STORED;
 
--- Create index on calendar_year for better query performance
+-- Step 4: Recreate the index for performance
 CREATE INDEX IF NOT EXISTS idx_citizens_calendar_year ON citizens(calendar_year);
 
--- Add column comment
-COMMENT ON COLUMN citizens.calendar_year IS 'Automatically calculated calendar year based on birth_date to assign ages of 80, 85, 90, 95, or 100';
-
--- Add comment on function
-COMMENT ON FUNCTION calculate_calendar_year(DATE) IS 'Calculates calendar year to assign target ages (80, 85, 90, 95, 100) based on birth year pattern';
+-- Step 5: Re-add the column comment
+COMMENT ON COLUMN citizens.calendar_year IS 'Automatically calculated calendar year based on birth_date to assign ages of 80, 85, 90, 95, or 100. Birth years ≤ 1928 use formula birth_year + 100.';

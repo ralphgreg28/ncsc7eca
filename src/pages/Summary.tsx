@@ -66,6 +66,18 @@ interface Stats {
   }[];
 }
 
+interface ProvincialPaidByAgeStats {
+  province_name: string;
+  province_code: string;
+  calendar_year: number;
+  age_80: number;
+  age_85: number;
+  age_90: number;
+  age_95: number;
+  age_100: number;
+  total_paid: number;
+}
+
 function Summary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -116,6 +128,8 @@ function Summary() {
     disqualified: number;
     total: number;
   }[]>([]);
+
+  const [provincialPaidByAge, setProvincialPaidByAge] = useState<ProvincialPaidByAgeStats[]>([]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -200,6 +214,24 @@ function Summary() {
       }
 
       const paidBySpecificAge = paidByAgeData || [];
+
+      // Fetch provincial paid by age stats
+      const provincialParams = {
+        p_start_date: params.p_start_date,
+        p_end_date: params.p_end_date,
+        p_province_code: params.p_province_code,
+        p_lgu_code: params.p_lgu_code,
+        p_barangay_code: params.p_barangay_code,
+        p_calendar_years: selectedYears
+      };
+      
+      const { data: provincialPaidByAgeData, error: provincialPaidByAgeError } = await supabase.rpc('get_provincial_paid_by_age_stats', provincialParams);
+      
+      if (provincialPaidByAgeError) {
+        console.error('Error fetching provincial paid by age stats:', provincialPaidByAgeError);
+      }
+
+      setProvincialPaidByAge(provincialPaidByAgeData || []);
 
       setStats({
         totalCitizens: basicStats.totalCitizens || 0,
@@ -708,6 +740,78 @@ function Summary() {
           </div>
         </div>
       )}
+
+      {/* Provincial Statistics - Paid by Age */}
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <h2 className="text-sm font-semibold mb-2 flex items-center">
+          <span className="bg-teal-100 text-teal-800 px-2 py-0.5 rounded text-xs mr-2">Provincial Statistics - Paid by Age</span>
+          <span className="ml-2 text-xs text-gray-500">({provincialPaidByAge.length} records)</span>
+        </h2>
+        <p className="text-xs text-gray-600 mb-3">
+          Paid citizens aged 80, 85, 90, 95, and 100 by province and calendar year
+        </p>
+        {provincialPaidByAge.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 text-sm">
+            <p>No data available for the selected filters.</p>
+            <p className="text-xs mt-2">This could mean:</p>
+            <ul className="text-xs mt-1 space-y-1">
+              <li>• No paid citizens aged 80, 85, 90, 95, or 100 for the selected calendar years</li>
+              <li>• The database function may not be returning data correctly</li>
+              <li>• Check the browser console for errors</li>
+            </ul>
+          </div>
+        ) : (
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th rowSpan={2} className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase border-r border-gray-200">Province</th>
+                  <th rowSpan={2} className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase border-r border-gray-200">Calendar Year</th>
+                  <th colSpan={5} className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase border-r border-gray-200">Paid by Age</th>
+                  <th rowSpan={2} className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Total</th>
+                </tr>
+                <tr>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">80</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">85</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">90</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">95</th>
+                  <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase border-r border-gray-200">100</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {provincialPaidByAge.map((row, index) => (
+                  <tr key={`${row.province_code}-${row.calendar_year}`} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-900 border-r border-gray-200">
+                      {row.province_name}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-900 font-medium border-r border-gray-200">
+                      {row.calendar_year}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-blue-600">
+                      {row.age_80}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-green-600">
+                      {row.age_85}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-purple-600">
+                      {row.age_90}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-orange-600">
+                      {row.age_95}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-red-600 border-r border-gray-200">
+                      {row.age_100}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-900 font-semibold">
+                      {row.total_paid}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Paid Citizens by Specific Ages */}
       <div className="bg-white rounded-lg shadow-sm p-4">

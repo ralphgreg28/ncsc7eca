@@ -2155,8 +2155,8 @@ function CitizenList() {
                     </div>
                     
                     {/* Year list */}
-                    <div className="p-2">
-                      <div className="grid grid-cols-3 gap-1">
+                    <div className="p-1 relative">
+                      <div className="grid grid-cols-3 gap-1 w-full overflow-y-auto ">
                         {availableBirthYears
                           .filter(year => 
                             yearSearchTerm === '' || 
@@ -2266,7 +2266,7 @@ function CitizenList() {
                 
                 {/* Month Dropdown */}
                 {showMonthFilter && (
-                  <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-96 overflow-y-auto">
+                  <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-96 overflow-y-auto">
                     {/* Search bar */}
                     <div className="sticky top-0 bg-white p-2 border-b border-gray-200">
                       <div className="relative">

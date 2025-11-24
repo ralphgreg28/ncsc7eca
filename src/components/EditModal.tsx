@@ -63,9 +63,9 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate remarks when status is "Compliance"
-    if (formData.status === 'Compliance' && (!formData.remarks || formData.remarks.trim() === '')) {
-      setValidationError('Remarks are required when status is "Compliance"');
+    // Validate remarks when status is "Compliance" or "Disqualified"
+    if ((formData.status === 'Compliance' || formData.status === 'Disqualified') && (!formData.remarks || formData.remarks.trim() === '')) {
+      setValidationError(`Remarks are required when status is "${formData.status}"`);
       return;
     }
     
@@ -307,7 +307,7 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
               <div className="group">
                 <label className={labelClass}>
                   Remarks
-                  {formData.status === 'Compliance' && (
+                  {(formData.status === 'Compliance' || formData.status === 'Disqualified') && (
                     <span className="text-red-600 ml-1">*</span>
                   )}
                 </label>
@@ -318,7 +318,7 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
                   className={`${inputClass} resize-none ${validationError ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
                   rows={3}
                   maxLength={500}
-                  placeholder={formData.status === 'Compliance' ? 'Remarks are required for Compliance status...' : 'Enter any additional notes or remarks...'}
+                  placeholder={(formData.status === 'Compliance' || formData.status === 'Disqualified') ? `Remarks are required for ${formData.status} status...` : 'Enter any additional notes or remarks...'}
                 />
                 {validationError && (
                   <p className="mt-2 text-sm text-red-600 font-medium">{validationError}</p>

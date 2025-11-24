@@ -53,6 +53,7 @@ const VALIDATORS = [
 function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps) {
   const [formData, setFormData] = useState(citizen);
   const [loading, setLoading] = useState(false);
+  const [validationError, setValidationError] = useState<string>('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -61,6 +62,14 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate remarks when status is "Compliance"
+    if (formData.status === 'Compliance' && (!formData.remarks || formData.remarks.trim() === '')) {
+      setValidationError('Remarks are required when status is "Compliance"');
+      return;
+    }
+    
+    setValidationError('');
     setLoading(true);
     try {
       await onSave(formData);
@@ -296,16 +305,24 @@ function EditModal({ citizen, addressDetails, onClose, onSave }: EditModalProps)
                 <h3 className="text-sm sm:text-base font-bold text-gray-800">Additional Information</h3>
               </div>
               <div className="group">
-                <label className={labelClass}>Remarks</label>
+                <label className={labelClass}>
+                  Remarks
+                  {formData.status === 'Compliance' && (
+                    <span className="text-red-600 ml-1">*</span>
+                  )}
+                </label>
                 <textarea
                   name="remarks"
                   value={formData.remarks || ''}
                   onChange={handleChange}
-                  className={`${inputClass} resize-none`}
+                  className={`${inputClass} resize-none ${validationError ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
                   rows={3}
                   maxLength={500}
-                  placeholder="Enter any additional notes or remarks..."
+                  placeholder={formData.status === 'Compliance' ? 'Remarks are required for Compliance status...' : 'Enter any additional notes or remarks...'}
                 />
+                {validationError && (
+                  <p className="mt-2 text-sm text-red-600 font-medium">{validationError}</p>
+                )}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
                   <p className="text-xs text-gray-500">Maximum 500 characters</p>
                   <div className="flex items-center gap-2">

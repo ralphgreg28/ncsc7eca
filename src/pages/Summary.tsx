@@ -671,6 +671,49 @@ function Summary() {
                   </td>
                 </tr>
               ))}
+
+              {/* TOTAL ROW */}
+                <tr className="bg-gray-100 font-semibold">
+                  <td className="px-3 py-2 text-xs text-gray-900">
+                    TOTAL
+                  </td>
+
+                  <td className="px-3 py-2 text-xs text-center text-violet-700">
+                    {stats.provinceStats.reduce((sum, r) => sum + r.encoded, 0).toLocaleString()}
+                  </td>
+
+                  <td className="px-3 py-2 text-xs text-center text-orange-700">
+                    {stats.provinceStats.reduce((sum, r) => sum + r.validated, 0).toLocaleString()}
+                  </td>
+
+                  <td className="px-3 py-2 text-xs text-center text-green-700">
+                    {stats.provinceStats.reduce((sum, r) => sum + r.paid, 0).toLocaleString()}
+                  </td>
+
+                  <td className="px-3 py-2 text-xs text-center text-yellow-700">
+                    {stats.provinceStats.reduce((sum, r) => sum + r.unpaid, 0).toLocaleString()}
+                  </td>
+
+                  <td className="px-3 py-2 text-xs text-center text-blue-700">
+                    {stats.provinceStats.reduce((sum, r) => sum + r.cleanlisted, 0).toLocaleString()}
+                  </td>
+
+                  <td className="px-3 py-2 text-xs text-center text-gray-700">
+                    {stats.provinceStats.reduce((sum, r) => sum + r.waitlisted, 0).toLocaleString()}
+                  </td>
+
+                  <td className="px-3 py-2 text-xs text-center text-red-700">
+                    {stats.provinceStats.reduce((sum, r) => sum + r.compliance, 0).toLocaleString()}
+                  </td>
+
+                  <td className="px-3 py-2 text-xs text-center text-rose-700">
+                    {stats.provinceStats.reduce((sum, r) => sum + r.disqualified, 0).toLocaleString()}
+                  </td>
+
+                  <td className="px-3 py-2 text-xs text-center text-gray-900 font-bold">
+                    {stats.provinceStats.reduce((sum, r) => sum + r.total, 0).toLocaleString()}
+                  </td>
+                </tr>
             </tbody>
           </table>
         </div>
@@ -807,6 +850,34 @@ function Summary() {
                     </td>
                   </tr>
                 ))}
+
+                {/* TOTAL ROW */}
+                <tr className="bg-gray-100 font-semibold">
+                  <td className="px-3 py-2 text-xs text-gray-900 border-r border-gray-300">
+                    TOTAL
+                  </td>
+                  <td className="px-3 py-2 text-xs text-center text-gray-900 border-r border-gray-300">
+                    —
+                  </td>
+                  <td className="px-3 py-2 text-xs text-center text-blue-700">
+                    {provincialPaidByAge.reduce((sum, r) => sum + r.age_80, 0)}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-center text-green-700">
+                    {provincialPaidByAge.reduce((sum, r) => sum + r.age_85, 0)}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-center text-purple-700">
+                    {provincialPaidByAge.reduce((sum, r) => sum + r.age_90, 0)}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-center text-orange-700">
+                    {provincialPaidByAge.reduce((sum, r) => sum + r.age_95, 0)}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-center text-red-700 border-r border-gray-300">
+                    {provincialPaidByAge.reduce((sum, r) => sum + r.age_100, 0)}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-center text-gray-900 font-bold">
+                    {provincialPaidByAge.reduce((sum, r) => sum + r.total_paid, 0)}
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>

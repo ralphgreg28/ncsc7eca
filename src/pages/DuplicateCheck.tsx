@@ -105,7 +105,13 @@ const DuplicateCheck = () => {
   // Calculate confidence score based on individual field matching
   // Equal weighting: Each of the 6 fields contributes 16.67% (1/6) to the total score
   const calculateConfidenceScore = (citizen1: Citizen, citizen2: Citizen) => {
-    const FIELD_WEIGHT = 100 / 6; // 16.6666667% per field
+   // const FIELD_WEIGHT = 100 / 6; // 16.6666667% per field
+    //const LASTNAME_WEIGHT = 0.30;
+   // const FIRSTNAME_WEIGHT = 0.20;
+    //const MIDDLENAME_WEIGHT = 0.15;
+   // const BIRTHMONTH_WEIGHT = 0.05;
+    //const BIRTHDAY_WEIGHT = 0.05;
+    //const BIRTHYEAR_WEIGHT = 0.05;
     
     // === NAME FIELD SCORING (16.67% each) ===
     
@@ -144,12 +150,12 @@ const DuplicateCheck = () => {
     // === FINAL CONFIDENCE SCORE ===
     // Sum all 6 fields, each weighted at 16.67%
     const confidenceScore = (
-      (lastNameScore * FIELD_WEIGHT / 100) +
-      (firstNameScore * FIELD_WEIGHT / 100) +
-      (middleNameScore * FIELD_WEIGHT / 100) +
-      (birthMonthScore * FIELD_WEIGHT / 100) +
-      (birthDayScore * FIELD_WEIGHT / 100) +
-      (birthYearScore * FIELD_WEIGHT / 100)
+      (lastNameScore   * 0.30) +
+      (firstNameScore  * 0.25) +
+      (middleNameScore * 0.25) +
+      (birthMonthScore * 0.05) +
+      (birthDayScore   * 0.05) +
+      (birthYearScore  * 0.10)
     );
     
     // Calculate combined scores for display purposes
@@ -619,7 +625,7 @@ const DuplicateCheck = () => {
                   {/* Name Fields */}
                   <div className="bg-indigo-50 rounded p-3 border border-indigo-200">
                     <div className="flex items-center justify-between mb-2">
-                      <h5 className="text-sm font-bold text-indigo-900">Name Fields (16.67% each)</h5>
+                      <h5 className="text-sm font-bold text-indigo-900">Name Fields (80%)</h5>
                       <span className="text-sm font-bold text-indigo-600">{selectedMatch.matchDetails.nameScore}%</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
@@ -657,7 +663,7 @@ const DuplicateCheck = () => {
                   {/* Birthdate Fields */}
                   <div className="bg-purple-50 rounded p-3 border border-purple-200">
                     <div className="flex items-center justify-between mb-2">
-                      <h5 className="text-sm font-bold text-purple-900">Birthdate Fields (16.67% each)</h5>
+                      <h5 className="text-sm font-bold text-purple-900">Birthdate Fields (20%)</h5>
                       <span className="text-sm font-bold text-purple-600">{selectedMatch.matchDetails.birthDateScore}%</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2">

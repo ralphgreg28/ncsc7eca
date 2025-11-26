@@ -103,63 +103,57 @@ const DuplicateCheck = () => {
   };
 
   // Calculate confidence score based on individual field matching
-  // Equal weighting: Each of the 7 fields contributes 14.3% (1/7) to the total score
+  // Equal weighting: Each of the 6 fields contributes 16.67% (1/6) to the total score
   const calculateConfidenceScore = (citizen1: Citizen, citizen2: Citizen) => {
-    const FIELD_WEIGHT = 100 / 7; // 14.285714% per field
+    const FIELD_WEIGHT = 100 / 6; // 16.6666667% per field
     
-    // === NAME FIELD SCORING (14.3% each) ===
+    // === NAME FIELD SCORING (16.67% each) ===
     
-    // Last Name (14.3% of total)
+    // Last Name (16.67% of total)
     const lastName1 = normalizeText(citizen1.last_name);
     const lastName2 = normalizeText(citizen2.last_name);
     const lastNameScore = calculateSimilarity(lastName1, lastName2);
     
-    // First Name (14.3% of total)
+    // First Name (16.67% of total)
     const firstName1 = normalizeText(citizen1.first_name);
     const firstName2 = normalizeText(citizen2.first_name);
     const firstNameScore = calculateSimilarity(firstName1, firstName2);
     
-    // Middle Name (14.3% of total) - handle nulls
+    // Middle Name (16.67% of total) - handle nulls
     const middleName1 = normalizeText(citizen1.middle_name || '');
     const middleName2 = normalizeText(citizen2.middle_name || '');
     const middleNameScore = calculateSimilarity(middleName1, middleName2);
     
-    // Extension Name (14.3% of total) - handle nulls
-    const extensionName1 = normalizeText(citizen1.extension_name || '');
-    const extensionName2 = normalizeText(citizen2.extension_name || '');
-    const extensionScore = calculateSimilarity(extensionName1, extensionName2);
-    
-    // === BIRTHDATE COMPONENT SCORING (14.3% each) ===
+    // === BIRTHDATE COMPONENT SCORING (16.67% each) ===
     
     const date1 = new Date(citizen1.birth_date);
     const date2 = new Date(citizen2.birth_date);
     
-    // Birth Month (14.3% of total)
+    // Birth Month (16.67% of total)
     const birthMonthMatch = date1.getMonth() === date2.getMonth();
     const birthMonthScore = birthMonthMatch ? 100 : 0;
     
-    // Birth Day (14.3% of total)
+    // Birth Day (16.67% of total)
     const birthDayMatch = date1.getDate() === date2.getDate();
     const birthDayScore = birthDayMatch ? 100 : 0;
     
-    // Birth Year (14.3% of total)
+    // Birth Year (16.67% of total)
     const birthYearMatch = date1.getFullYear() === date2.getFullYear();
     const birthYearScore = birthYearMatch ? 100 : 0;
     
     // === FINAL CONFIDENCE SCORE ===
-    // Sum all 7 fields, each weighted at 14.3%
+    // Sum all 6 fields, each weighted at 16.67%
     const confidenceScore = (
       (lastNameScore * FIELD_WEIGHT / 100) +
       (firstNameScore * FIELD_WEIGHT / 100) +
       (middleNameScore * FIELD_WEIGHT / 100) +
-      (extensionScore * FIELD_WEIGHT / 100) +
       (birthMonthScore * FIELD_WEIGHT / 100) +
       (birthDayScore * FIELD_WEIGHT / 100) +
       (birthYearScore * FIELD_WEIGHT / 100)
     );
     
     // Calculate combined scores for display purposes
-    const nameScore = (lastNameScore + firstNameScore + middleNameScore + extensionScore) / 4;
+    const nameScore = (lastNameScore + firstNameScore + middleNameScore) / 3;
     const birthDateScore = (birthMonthScore + birthDayScore + birthYearScore) / 3;
     
     return {
@@ -168,7 +162,6 @@ const DuplicateCheck = () => {
         lastNameScore: Math.round(lastNameScore),
         firstNameScore: Math.round(firstNameScore),
         middleNameScore: Math.round(middleNameScore),
-        extensionScore: Math.round(extensionScore),
         nameScore: Math.round(nameScore),
         birthMonthMatch,
         birthDayMatch,
@@ -294,7 +287,7 @@ const DuplicateCheck = () => {
 
   const formatFullName = (citizen: Citizen): string => {
     const parts = [
-      citizen.last_name,
+      citizen.last_name,",",
       citizen.first_name,
       citizen.middle_name || ''
     ].filter(part => part.trim() !== '');
@@ -626,7 +619,7 @@ const DuplicateCheck = () => {
                   {/* Name Fields */}
                   <div className="bg-indigo-50 rounded p-3 border border-indigo-200">
                     <div className="flex items-center justify-between mb-2">
-                      <h5 className="text-sm font-bold text-indigo-900">Name Fields (14.3% each)</h5>
+                      <h5 className="text-sm font-bold text-indigo-900">Name Fields (16.67% each)</h5>
                       <span className="text-sm font-bold text-indigo-600">{selectedMatch.matchDetails.nameScore}%</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
@@ -657,22 +650,14 @@ const DuplicateCheck = () => {
                           <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${selectedMatch.matchDetails.middleNameScore}%` }}></div>
                         </div>
                       </div>
-                      <div>
-                        <div className="flex justify-between items-center mb-0.5">
-                          <span className="text-gray-600">Ext.</span>
-                          <span className="font-semibold">{selectedMatch.matchDetails.extensionScore}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5">
-                          <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${selectedMatch.matchDetails.extensionScore}%` }}></div>
-                        </div>
-                      </div>
+                      
                     </div>
                   </div>
 
                   {/* Birthdate Fields */}
                   <div className="bg-purple-50 rounded p-3 border border-purple-200">
                     <div className="flex items-center justify-between mb-2">
-                      <h5 className="text-sm font-bold text-purple-900">Birthdate Fields (14.3% each)</h5>
+                      <h5 className="text-sm font-bold text-purple-900">Birthdate Fields (16.67% each)</h5>
                       <span className="text-sm font-bold text-purple-600">{selectedMatch.matchDetails.birthDateScore}%</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2">

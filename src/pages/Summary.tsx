@@ -616,108 +616,198 @@ function Summary() {
       </div>
 
       {/* Provincial Statistics */}
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        <h2 className="text-sm font-semibold mb-3 flex items-center">
-          <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs mr-2">Provincial Statistics</span>
-        </h2>
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">Province</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Encoded</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Validated</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Paid</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Unpaid</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Cleanlisted</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Waitlisted</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Compliance</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Disqualified</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Total</th>
+<div className="bg-white rounded-lg shadow-sm p-4">
+  <h2 className="text-sm font-semibold mb-3 flex items-center">
+    <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs mr-2">Provincial Statistics</span>
+  </h2>
+
+  {/** ***** COMPUTE TOTALS ***** **/}
+  {(() => {
+    const totals = {
+      encoded: stats.provinceStats.reduce((s, r) => s + r.encoded, 0),
+      validated: stats.provinceStats.reduce((s, r) => s + r.validated, 0),
+      paid: stats.provinceStats.reduce((s, r) => s + r.paid, 0),
+      unpaid: stats.provinceStats.reduce((s, r) => s + r.unpaid, 0),
+      cleanlisted: stats.provinceStats.reduce((s, r) => s + r.cleanlisted, 0),
+      waitlisted: stats.provinceStats.reduce((s, r) => s + r.waitlisted, 0),
+      compliance: stats.provinceStats.reduce((s, r) => s + r.compliance, 0),
+      disqualified: stats.provinceStats.reduce((s, r) => s + r.disqualified, 0),
+      total: stats.provinceStats.reduce((s, r) => s + r.total, 0),
+    };
+
+    return (
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase">Province</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Encoded</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Validated</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Paid</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Unpaid</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Cleanlisted</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Waitlisted</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Compliance</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Disqualified</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Total</th>
+            </tr>
+          </thead>
+
+          <tbody className="bg-white divide-y divide-gray-100">
+
+            {/* BODY ROWS WITH PERCENTAGES */}
+            {stats.provinceStats.map((province) => (
+              <tr key={province.name} className="hover:bg-gray-50 transition-colors">
+                <td className="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-900">
+                  {province.name}
+                </td>
+
+                {/* Encoded */}
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-violet-600">
+                  {province.encoded.toLocaleString()}
+                  <div className="text-[10px] text-gray-500">
+                    ({((province.encoded / totals.encoded) * 100).toFixed(1)}%)
+                  </div>
+                </td>
+
+                {/* Validated */}
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-orange-600">
+                  {province.validated.toLocaleString()}
+                  <div className="text-[10px] text-gray-500">
+                    ({((province.validated / totals.validated) * 100).toFixed(1)}%)
+                  </div>
+                </td>
+
+                {/* Paid */}
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-green-600 font-semibold">
+                  {province.paid.toLocaleString()}
+                  <div className="text-[10px] text-gray-500">
+                    ({((province.paid / totals.paid) * 100).toFixed(1)}%)
+                  </div>
+                </td>
+
+                {/* Unpaid */}
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-yellow-600 font-semibold">
+                  {province.unpaid.toLocaleString()}
+                  <div className="text-[10px] text-gray-500">
+                    ({((province.unpaid / totals.unpaid) * 100).toFixed(1)}%)
+                  </div>
+                </td>
+
+                {/* Cleanlisted */}
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-blue-600">
+                  {province.cleanlisted.toLocaleString()}
+                  <div className="text-[10px] text-gray-500">
+                    ({((province.cleanlisted / totals.cleanlisted) * 100).toFixed(1)}%)
+                  </div>
+                </td>
+
+                {/* Waitlisted */}
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-600">
+                  {province.waitlisted.toLocaleString()}
+                  <div className="text-[10px] text-gray-500">
+                    ({((province.waitlisted / totals.waitlisted) * 100).toFixed(1)}%)
+                  </div>
+                </td>
+
+                {/* Compliance */}
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-red-600">
+                  {province.compliance.toLocaleString()}
+                  <div className="text-[10px] text-gray-500">
+                    ({((province.compliance / totals.compliance) * 100).toFixed(1)}%)
+                  </div>
+                </td>
+
+                {/* Disqualified */}
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-rose-600">
+                  {province.disqualified.toLocaleString()}
+                  <div className="text-[10px] text-gray-500">
+                    ({((province.disqualified / totals.disqualified) * 100).toFixed(1)}%)
+                  </div>
+                </td>
+
+                {/* Total */}
+                <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-900 font-semibold">
+                  {province.total.toLocaleString()}
+                  <div className="text-[10px] text-gray-500">
+                    ({((province.total / totals.total) * 100).toFixed(1)}%)
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
-              {stats.provinceStats.map((province) => (
-                <tr key={province.name} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-900">
-                    {province.name}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-violet-600">
-                    {province.encoded.toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-orange-600">
-                    {province.validated.toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-green-600 font-semibold">
-                    {province.paid.toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-yellow-600 font-semibold">
-                    {province.unpaid.toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-blue-600">
-                    {province.cleanlisted.toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-600">
-                    {province.waitlisted.toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-red-600">
-                    {province.compliance.toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-rose-600">
-                    {province.disqualified.toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-900 font-semibold">
-                    {province.total.toLocaleString()}
-                  </td>
-                </tr>
-              ))}
+            ))}
 
-              {/* TOTAL ROW */}
-                <tr className="bg-gray-100 font-semibold">
-                  <td className="px-3 py-2 text-xs text-gray-900">
-                    TOTAL
-                  </td>
+            {/* FINAL TOTAL ROW WITH PERCENTAGES (OPTION B) */}
+            <tr className="bg-gray-100 font-semibold">
+              <td className="px-3 py-2 text-xs text-gray-900">TOTAL</td>
 
-                  <td className="px-3 py-2 text-xs text-center text-violet-700">
-                    {stats.provinceStats.reduce((sum, r) => sum + r.encoded, 0).toLocaleString()}
-                  </td>
+              <td className="px-3 py-2 text-xs text-center text-violet-700">
+                {totals.encoded.toLocaleString()}
+                <div className="text-[10px] text-gray-500">
+                  ({(totals.total ? ((totals.encoded / totals.total) * 100).toFixed(1) : "0.0")}%)
+                </div>
+              </td>
 
-                  <td className="px-3 py-2 text-xs text-center text-orange-700">
-                    {stats.provinceStats.reduce((sum, r) => sum + r.validated, 0).toLocaleString()}
-                  </td>
+              <td className="px-3 py-2 text-xs text-center text-orange-700">
+                {totals.validated.toLocaleString()}
+                <div className="text-[10px] text-gray-500">
+                  ({(totals.total ? ((totals.validated / totals.total) * 100).toFixed(1) : "0.0")}%)
+                </div>
+              </td>
 
-                  <td className="px-3 py-2 text-xs text-center text-green-700">
-                    {stats.provinceStats.reduce((sum, r) => sum + r.paid, 0).toLocaleString()}
-                  </td>
+              <td className="px-3 py-2 text-xs text-center text-green-700">
+                {totals.paid.toLocaleString()}
+                <div className="text-[10px] text-gray-500">
+                  ({(totals.total ? ((totals.paid / totals.total) * 100).toFixed(1) : "0.0")}%)
+                </div>
+              </td>
 
-                  <td className="px-3 py-2 text-xs text-center text-yellow-700">
-                    {stats.provinceStats.reduce((sum, r) => sum + r.unpaid, 0).toLocaleString()}
-                  </td>
+              <td className="px-3 py-2 text-xs text-center text-yellow-700">
+                {totals.unpaid.toLocaleString()}
+                <div className="text-[10px] text-gray-500">
+                  ({(totals.total ? ((totals.unpaid / totals.total) * 100).toFixed(1) : "0.0")}%)
+                </div>
+              </td>
 
-                  <td className="px-3 py-2 text-xs text-center text-blue-700">
-                    {stats.provinceStats.reduce((sum, r) => sum + r.cleanlisted, 0).toLocaleString()}
-                  </td>
+              <td className="px-3 py-2 text-xs text-center text-blue-700">
+                {totals.cleanlisted.toLocaleString()}
+                <div className="text-[10px] text-gray-500">
+                  ({(totals.total ? ((totals.cleanlisted / totals.total) * 100).toFixed(1) : "0.0")}%)
+                </div>
+              </td>
 
-                  <td className="px-3 py-2 text-xs text-center text-gray-700">
-                    {stats.provinceStats.reduce((sum, r) => sum + r.waitlisted, 0).toLocaleString()}
-                  </td>
+              <td className="px-3 py-2 text-xs text-center text-gray-700">
+                {totals.waitlisted.toLocaleString()}
+                <div className="text-[10px] text-gray-500">
+                  ({(totals.total ? ((totals.waitlisted / totals.total) * 100).toFixed(1) : "0.0")}%)
+                </div>
+              </td>
 
-                  <td className="px-3 py-2 text-xs text-center text-red-700">
-                    {stats.provinceStats.reduce((sum, r) => sum + r.compliance, 0).toLocaleString()}
-                  </td>
+              <td className="px-3 py-2 text-xs text-center text-red-700">
+                {totals.compliance.toLocaleString()}
+                <div className="text-[10px] text-gray-500">
+                  ({(totals.total ? ((totals.compliance / totals.total) * 100).toFixed(1) : "0.0")}%)
+                </div>
+              </td>
 
-                  <td className="px-3 py-2 text-xs text-center text-rose-700">
-                    {stats.provinceStats.reduce((sum, r) => sum + r.disqualified, 0).toLocaleString()}
-                  </td>
+              <td className="px-3 py-2 text-xs text-center text-rose-700">
+                {totals.disqualified.toLocaleString()}
+                <div className="text-[10px] text-gray-500">
+                  ({(totals.total ? ((totals.disqualified / totals.total) * 100).toFixed(1) : "0.0")}%)
+                </div>
+              </td>
 
-                  <td className="px-3 py-2 text-xs text-center text-gray-900 font-bold">
-                    {stats.provinceStats.reduce((sum, r) => sum + r.total, 0).toLocaleString()}
-                  </td>
-                </tr>
-            </tbody>
-          </table>
-        </div>
+              <td className="px-3 py-2 text-xs text-center text-gray-900 font-bold">
+                {totals.total.toLocaleString()}
+                <div className="text-[10px] text-gray-500">(100.0%)</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+    );
+  })()}
+</div>
+
 
       {/* LGU Statistics (if province selected) */}
       {filters.province && lguStats.length > 0 && (

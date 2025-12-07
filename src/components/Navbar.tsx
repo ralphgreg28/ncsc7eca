@@ -1,4 +1,4 @@
-import { Menu, LogOut, User, ChevronDown, FileCheck, Users } from 'lucide-react';
+import { Menu, LogOut, User, ChevronDown, FileCheck, Users, BarChart3, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,6 +19,7 @@ function Navbar({ onMenuClick, isAtTop, className = '' }: NavbarProps) {
   const [userTodayEncoded, setUserTodayEncoded] = useState(0);
   const [userWeekEncoded, setUserWeekEncoded] = useState(0);
   const [userTotalEncoded, setUserTotalEncoded] = useState(0);
+  const [showMobileStats, setShowMobileStats] = useState(false);
   const { user, logout } = useAuth();
 
   useEffect(() => {
@@ -148,8 +149,18 @@ function Navbar({ onMenuClick, isAtTop, className = '' }: NavbarProps) {
 
           {/* Right: Encoded Counters, User & Logout */}
           {user && (
-            <div className="flex items-center gap-2">
-              {/* User's Encoded Stats */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* Mobile Stats Button */}
+              <button
+                onClick={() => setShowMobileStats(true)}
+                className="xl:hidden group relative p-2.5 rounded-xl text-gray-600 hover:text-violet-600 bg-white hover:bg-gradient-to-br hover:from-violet-50 hover:to-violet-100/50 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:ring-offset-2 transition-all duration-300 ease-out shadow-sm hover:shadow-md border border-gray-100 hover:border-violet-200 active:scale-95"
+                aria-label="View Stats"
+                title="View Stats"
+              >
+                <BarChart3 className="h-4.5 w-4.5 transition-transform duration-300 group-hover:scale-110" />
+              </button>
+
+              {/* Desktop User's Encoded Stats */}
               <div className="hidden xl:flex items-center gap-2 bg-white rounded-2xl py-2 px-3.5 shadow-sm border border-violet-100/50 hover:border-violet-200 transition-all duration-300">
                 <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md">
                   <User className="h-4 w-4 text-white" />
@@ -171,17 +182,15 @@ function Navbar({ onMenuClick, isAtTop, className = '' }: NavbarProps) {
                 </div>
               </div>
 
-            
-
-              <div className="group flex items-center bg-white hover:bg-gradient-to-br hover:from-blue-50 hover:to-blue-100/50 rounded-2xl py-2 px-3.5 cursor-pointer transition-all duration-300 ease-out shadow-sm hover:shadow-md border border-blue-100/50 hover:border-blue-200">
-                <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-2.5 shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
+              <div className="group flex items-center bg-white hover:bg-gradient-to-br hover:from-blue-50 hover:to-blue-100/50 rounded-2xl py-2 px-2 sm:px-3.5 cursor-pointer transition-all duration-300 ease-out shadow-sm hover:shadow-md border border-blue-100/50 hover:border-blue-200">
+                <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-2 sm:mr-2.5 shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
                   <User className="h-4 w-4 text-white" />
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-gray-800 text-xs font-semibold truncate max-w-[90px] sm:max-w-[140px] group-hover:text-blue-900 transition-colors duration-300">
+                <div className="flex flex-col min-w-0">
+                  <span className="text-gray-800 text-xs font-semibold truncate max-w-[70px] sm:max-w-[100px] md:max-w-[140px] group-hover:text-blue-900 transition-colors duration-300">
                     {user.first_name} {user.last_name}
                   </span>
-                  <span className="text-blue-600 text-[10px] font-medium hidden sm:block truncate max-w-[140px]">
+                  <span className="text-blue-600 text-[10px] font-medium hidden sm:block truncate max-w-[100px] md:max-w-[140px]">
                     {user.position}
                   </span>
                 </div>
@@ -193,12 +202,89 @@ function Navbar({ onMenuClick, isAtTop, className = '' }: NavbarProps) {
                 aria-label="Logout"
                 title="Logout"
               >
-                <LogOut className="h-4.5 w-4.5 transition-transform duration-300 group-hover:rotate-12" />
+                <LogOut className="h-4 w-4 sm:h-4.5 sm:w-4.5 transition-transform duration-300 group-hover:rotate-12" />
               </button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Mobile Stats Modal */}
+      {showMobileStats && user && (
+        <>
+          <div 
+            className="fixed inset-0 z-50 bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 xl:hidden" 
+            onClick={() => setShowMobileStats(false)}
+          />
+          <div className="fixed inset-x-4 top-20 z-50 xl:hidden animate-in slide-in-from-top-4 duration-300">
+            <div className="bg-white rounded-2xl shadow-2xl border border-blue-100 overflow-hidden max-w-md mx-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50 to-violet-50 border-b border-blue-100">
+                <h3 className="font-bold text-sm bg-gradient-to-r from-blue-700 to-violet-700 bg-clip-text text-transparent">
+                  Encoding Statistics
+                </h3>
+                <button
+                  onClick={() => setShowMobileStats(false)}
+                  className="p-1.5 rounded-lg text-gray-600 hover:text-red-600 hover:bg-red-50 transition-all duration-200 active:scale-95"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Stats Content */}
+              <div className="p-4 space-y-3">
+                {/* User's Encoded Stats */}
+                <div className="bg-gradient-to-br from-violet-50 to-violet-100/50 rounded-xl p-4 border border-violet-200/50 shadow-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-violet-500 to-violet-600 rounded-lg flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="text-sm font-bold text-violet-900">Your Encoded</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-white/80 rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold text-violet-600">{userTodayEncoded}</div>
+                      <div className="text-xs text-gray-600 mt-1">Today</div>
+                    </div>
+                    <div className="bg-white/80 rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold text-violet-600">{userWeekEncoded}</div>
+                      <div className="text-xs text-gray-600 mt-1">This Week</div>
+                    </div>
+                    <div className="bg-white/80 rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold text-violet-600">{userTotalEncoded}</div>
+                      <div className="text-xs text-gray-600 mt-1">All Time</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* System-wide Encoded Stats */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-200/50 shadow-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                      <Users className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="text-sm font-bold text-blue-900">All Users Encoded</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-white/80 rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold text-blue-600">{todayEncoded}</div>
+                      <div className="text-xs text-gray-600 mt-1">Today</div>
+                    </div>
+                    <div className="bg-white/80 rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold text-blue-600">{weekEncoded}</div>
+                      <div className="text-xs text-gray-600 mt-1">This Week</div>
+                    </div>
+                    <div className="bg-white/80 rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold text-blue-600">{totalEncoded}</div>
+                      <div className="text-xs text-gray-600 mt-1">All Time</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </nav>
   );
 }

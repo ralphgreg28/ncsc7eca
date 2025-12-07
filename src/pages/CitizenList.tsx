@@ -1889,40 +1889,40 @@ function CitizenList() {
   };
 
   return (
-    <div className="space-y-4 p-2 bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 min-h-screen">
+    <div className="space-y-3 sm:space-y-4 p-2 sm:p-4 bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 min-h-screen">
       {/* Header Section with Gradient */}
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-200/60 p-8 backdrop-blur-sm bg-white/90">
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
-          <div className="space-y-3">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200/60 p-4 sm:p-6 lg:p-8 backdrop-blur-sm bg-white/90">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sm:gap-6">
+          <div className="space-y-2 sm:space-y-3">
+            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
               Expanded Centenarian Act Records
             </h1>
             <div className="flex items-center gap-2 text-gray-600">
-              <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-full border border-blue-200/50">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-full border border-blue-200/50">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <span className="font-semibold text-gray-800">{totalRecords.toLocaleString()}</span>
-                <span className="text-gray-600">records found</span>
+                <span className="font-semibold text-gray-800 text-sm sm:text-base">{totalRecords.toLocaleString()}</span>
+                <span className="text-gray-600 text-sm sm:text-base hidden xs:inline">records</span>
               </div>
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`group relative overflow-hidden px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+              className={`group relative overflow-hidden px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform active:scale-95 sm:hover:scale-105 hover:shadow-lg touch-manipulation ${
                 showFilters 
                   ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md' 
                   : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-400'
               }`}
             >
               <div className="flex items-center justify-center gap-2">
-                <Filter className="h-5 w-5" />
-                <span>{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
+                <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-sm sm:text-base">{showFilters ? 'Hide' : 'Show'} Filters</span>
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
-                  className={`h-5 w-5 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} 
+                  className={`h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} 
                   fill="none" 
                   viewBox="0 0 24 24" 
                   stroke="currentColor"
@@ -1934,19 +1934,19 @@ function CitizenList() {
             
             <button 
               onClick={handleExport}
-              className="group relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="group relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform active:scale-95 sm:hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none touch-manipulation"
               disabled={exportLoading}
             >
               <div className="flex items-center justify-center gap-2">
                 {exportLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                    <span>Exporting...</span>
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent"></div>
+                    <span className="text-sm sm:text-base">Exporting...</span>
                   </>
                 ) : (
                   <>
-                    <Download className="h-5 w-5" />
-                    <span>Export CSV</span>
+                    <Download className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-sm sm:text-base">Export CSV</span>
                   </>
                 )}
               </div>
@@ -1956,11 +1956,11 @@ function CitizenList() {
       </div>
 
       {showFilters && (
-        <div className="bg-white/95 backdrop-blur-lg rounded-xl shadow-l p-4 border border-gray-200/60 transform transition-all duration-300 animate-in slide-in-from-top">
-          <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-gradient-to-r from-blue-200 to-purple-200">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-1">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl">
-                <Filter className="h-6 w-6 text-white" />
+        <div className="bg-white/95 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 border border-gray-200/60 transform transition-all duration-300 animate-in slide-in-from-top">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b-2 border-gradient-to-r from-blue-200 to-purple-200">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
+              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg sm:rounded-xl">
+                <Filter className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
               </div>
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Advanced Filters
@@ -1968,46 +1968,46 @@ function CitizenList() {
             </h2>
             <button
               onClick={resetFilters}
-              className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 text-red-600 rounded-xl font-medium transition-all duration-300 border border-red-200 hover:border-red-300 hover:shadow-md"
+              className="group flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 text-red-600 rounded-lg sm:rounded-xl font-medium transition-all duration-300 border border-red-200 hover:border-red-300 hover:shadow-md touch-manipulation w-full sm:w-auto justify-center"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:rotate-180 duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-180 duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span>Reset All</span>
+              <span className="text-sm sm:text-base">Reset All</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="group">
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                <Search className="h-4 w-4 text-blue-500" />
-                Search
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+            <div className="group sm:col-span-2 lg:col-span-1">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2">
+                <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
+                <span>Search</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
                 </div>
                 <input
                   type="text"
                   value={filters.searchTerm}
                   onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
                   placeholder="Search by name..."
-                  className="pl-12 w-full rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 py-3 shadow-sm hover:shadow-md"
+                  className="pl-10 sm:pl-12 w-full rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 py-2.5 sm:py-3 text-sm sm:text-base shadow-sm hover:shadow-md touch-manipulation"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
                 </svg>
-                Province
+                <span>Province</span>
               </label>
               <select
                 value={filters.provinceCode}
                 onChange={(e) => handleFilterChange('provinceCode', e.target.value)}
-                className="w-full rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 py-3 px-4 shadow-sm hover:shadow-md font-medium"
+                className="w-full rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 py-2.5 sm:py-3 px-3 sm:px-4 text-sm sm:text-base shadow-sm hover:shadow-md font-medium touch-manipulation"
               >
                 <option value="">All Provinces</option>
                 {provinces.map(province => (
@@ -2019,16 +2019,16 @@ function CitizenList() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
-                City/Municipality
+                <span>City/Municipality</span>
               </label>
               <select
                 value={filters.lguCode}
                 onChange={(e) => handleFilterChange('lguCode', e.target.value)}
-                className="w-full rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-300 py-3 px-4 shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-300 py-2.5 sm:py-3 px-3 sm:px-4 text-sm sm:text-base shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                 disabled={!filters.provinceCode}
               >
                 <option value="">All Cities/Municipalities</option>
@@ -2041,16 +2041,16 @@ function CitizenList() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 </svg>
-                Barangay
+                <span>Barangay</span>
               </label>
               <select
                 value={filters.barangayCode}
                 onChange={(e) => handleFilterChange('barangayCode', e.target.value)}
-                className="w-full rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-300 py-3 px-4 shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-300 py-2.5 sm:py-3 px-3 sm:px-4 text-sm sm:text-base shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                 disabled={!filters.lguCode}
               >
                 <option value="">All Barangays</option>
@@ -2481,7 +2481,126 @@ function CitizenList() {
       )}
 
       <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 backdrop-blur-sm">
-        <div className="overflow-x-auto">
+        {/* Mobile Card View */}
+        <div className="block lg:hidden">
+          {loading ? (
+            <div className="px-4 py-12 text-center">
+              <div className="flex flex-col items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-t-2 border-blue-500 mb-4"></div>
+                <span className="text-gray-500 text-base">Loading records...</span>
+              </div>
+            </div>
+          ) : citizens.length === 0 ? (
+            <div className="px-4 py-12 text-center text-gray-500">
+              <div className="flex flex-col items-center justify-center">
+                <AlertTriangle className="h-12 w-12 text-gray-400 mb-3" />
+                <p className="text-base font-medium">No records found</p>
+                <p className="text-gray-400 text-sm mt-2">Try adjusting your filters</p>
+              </div>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {citizens.map((citizen) => {
+                const addressDetail = addressDetails[citizen.id];
+                const quarter = getBirthQuarter(citizen.birth_date);
+                const quarterColors = getQuarterColors(quarter);
+                
+                return (
+                  <div key={citizen.id} className="p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors">
+                    {/* Name and Status */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-base truncate">
+                          {citizen.last_name}, {citizen.first_name}
+                        </h3>
+                        {(citizen.middle_name || citizen.extension_name) && (
+                          <p className="text-sm text-gray-500 truncate">
+                            {citizen.middle_name} {citizen.extension_name && `(${citizen.extension_name})`}
+                          </p>
+                        )}
+                      </div>
+                      <span className={`ml-2 flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold ${
+                        citizen.status === 'Encoded' ? 'bg-gray-200 text-gray-800' :
+                        citizen.status === 'Validated' ? 'bg-blue-200 text-blue-800' :
+                        citizen.status === 'Cleanlisted' ? 'bg-green-200 text-green-800' :
+                        citizen.status === 'Waitlisted' ? 'bg-yellow-200 text-yellow-800' : 
+                        citizen.status === 'Paid' ? 'bg-emerald-200 text-emerald-800' :
+                        'bg-red-200 text-red-800'
+                      }`}>
+                        {citizen.status}
+                      </span>
+                    </div>
+
+                    {/* Birth Date and Sex */}
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div className={`${quarterColors.bg} ${quarterColors.border} border rounded-lg p-2`}>
+                        <p className="text-xs text-gray-600 mb-0.5">Birth Date</p>
+                        <p className={`text-sm font-semibold ${quarterColors.text}`}>
+                          {format(new Date(citizen.birth_date), 'MMM d, yyyy')}
+                        </p>
+                        <p className="text-xs text-gray-500">Q{quarter}</p>
+                      </div>
+                      <div className={`${citizen.sex === 'Male' ? 'bg-blue-50 border-blue-200' : 'bg-pink-50 border-pink-200'} border rounded-lg p-2`}>
+                        <p className="text-xs text-gray-600 mb-0.5">Sex</p>
+                        <p className={`text-sm font-semibold ${citizen.sex === 'Male' ? 'text-blue-800' : 'text-pink-800'}`}>
+                          {citizen.sex}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Address */}
+                    {addressDetail && (
+                      <div className="mb-3 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                        <p className="text-xs text-gray-600 mb-1">Address</p>
+                        <p className="text-sm font-medium text-gray-900">{addressDetail.barangay_name}</p>
+                        <p className="text-xs text-gray-600">{addressDetail.lgu_name}, {addressDetail.province_name}</p>
+                      </div>
+                    )}
+
+                    {/* Remarks if exists */}
+                    {citizen.remarks && (
+                      <div className="mb-3">
+                        <p className="text-xs text-gray-600 mb-1">Remarks</p>
+                        <p className="text-sm text-gray-700 line-clamp-2">{citizen.remarks}</p>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-2 border-t border-gray-200">
+                      <button
+                        onClick={() => setViewingCitizen(citizen)}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium text-sm transition-colors touch-manipulation"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>View</span>
+                      </button>
+                      {(user?.position === 'Administrator' || user?.position === 'PDO') && (
+                        <button
+                          onClick={() => setEditingCitizen(citizen)}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg font-medium text-sm transition-colors touch-manipulation"
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span>Edit</span>
+                        </button>
+                      )}
+                      {user?.position === 'Administrator' && (
+                        <button
+                          onClick={() => setShowDeleteConfirm(citizen.id)}
+                          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium text-sm transition-colors touch-manipulation"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr className="bg-gradient-to-r from-gray-50 to-gray-100 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -2596,20 +2715,20 @@ function CitizenList() {
         </div>
 
         {!loading && citizens.length > 0 && (
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="text-sm text-gray-700 bg-white px-4 py-2 rounded-md border border-gray-200 shadow-sm">
-                <span className="font-medium">Showing</span> {currentPage * PAGE_SIZE + 1} - {Math.min((currentPage + 1) * PAGE_SIZE, totalRecords)} <span className="font-medium">of</span> {totalRecords} <span className="font-medium">records</span>
+          <div className="px-3 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+              <div className="text-xs sm:text-sm text-gray-700 bg-white px-3 sm:px-4 py-2 rounded-md border border-gray-200 shadow-sm text-center sm:text-left">
+                <span className="font-medium">Showing</span> {currentPage * PAGE_SIZE + 1} - {Math.min((currentPage + 1) * PAGE_SIZE, totalRecords)} <span className="font-medium">of</span> {totalRecords}
               </div>
               
-              <div className="flex items-center bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-center bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
                 <button
                   onClick={() => setCurrentPage(0)}
                   disabled={currentPage === 0}
-                  className={`p-2 border-r border-gray-200 hover:bg-gray-50 transition-colors ${currentPage === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-2 sm:p-2.5 border-r border-gray-200 hover:bg-gray-50 transition-colors touch-manipulation ${currentPage === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                   title="First Page"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                   </svg>
                 </button>
@@ -2617,32 +2736,32 @@ function CitizenList() {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
                   disabled={currentPage === 0}
-                  className={`p-2 border-r border-gray-200 hover:bg-gray-50 transition-colors ${currentPage === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-2 sm:p-2.5 border-r border-gray-200 hover:bg-gray-50 transition-colors touch-manipulation ${currentPage === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                   title="Previous Page"
                 >
-                  <ChevronLeft className="h-5 w-5 text-gray-600" />
+                  <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                 </button>
                 
-                <div className="px-4 py-2 text-sm font-medium text-gray-700 border-r border-gray-200">
+                <div className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 border-r border-gray-200">
                   Page {currentPage + 1} of {totalPages}
                 </div>
                 
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
                   disabled={currentPage >= totalPages - 1}
-                  className={`p-2 border-r border-gray-200 hover:bg-gray-50 transition-colors ${currentPage >= totalPages - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-2 sm:p-2.5 border-r border-gray-200 hover:bg-gray-50 transition-colors touch-manipulation ${currentPage >= totalPages - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
                   title="Next Page"
                 >
-                  <ChevronRight className="h-5 w-5 text-gray-600" />
+                  <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                 </button>
                 
                 <button
                   onClick={() => setCurrentPage(totalPages - 1)}
                   disabled={currentPage >= totalPages - 1}
-                  className={`p-2 hover:bg-gray-50 transition-colors ${currentPage >= totalPages - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-2 sm:p-2.5 hover:bg-gray-50 transition-colors touch-manipulation ${currentPage >= totalPages - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
                   title="Last Page"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                   </svg>
                 </button>

@@ -864,9 +864,23 @@ function Summary() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
                 {lguStats.map((lgu) => (
-                  <tr key={lgu.name} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-900">
+                  <tr 
+                    key={lgu.name} 
+                    className={`transition-colors ${
+                      lgu.total === 0 
+                        ? 'bg-red-50 hover:bg-red-100 border-l-4 border-l-red-500' 
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <td className={`px-3 py-2 whitespace-nowrap text-xs font-medium ${
+                      lgu.total === 0 ? 'text-red-900' : 'text-gray-900'
+                    }`}>
                       {lgu.name}
+                      {lgu.total === 0 && (
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-red-200 text-red-800">
+                          No Data
+                        </span>
+                      )}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-violet-600">
                       {lgu.encoded.toLocaleString()}
@@ -892,7 +906,9 @@ function Summary() {
                     <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-rose-600">
                       {lgu.disqualified.toLocaleString()}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-900 font-semibold">
+                    <td className={`px-3 py-2 whitespace-nowrap text-xs text-center font-semibold ${
+                      lgu.total === 0 ? 'text-red-900' : 'text-gray-900'
+                    }`}>
                       {lgu.total.toLocaleString()}
                     </td>
                   </tr>

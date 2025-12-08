@@ -78,6 +78,25 @@ interface ProvincialPaidByAgeStats {
   total_paid: number;
 }
 
+interface ProvincialPaidByMonthStats {
+  province_name: string;
+  province_code: string;
+  calendar_year: number;
+  jan: number;
+  feb: number;
+  mar: number;
+  apr: number;
+  may: number;
+  jun: number;
+  jul: number;
+  aug: number;
+  sep: number;
+  oct: number;
+  nov: number;
+  dec: number;
+  total_paid: number;
+}
+
 function Summary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +149,7 @@ function Summary() {
   }[]>([]);
 
   const [provincialPaidByAge, setProvincialPaidByAge] = useState<ProvincialPaidByAgeStats[]>([]);
+  const [provincialPaidByMonth, setProvincialPaidByMonth] = useState<ProvincialPaidByMonthStats[]>([]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -232,6 +252,15 @@ function Summary() {
       }
 
       setProvincialPaidByAge(provincialPaidByAgeData || []);
+
+      // Fetch provincial paid by month stats
+      const { data: provincialPaidByMonthData, error: provincialPaidByMonthError } = await supabase.rpc('get_provincial_paid_by_month_stats', provincialParams);
+      
+      if (provincialPaidByMonthError) {
+        console.error('Error fetching provincial paid by month stats:', provincialPaidByMonthError);
+      }
+
+      setProvincialPaidByMonth(provincialPaidByMonthData || []);
 
       setStats({
         totalCitizens: basicStats.totalCitizens || 0,
@@ -873,6 +902,149 @@ function Summary() {
           </div>
         </div>
       )}
+
+      {/* Provincial Statistics - Paid by Month */}
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <h2 className="text-sm font-semibold mb-2 flex items-center">
+          <span className="bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded text-xs mr-2">Provincial Statistics - Paid by Month</span>
+          <span className="ml-2 text-xs text-gray-500">({provincialPaidByMonth.length} records)</span>
+        </h2>
+        <p className="text-xs text-gray-600 mb-3">
+          Paid citizens by province, calendar year, and month
+        </p>
+        {provincialPaidByMonth.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 text-sm">
+            <p>No data available for the selected filters.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th rowSpan={2} className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase border-r border-gray-200">Province</th>
+                  <th rowSpan={2} className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase border-r border-gray-200">Calendar Year</th>
+                  <th colSpan={12} className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase border-r border-gray-200">Paid by Month</th>
+                  <th rowSpan={2} className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase">Total</th>
+                </tr>
+                <tr>
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-600 uppercase">Jan</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-600 uppercase">Feb</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-600 uppercase">Mar</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-600 uppercase">Apr</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-600 uppercase">May</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-600 uppercase">Jun</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-600 uppercase">Jul</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-600 uppercase">Aug</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-600 uppercase">Sep</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-600 uppercase">Oct</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-600 uppercase">Nov</th>
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-600 uppercase border-r border-gray-200">Dec</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {provincialPaidByMonth.map((row) => (
+                  <tr key={`${row.province_code}-${row.calendar_year}`} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs font-medium text-gray-900 border-r border-gray-200">
+                      {row.province_name}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-900 font-medium border-r border-gray-200">
+                      {row.calendar_year}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-blue-600">
+                      {row.jan}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-blue-600">
+                      {row.feb}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-green-600">
+                      {row.mar}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-green-600">
+                      {row.apr}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-green-600">
+                      {row.may}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-teal-600">
+                      {row.jun}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-teal-600">
+                      {row.jul}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-teal-600">
+                      {row.aug}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-orange-600">
+                      {row.sep}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-orange-600">
+                      {row.oct}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-orange-600">
+                      {row.nov}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-red-600 border-r border-gray-200">
+                      {row.dec}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-center text-gray-900 font-semibold">
+                      {row.total_paid}
+                    </td>
+                  </tr>
+                ))}
+
+                {/* TOTAL ROW */}
+                <tr className="bg-gray-100 font-semibold">
+                  <td className="px-3 py-2 text-xs text-gray-900 border-r border-gray-300">
+                    TOTAL
+                  </td>
+                  <td className="px-3 py-2 text-xs text-center text-gray-900 border-r border-gray-300">
+                    —
+                  </td>
+                  <td className="px-2 py-2 text-xs text-center text-blue-700">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.jan, 0)}
+                  </td>
+                  <td className="px-2 py-2 text-xs text-center text-blue-700">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.feb, 0)}
+                  </td>
+                  <td className="px-2 py-2 text-xs text-center text-green-700">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.mar, 0)}
+                  </td>
+                  <td className="px-2 py-2 text-xs text-center text-green-700">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.apr, 0)}
+                  </td>
+                  <td className="px-2 py-2 text-xs text-center text-green-700">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.may, 0)}
+                  </td>
+                  <td className="px-2 py-2 text-xs text-center text-teal-700">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.jun, 0)}
+                  </td>
+                  <td className="px-2 py-2 text-xs text-center text-teal-700">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.jul, 0)}
+                  </td>
+                  <td className="px-2 py-2 text-xs text-center text-teal-700">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.aug, 0)}
+                  </td>
+                  <td className="px-2 py-2 text-xs text-center text-orange-700">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.sep, 0)}
+                  </td>
+                  <td className="px-2 py-2 text-xs text-center text-orange-700">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.oct, 0)}
+                  </td>
+                  <td className="px-2 py-2 text-xs text-center text-orange-700">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.nov, 0)}
+                  </td>
+                  <td className="px-2 py-2 text-xs text-center text-red-700 border-r border-gray-300">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.dec, 0)}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-center text-gray-900 font-bold">
+                    {provincialPaidByMonth.reduce((sum, r) => sum + r.total_paid, 0)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Provincial Statistics - Paid by Age */}
       <div className="bg-white rounded-lg shadow-sm p-4">

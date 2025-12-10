@@ -1,7 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Users, FileText, Upload, Download, RefreshCw, Loader2, CheckCircle, DollarSign, Clock, CheckSquare, AlertTriangle, XCircle, Pencil, AlertCircle, TrendingUp, BarChart3, Calendar, MapPin } from 'lucide-react';
+import { Users, FileText, Upload, Download, RefreshCw, Loader2, CheckCircle, DollarSign, Clock, CheckSquare, AlertTriangle, XCircle, Pencil, AlertCircle, TrendingUp, BarChart3, Calendar, MapPin, PieChart as PieChartIcon } from 'lucide-react';
 import { format, startOfDay, endOfDay, parseISO } from 'date-fns';
 import { supabase } from '../lib/supabase';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  ComposedChart
+} from 'recharts';
 
 interface Filters {
   startDate: string;
@@ -1382,6 +1398,234 @@ function Summary() {
           </div>
         )}
       </div>
+
+      {/* NEW: Quarterly Paid Data Charts */}
+      {provincialPaidByMonth.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm p-4">
+          <h2 className="text-sm font-semibold mb-2 flex items-center">
+            <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-xs mr-2">
+              <BarChart3 className="h-3 w-3 inline mr-1" />
+              Quarterly Paid Analysis
+            </span>
+          </h2>
+          <p className="text-xs text-gray-600 mb-4">
+            Visual representation of paid citizens by quarter (Q1-Q4) across calendar years
+          </p>
+
+          {/* Quarterly Data by Year Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            {Array.from(new Set(provincialPaidByMonth.map(r => r.calendar_year)))
+              .sort((a, b) => a - b)
+              .map((year) => {
+                const yearData = provincialPaidByMonth.filter(r => r.calendar_year === year);
+                
+                // Calculate quarterly totals
+                const quarterlyData = yearData.map(row => ({
+                  province: row.province_name,
+                  Q1: row.jan + row.feb + row.mar,
+                  Q2: row.apr + row.may + row.jun,
+                  Q3: row.jul + row.aug + row.sep,
+                  Q4: row.oct + row.nov + row.dec,
+                }));
+
+                return (
+                  <div key={year} className="border border-gray-200 rounded-lg p-4 bg-gradient-to-br from-emerald-50 to-teal-50">
+                    <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-emerald-600" />
+                      Calendar Year {year} - Quarterly Distribution
+                    </h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={quarterlyData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis 
+                          dataKey="province" 
+                          angle={-45} 
+                          textAnchor="end" 
+                          height={100}
+                          tick={{ fontSize: 10 }}
+                        />
+                        <YAxis tick={{ fontSize: 10 }} />
+                        <Tooltip 
+                          contentStyle={{ fontSize: '12px', backgroundColor: 'rgba(255, 255, 255, 0.95)' }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: '11px' }} />
+                        <Bar dataKey="Q1" fill="#3b82f6" name="Q1 (Jan-Mar)" />
+                        <Bar dataKey="Q2" fill="#10b981" name="Q2 (Apr-Jun)" />
+                        <Bar dataKey="Q3" fill="#f59e0b" name="Q3 (Jul-Sep)" />
+                        <Bar dataKey="Q4" fill="#ef4444" name="Q4 (Oct-Dec)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })}
+          </div>
+
+          {/* Overall Quarterly Trends */}
+          <div className="border border-gray-200 rounded-lg p-4 bg-gradient-to-br from-blue-50 to-indigo-50">
+            <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-blue-600" />
+              Overall Quarterly Trends (All Years Combined)
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={
+                Array.from(new Set(provincialPaidByMonth.map(r => r.calendar_year)))
+                  .sort((a, b) => a - b)
+                  .map(year => {
+                    const yearData = provincialPaidByMonth.filter(r => r.calendar_year === year);
+                    return {
+                      year: year.toString(),
+                      Q1: yearData.reduce((sum, r) => sum + r.jan + r.feb + r.mar, 0),
+                      Q2: yearData.reduce((sum, r) => sum + r.apr + r.may + r.jun, 0),
+                      Q3: yearData.reduce((sum, r) => sum + r.jul + r.aug + r.sep, 0),
+                      Q4: yearData.reduce((sum, r) => sum + r.oct + r.nov + r.dec, 0),
+                    };
+                  })
+              }>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="year" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 10 }} />
+                <Tooltip contentStyle={{ fontSize: '12px', backgroundColor: 'rgba(255, 255, 255, 0.95)' }} />
+                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                <Line type="monotone" dataKey="Q1" stroke="#3b82f6" strokeWidth={2} name="Q1 (Jan-Mar)" />
+                <Line type="monotone" dataKey="Q2" stroke="#10b981" strokeWidth={2} name="Q2 (Apr-Jun)" />
+                <Line type="monotone" dataKey="Q3" stroke="#f59e0b" strokeWidth={2} name="Q3 (Jul-Sep)" />
+                <Line type="monotone" dataKey="Q4" stroke="#ef4444" strokeWidth={2} name="Q4 (Oct-Dec)" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* NEW: Sex-Disaggregated Data Charts */}
+      {stats.paidBySpecificAge.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm p-4">
+          <h2 className="text-sm font-semibold mb-2 flex items-center">
+            <span className="bg-fuchsia-100 text-fuchsia-800 px-2 py-0.5 rounded text-xs mr-2">
+              <PieChartIcon className="h-3 w-3 inline mr-1" />
+              Sex-Disaggregated Data Analysis
+            </span>
+          </h2>
+          <p className="text-xs text-gray-600 mb-4">
+            Gender distribution analysis for paid citizens by age group
+          </p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Male vs Female by Age - Bar Chart */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-gradient-to-br from-fuchsia-50 to-pink-50">
+              <h3 className="text-sm font-bold text-gray-800 mb-3">Gender Distribution by Age Group</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.paidBySpecificAge.map(item => ({
+                  age: `Age ${item.age}`,
+                  Male: item.maleCount,
+                  Female: item.femaleCount,
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="age" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip contentStyle={{ fontSize: '12px', backgroundColor: 'rgba(255, 255, 255, 0.95)' }} />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} />
+                  <Bar dataKey="Male" fill="#3b82f6" name="Male" />
+                  <Bar dataKey="Female" fill="#ec4899" name="Female" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Overall Gender Distribution - Pie Chart */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-gradient-to-br from-blue-50 to-cyan-50">
+              <h3 className="text-sm font-bold text-gray-800 mb-3">Overall Gender Distribution</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      { 
+                        name: 'Male', 
+                        value: stats.paidBySpecificAge.reduce((sum, item) => sum + item.maleCount, 0),
+                        percentage: (() => {
+                          const total = stats.paidBySpecificAge.reduce((sum, item) => sum + item.count, 0);
+                          const male = stats.paidBySpecificAge.reduce((sum, item) => sum + item.maleCount, 0);
+                          return total > 0 ? ((male / total) * 100).toFixed(1) : 0;
+                        })()
+                      },
+                      { 
+                        name: 'Female', 
+                        value: stats.paidBySpecificAge.reduce((sum, item) => sum + item.femaleCount, 0),
+                        percentage: (() => {
+                          const total = stats.paidBySpecificAge.reduce((sum, item) => sum + item.count, 0);
+                          const female = stats.paidBySpecificAge.reduce((sum, item) => sum + item.femaleCount, 0);
+                          return total > 0 ? ((female / total) * 100).toFixed(1) : 0;
+                        })()
+                      },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percentage }) => `${name}: ${percentage}%`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    <Cell fill="#3b82f6" />
+                    <Cell fill="#ec4899" />
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: any) => value.toLocaleString()}
+                    contentStyle={{ fontSize: '12px', backgroundColor: 'rgba(255, 255, 255, 0.95)' }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Gender Percentage by Age - Stacked Bar */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-gradient-to-br from-violet-50 to-purple-50">
+              <h3 className="text-sm font-bold text-gray-800 mb-3">Gender Percentage by Age (100% Stacked)</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart 
+                  data={stats.paidBySpecificAge.map(item => ({
+                    age: `Age ${item.age}`,
+                    MalePercent: item.malePercentage,
+                    FemalePercent: item.femalePercentage,
+                  }))}
+                  layout="vertical"
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} />
+                  <YAxis dataKey="age" type="category" tick={{ fontSize: 10 }} width={80} />
+                  <Tooltip 
+                    formatter={(value: any) => `${value.toFixed(1)}%`}
+                    contentStyle={{ fontSize: '12px', backgroundColor: 'rgba(255, 255, 255, 0.95)' }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} />
+                  <Bar dataKey="MalePercent" stackId="a" fill="#3b82f6" name="Male %" />
+                  <Bar dataKey="FemalePercent" stackId="a" fill="#ec4899" name="Female %" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Gender Comparison Line Chart */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-gradient-to-br from-amber-50 to-orange-50">
+              <h3 className="text-sm font-bold text-gray-800 mb-3">Gender Count Trend by Age</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <ComposedChart data={stats.paidBySpecificAge.map(item => ({
+                  age: item.age,
+                  Male: item.maleCount,
+                  Female: item.femaleCount,
+                  Total: item.count,
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="age" tick={{ fontSize: 10 }} label={{ value: 'Age', position: 'insideBottom', offset: -5, fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip contentStyle={{ fontSize: '12px', backgroundColor: 'rgba(255, 255, 255, 0.95)' }} />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} />
+                  <Bar dataKey="Total" fill="#9ca3af" name="Total" opacity={0.3} />
+                  <Line type="monotone" dataKey="Male" stroke="#3b82f6" strokeWidth={2} name="Male" />
+                  <Line type="monotone" dataKey="Female" stroke="#ec4899" strokeWidth={2} name="Female" />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Paid Citizens by Specific Ages */}
       <div className="bg-white rounded-lg shadow-sm p-4">

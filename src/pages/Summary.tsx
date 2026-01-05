@@ -143,8 +143,8 @@ function Summary() {
   const [availableYears, setAvailableYears] = useState<string[]>([]);
   
   const [filters, setFilters] = useState<Filters>({
-    startDate: format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd'),
-    endDate: format(new Date(), 'yyyy-MM-dd'),
+    startDate: '',
+    endDate: '',
     province: '',
     lgu: '',
     barangay: '',
@@ -419,8 +419,8 @@ function Summary() {
 
   const resetFilters = useCallback(() => {
     setFilters({
-      startDate: format(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd'),
-      endDate: format(new Date(), 'yyyy-MM-dd'),
+      startDate: '',
+      endDate: '',
       province: '',
       lgu: '',
       barangay: '',

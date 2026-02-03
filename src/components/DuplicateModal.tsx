@@ -446,7 +446,7 @@ function DuplicateModal({
                 <X size={16} className="group-hover:rotate-90 transition-transform" />
                 <span className="text-sm">Cancel & Edit</span>
               </button>
-              {existingRecord.status?.toLowerCase() !== 'paid' && (
+              {existingRecord.status?.toLowerCase() == 'encoded' && (
                 <button 
                   onClick={onUpdate} 
                   className="btn-warning flex items-center justify-center gap-2 group px-4 py-2"
